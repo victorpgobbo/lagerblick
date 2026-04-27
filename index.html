@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lagerblick</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #111; --surface: #1e1e1e; --border: #333;
+    --accent: #c8f000; --accent2: #ff6b35;
+    --text: #f0f0f0; --muted: #888;
+    --danger: #ff4444; --ok: #44dd88; --warn: #ffaa33; --venc: #cc44ff;
+  }
+  html, body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; min-height: 100vh; }
+
+  /* LOGIN */
+  .login-screen {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh; padding: 24px;
+  }
+  .login-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 32px; width: 100%; max-width: 320px; text-align: center;
+  }
+  .login-box h1 { font-family: 'Syne', sans-serif; font-size: 1.8rem; font-weight: 800; margin-bottom: 4px; }
+  .login-box h1 span { color: var(--accent); }
+  .login-box p { font-size: 0.8rem; color: var(--muted); margin-bottom: 24px; }
+  .login-box input {
+    width: 100%; background: #0a0a0a; border: 1px solid var(--border);
+    color: #fff; padding: 12px; font-size: 1rem; border-radius: 8px;
+    outline: none; margin-bottom: 12px; text-align: center; letter-spacing: 0.1em;
+  }
+  .login-box input:focus { border-color: var(--accent); }
+  .login-error { color: var(--danger); font-size: 0.8rem; margin-bottom: 10px; min-height: 18px; }
+
+  /* APP */
+  .app-screen { display: none; }
+  header {
+    background: #000; border-bottom: 1px solid var(--border);
+    padding: 16px 20px; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+  }
+  header h1 { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800; color: #fff; }
+  header h1 span { color: var(--accent); }
+  .badge { background: var(--surface); border: 1px solid var(--border); padding: 4px 10px; font-size: 0.65rem; border-radius: 4px; color: var(--muted); }
+
+  main { max-width: 900px; margin: 0 auto; padding: 20px 16px; }
+
+  .tabs { display: flex; background: var(--surface); border-radius: 10px; padding: 4px; margin-bottom: 20px; gap: 4px; }
+  .tab { flex: 1; padding: 9px 4px; font-size: 0.62rem; font-weight: 700; background: none; border: none; color: var(--muted); cursor: pointer; border-radius: 7px; transition: all 0.15s; text-transform: uppercase; text-align: center; line-height: 1.3; }
+  .tab.active { background: var(--accent); color: #111; }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .section-title { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 14px; }
+
+  .status-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 18px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 10px; }
+  .stat-label { font-size: 0.52rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+  .stat-value { font-size: 1.8rem; font-weight: 800; line-height: 1; color: #fff; }
+  .stat-value.warn { color: var(--warn); }
+  .stat-value.danger { color: var(--danger); }
+  .stat-value.venc { color: var(--venc); }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-group label { display: block; font-size: 0.6rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+  .form-group input, .form-group select {
+    width: 100%; background: #0a0a0a; border: 1px solid var(--border);
+    color: #fff; padding: 10px 12px; font-size: 0.9rem; border-radius: 6px;
+    outline: none; -webkit-appearance: none; appearance: none;
+  }
+  .form-group input:focus, .form-group select:focus { border-color: var(--accent); }
+
+  .btn-add { display: block; width: 100%; padding: 12px; background: var(--accent); color: #111; font-family: 'Syne', sans-serif; font-size: 0.9rem; font-weight: 800; border: none; border-radius: 8px; cursor: pointer; }
+
+  .product-list { display: flex; flex-direction: column; gap: 8px; }
+  .product-item { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid #333; border-radius: 8px; padding: 13px 12px; }
+  .product-item.low { border-left-color: var(--warn); }
+  .product-item.critical { border-left-color: var(--danger); }
+  .product-item.expiring { border-left-color: var(--venc); }
+  .product-item.expired { border-left-color: var(--danger); background: #1a1020; }
+
+  .product-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .product-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.9rem; color: #fff; }
+  .product-meta { font-size: 0.68rem; color: var(--muted); margin-top: 3px; line-height: 1.5; }
+  .tag-venc { color: var(--venc); }
+  .tag-expired { color: var(--danger); }
+
+  .product-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .product-qty { font-size: 1.5rem; font-weight: 800; min-width: 36px; text-align: right; }
+  .product-qty.ok { color: var(--ok); }
+  .product-qty.low { color: var(--warn); }
+  .product-qty.critical { color: var(--danger); }
+
+  /* EDIT QTY INLINE */
+  .edit-row { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); align-items: center; gap: 8px; }
+  .edit-row.open { display: flex; }
+  .edit-row input { flex: 1; background: #0a0a0a; border: 1px solid var(--border); color: #fff; padding: 8px 10px; font-size: 0.9rem; border-radius: 6px; outline: none; }
+  .edit-row input:focus { border-color: var(--accent); }
+  .btn-confirm { padding: 8px 14px; background: var(--accent); color: #111; font-weight: 700; font-size: 0.8rem; border: none; border-radius: 6px; cursor: pointer; }
+  .btn-cancel-edit { padding: 8px 10px; background: #2a2a2a; color: var(--muted); font-size: 0.8rem; border: none; border-radius: 6px; cursor: pointer; }
+
+  .btn-sm { padding: 7px 11px; font-size: 0.75rem; font-weight: 700; border: none; border-radius: 5px; cursor: pointer; }
+  .btn-out { background: var(--warn); color: #111; }
+  .btn-edit { background: #2a2a2a; color: #aaa; border: 1px solid #444; }
+  .btn-del { background: #2a2a2a; color: #ff6666; border: 1px solid #444; }
+
+  .buy-item { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--accent2); border-radius: 8px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .buy-item.venc-item { border-left-color: var(--venc); }
+  .buy-name { font-weight: 700; font-size: 0.9rem; color: #fff; }
+  .buy-info { font-size: 0.68rem; color: var(--muted); margin-top: 2px; }
+  .buy-qty { font-weight: 700; color: var(--accent2); font-size: 0.85rem; flex-shrink: 0; }
+  .buy-qty.venc { color: var(--venc); }
+
+  .log-item { padding: 10px 0; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; }
+  .log-item:last-child { border-bottom: none; }
+  .log-time { color: var(--muted); font-size: 0.68rem; }
+  .log-out { color: var(--danger); font-weight: 700; }
+
+  .empty-state { text-align: center; padding: 36px 20px; color: var(--muted); font-size: 0.8rem; border: 1px dashed var(--border); border-radius: 10px; }
+  .empty-state strong { display: block; font-family: 'Syne', sans-serif; font-size: 0.9rem; color: var(--text); margin-bottom: 4px; }
+
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 200; align-items: center; justify-content: center; padding: 24px; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; width: 100%; max-width: 340px; }
+  .modal h2 { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 800; margin-bottom: 8px; color: #fff; }
+  .modal p { font-size: 0.85rem; color: var(--muted); margin-bottom: 18px; }
+  .modal-btns { display: flex; gap: 8px; }
+  .modal-btn { flex: 1; padding: 12px; background: var(--accent); color: #111; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 0.9rem; border: none; border-radius: 8px; cursor: pointer; }
+  .modal-btn.cancel { background: #2a2a2a; color: var(--muted); border: 1px solid #444; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-screen" id="login-screen">
+  <div class="login-box">
+    <h1>lager<span>blick</span></h1>
+    <p>Controle de estoque</p>
+    <input type="password" id="login-input" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    <div class="login-error" id="login-error"></div>
+    <button class="btn-add" onclick="doLogin()">Entrar</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app-screen" id="app-screen">
+  <header>
+    <h1>lager<span>blick</span></h1>
+    <span class="badge" id="total-badge">0 itens</span>
+  </header>
+
+  <main>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('estoque',this)">Estoque</button>
+      <button class="tab" onclick="switchTab('saidas',this)">Saída</button>
+      <button class="tab" onclick="switchTab('compras',this)">Compras</button>
+      <button class="tab" onclick="switchTab('log',this)">Histórico</button>
+    </div>
+
+    <!-- ESTOQUE -->
+    <div class="panel active" id="panel-estoque">
+      <div class="status-bar">
+        <div class="stat"><div class="stat-label">Total</div><div class="stat-value" id="stat-total">0</div></div>
+        <div class="stat"><div class="stat-label">Atenção</div><div class="stat-value warn" id="stat-low">0</div></div>
+        <div class="stat"><div class="stat-label">Crítico</div><div class="stat-value danger" id="stat-critical">0</div></div>
+        <div class="stat"><div class="stat-label">Vencendo</div><div class="stat-value venc" id="stat-venc">0</div></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title" style="margin-bottom:14px">Adicionar produto</div>
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>Nome</label>
+            <input type="text" id="new-name" placeholder="ex: Frango">
+          </div>
+          <div class="form-group">
+            <label>Qtd atual</label>
+            <input type="number" id="new-qty" placeholder="0" min="0">
+          </div>
+          <div class="form-group">
+            <label>Qtd mínima</label>
+            <input type="number" id="new-min" placeholder="0" min="0">
+          </div>
+          <div class="form-group">
+            <label>Unidade</label>
+            <select id="new-unit">
+              <option value="un">un (unidade)</option>
+              <option value="kg">kg</option>
+              <option value="g">g</option>
+              <option value="L">L (litros)</option>
+              <option value="ml">ml</option>
+              <option value="cx">cx (caixa)</option>
+              <option value="pct">pct (pacote)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Vencimento (opcional)</label>
+            <input type="date" id="new-exp">
+          </div>
+        </div>
+        <button class="btn-add" onclick="addProduct()">+ Adicionar</button>
+      </div>
+
+      <div class="section-title">Produtos</div>
+      <div class="product-list" id="product-list">
+        <div class="empty-state"><strong>Nenhum produto</strong>Adicione acima</div>
+      </div>
+    </div>
+
+    <!-- SAIDAS -->
+    <div class="panel" id="panel-saidas">
+      <div class="card">
+        <div class="section-title" style="margin-bottom:14px">Registrar saída</div>
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>Produto</label>
+            <select id="out-product"><option value="">Selecione...</option></select>
+          </div>
+          <div class="form-group">
+            <label>Quantidade</label>
+            <input type="number" id="out-qty" placeholder="1" min="1">
+          </div>
+          <div class="form-group">
+            <label>Motivo</label>
+            <select id="out-reason">
+              <option>Consumo</option>
+              <option>Vencimento</option>
+              <option>Quebra</option>
+              <option>Outro</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn-add" onclick="registerOut()">Confirmar saída</button>
+      </div>
+      <div id="out-alert"></div>
+    </div>
+
+    <!-- COMPRAS -->
+    <div class="panel" id="panel-compras">
+      <div class="section-title">Para repor</div>
+      <div id="buy-list-container">
+        <div class="empty-state"><strong>Tudo em ordem</strong>Itens abaixo do mínimo aparecem aqui</div>
+      </div>
+    </div>
+
+    <!-- LOG -->
+    <div class="panel" id="panel-log">
+      <div class="section-title">Movimentações</div>
+      <div class="card">
+        <div id="log-container">
+          <div class="empty-state"><strong>Sem registros</strong>As saídas aparecem aqui</div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2 id="modal-title"></h2>
+    <p id="modal-msg"></p>
+    <div class="modal-btns">
+      <button class="modal-btn cancel" id="modal-cancel" onclick="closeModal()" style="display:none">Cancelar</button>
+      <button class="modal-btn" id="modal-ok" onclick="closeModal()">OK</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SENHA = 'lager2024';
+
+function doLogin() {
+  const val = document.getElementById('login-input').value;
+  if (val === SENHA) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display = 'block';
+    sessionStorage.setItem('auth', '1');
+    renderProducts();
+  } else {
+    document.getElementById('login-error').textContent = 'Senha incorreta.';
+    document.getElementById('login-input').value = '';
+  }
+}
+
+// Auto-login se já autenticado na sessão
+if (sessionStorage.getItem('auth') === '1') {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'block';
+}
+
+let products = JSON.parse(localStorage.getItem('est_p') || '[]');
+let log = JSON.parse(localStorage.getItem('est_l') || '[]');
+let pendingDeleteId = null;
+let onConfirmCallback = null;
+
+function save() {
+  localStorage.setItem('est_p', JSON.stringify(products));
+  localStorage.setItem('est_l', JSON.stringify(log));
+}
+
+function switchTab(tab, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('panel-' + tab).classList.add('active');
+  if (tab === 'saidas') updateOutSelect();
+  if (tab === 'compras') renderBuyList();
+  if (tab === 'log') renderLog();
+}
+
+function getStatus(p) {
+  if (p.qty <= 0) return 'critical';
+  if (p.qty <= p.min) return 'low';
+  return 'ok';
+}
+
+function getDaysUntilExp(exp) {
+  if (!exp) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const d = new Date(exp + 'T00:00:00');
+  return Math.floor((d - today) / 86400000);
+}
+
+function expLabel(exp) {
+  const days = getDaysUntilExp(exp);
+  if (days === null) return null;
+  if (days < 0) return { text: 'VENCIDO', cls: 'tag-expired' };
+  if (days === 0) return { text: 'Vence hoje!', cls: 'tag-venc' };
+  if (days <= 7) return { text: 'Vence em ' + days + 'd', cls: 'tag-venc' };
+  return { text: 'Vence ' + new Date(exp + 'T00:00:00').toLocaleDateString('pt-BR'), cls: '' };
+}
+
+function addProduct() {
+  const name = document.getElementById('new-name').value.trim();
+  const qty = parseFloat(document.getElementById('new-qty').value);
+  const min = parseFloat(document.getElementById('new-min').value);
+  const unit = document.getElementById('new-unit').value;
+  const exp = document.getElementById('new-exp').value || null;
+  if (!name || isNaN(qty) || isNaN(min)) return showAlert('Atenção', 'Preencha nome, quantidade e mínimo.');
+  products.push({ id: Date.now(), name, qty, min, unit, exp });
+  save();
+  document.getElementById('new-name').value = '';
+  document.getElementById('new-qty').value = '';
+  document.getElementById('new-min').value = '';
+  document.getElementById('new-exp').value = '';
+  renderProducts();
+}
+
+function confirmRemove(id) {
+  const p = products.find(x => x.id === id);
+  showConfirm('Remover produto?', 'Tem certeza que quer remover "' + p.name + '"?', () => {
+    products = products.filter(x => x.id !== id);
+    save(); renderProducts();
+  });
+}
+
+function quickOut(id) {
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  if (p.qty <= 0) { showAlert('Zerado', p.name + ' já está zerado.'); return; }
+  p.qty = Math.round((p.qty - 1) * 100) / 100;
+  log.unshift({ time: new Date().toLocaleString('pt-BR'), name: p.name, qty: 1, unit: p.unit, reason: 'Consumo' });
+  save(); renderProducts();
+}
+
+function toggleEdit(id) {
+  const row = document.getElementById('edit-row-' + id);
+  if (row.classList.contains('open')) {
+    row.classList.remove('open');
+  } else {
+    document.querySelectorAll('.edit-row.open').forEach(r => r.classList.remove('open'));
+    row.classList.add('open');
+    document.getElementById('edit-input-' + id).focus();
+  }
+}
+
+function confirmEdit(id) {
+  const p = products.find(x => x.id === id);
+  const val = parseFloat(document.getElementById('edit-input-' + id).value);
+  if (isNaN(val) || val < 0) return showAlert('Inválido', 'Digite uma quantidade válida.');
+  const diff = Math.round((p.qty - val) * 100) / 100;
+  p.qty = Math.round(val * 100) / 100;
+  if (diff !== 0) log.unshift({ time: new Date().toLocaleString('pt-BR'), name: p.name, qty: Math.abs(diff), unit: p.unit, reason: diff > 0 ? 'Ajuste manual (saída)' : 'Ajuste manual (entrada)' });
+  save(); renderProducts();
+}
+
+function renderProducts() {
+  const list = document.getElementById('product-list');
+  if (!products.length) {
+    list.innerHTML = '<div class="empty-state"><strong>Nenhum produto</strong>Adicione acima</div>';
+    updateStats(); return;
+  }
+
+  list.innerHTML = products.map(p => {
+    const s = getStatus(p);
+    const days = getDaysUntilExp(p.exp);
+    const el = expLabel(p.exp);
+    const isExpired = days !== null && days < 0;
+    const isExpiring = days !== null && days >= 0 && days <= 7;
+    let itemClass = s;
+    if (isExpired) itemClass = 'expired';
+    else if (isExpiring && s === 'ok') itemClass = 'expiring';
+
+    let metaParts = ['mín: ' + p.min + ' ' + (p.unit||'un')];
+    if (s !== 'ok') metaParts.push(s === 'low' ? '⚠ atenção' : '⛔ crítico');
+    if (el) metaParts.push('<span class="' + el.cls + '">' + el.text + '</span>');
+
+    return `<div class="product-item ${itemClass}">
+      <div class="product-top">
+        <div style="flex:1;min-width:0">
+          <div class="product-name">${p.name}</div>
+          <div class="product-meta">${metaParts.join(' · ')}</div>
+        </div>
+        <div class="product-right">
+          <div class="product-qty ${s}">${p.qty} <span style="font-size:0.75rem;font-weight:400;color:var(--muted)">${p.unit||'un'}</span></div>
+          <button class="btn-sm btn-out" onclick="quickOut(${p.id})">−1</button>
+          <button class="btn-sm btn-edit" onclick="toggleEdit(${p.id})">✏</button>
+          <button class="btn-sm btn-del" onclick="confirmRemove(${p.id})">✕</button>
+        </div>
+      </div>
+      <div class="edit-row" id="edit-row-${p.id}">
+        <input type="number" id="edit-input-${p.id}" placeholder="Nova quantidade" min="0" step="0.1" value="${p.qty}">
+        <button class="btn-confirm" onclick="confirmEdit(${p.id})">Salvar</button>
+        <button class="btn-cancel-edit" onclick="toggleEdit(${p.id})">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+  updateStats();
+}
+
+function updateStats() {
+  const low = products.filter(p => getStatus(p) === 'low').length;
+  const crit = products.filter(p => getStatus(p) === 'critical').length;
+  const venc = products.filter(p => { const d = getDaysUntilExp(p.exp); return d !== null && d <= 3; }).length;
+  document.getElementById('stat-total').textContent = products.length;
+  document.getElementById('stat-low').textContent = low;
+  document.getElementById('stat-critical').textContent = crit;
+  document.getElementById('stat-venc').textContent = venc;
+  document.getElementById('total-badge').textContent = products.length + ' itens';
+}
+
+function updateOutSelect() {
+  const sel = document.getElementById('out-product');
+  sel.innerHTML = '<option value="">Selecione...</option>' +
+    products.map(p => `<option value="${p.id}">${p.name} (${p.qty} ${p.unit||'un'})</option>`).join('');
+}
+
+function registerOut() {
+  const id = parseInt(document.getElementById('out-product').value);
+  const qty = parseFloat(document.getElementById('out-qty').value);
+  const reason = document.getElementById('out-reason').value;
+  if (!id || isNaN(qty) || qty <= 0) return showAlert('Atenção', 'Selecione produto e quantidade.');
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  if (qty > p.qty) return showAlert('Inválido', 'Só há ' + p.qty + ' ' + (p.unit||'un') + ' de ' + p.name + '.');
+  p.qty = Math.round((p.qty - qty) * 100) / 100;
+  log.unshift({ time: new Date().toLocaleString('pt-BR'), name: p.name, qty, unit: p.unit||'un', reason });
+  save(); renderProducts(); updateOutSelect();
+  document.getElementById('out-qty').value = '';
+  const a = document.getElementById('out-alert');
+  if (getStatus(p) !== 'ok') {
+    a.innerHTML = `<div class="buy-item" style="margin-top:12px"><div><div class="buy-name">⚠ ${p.name} baixo</div><div class="buy-info">Atual: ${p.qty} ${p.unit||'un'} · Mín: ${p.min}</div></div></div>`;
+  } else a.innerHTML = '';
+}
+
+function renderBuyList() {
+  const c = document.getElementById('buy-list-container');
+  const low = products.filter(p => getStatus(p) !== 'ok');
+  const venc = products.filter(p => { const d = getDaysUntilExp(p.exp); return d !== null && d <= 7; });
+  if (!low.length && !venc.length) {
+    c.innerHTML = '<div class="empty-state"><strong>Tudo em ordem</strong>Itens abaixo do mínimo ou vencendo aparecem aqui</div>';
+    return;
+  }
+  let html = '';
+  if (venc.length) {
+    html += '<div class="section-title" style="margin-bottom:8px;color:var(--venc)">⚠ Vencendo em breve</div>';
+    html += venc.map(p => {
+      const el = expLabel(p.exp);
+      return `<div class="buy-item venc-item"><div><div class="buy-name">${p.name}</div><div class="buy-info tag-venc">${el ? el.text : ''}</div></div><div class="buy-qty venc">verificar</div></div>`;
+    }).join('');
+  }
+  if (low.length) {
+    if (venc.length) html += '<div class="section-title" style="margin:16px 0 8px">Repor estoque</div>';
+    html += low.map(p => `<div class="buy-item"><div><div class="buy-name">${p.name}</div><div class="buy-info">atual: ${p.qty} ${p.unit||'un'} · mín: ${p.min}</div></div><div class="buy-qty">repor ~${Math.max(p.min * 2 - p.qty, p.min)} ${p.unit||'un'}</div></div>`).join('');
+  }
+  c.innerHTML = html;
+}
+
+function renderLog() {
+  const c = document.getElementById('log-container');
+  if (!log.length) { c.innerHTML = '<div class="empty-state"><strong>Sem registros</strong>As saídas aparecem aqui</div>'; return; }
+  c.innerHTML = log.slice(0, 50).map(l => `<div class="log-item">
+    <div><div>${l.name} · <span class="log-out">−${l.qty} ${l.unit||'un'}</span></div><div class="log-time">${l.reason}</div></div>
+    <div class="log-time">${l.time}</div>
+  </div>`).join('');
+}
+
+function showAlert(title, msg) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-msg').textContent = msg;
+  document.getElementById('modal-cancel').style.display = 'none';
+  document.getElementById('modal-ok').textContent = 'OK';
+  document.getElementById('modal-ok').onclick = closeModal;
+  document.getElementById('modal').classList.add('open');
+}
+
+function showConfirm(title, msg, callback) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-msg').textContent = msg;
+  document.getElementById('modal-cancel').style.display = 'flex';
+  document.getElementById('modal-ok').textContent = 'Confirmar';
+  document.getElementById('modal-ok').onclick = () => { closeModal(); callback(); };
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+if (sessionStorage.getItem('auth') === '1') renderProducts();
+</script>
+</body>
+</html>
