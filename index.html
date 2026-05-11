@@ -2,7 +2,9 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#111111">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>Lagerblick</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <style>
@@ -16,116 +18,147 @@
   html, body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; min-height: 100vh; }
 
   /* LOGIN */
-  .login-screen {
-    display: flex; align-items: center; justify-content: center;
-    min-height: 100vh; padding: 24px;
-  }
-  .login-box {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 14px; padding: 32px; width: 100%; max-width: 320px; text-align: center;
-  }
+  .login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
+  .login-box { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 32px; width: 100%; max-width: 320px; text-align: center; }
   .login-box h1 { font-family: 'Syne', sans-serif; font-size: 1.8rem; font-weight: 800; margin-bottom: 4px; }
   .login-box h1 span { color: var(--accent); }
   .login-box p { font-size: 0.8rem; color: var(--muted); margin-bottom: 24px; }
-  .login-box input {
-    width: 100%; background: #0a0a0a; border: 1px solid var(--border);
-    color: #fff; padding: 12px; font-size: 1rem; border-radius: 8px;
-    outline: none; margin-bottom: 12px; text-align: center; letter-spacing: 0.1em;
-  }
+  .login-box input { width: 100%; background: #0a0a0a; border: 1px solid var(--border); color: #fff; padding: 12px; font-size: 1rem; border-radius: 8px; outline: none; margin-bottom: 12px; text-align: center; letter-spacing: 0.1em; }
   .login-box input:focus { border-color: var(--accent); }
   .login-error { color: var(--danger); font-size: 0.8rem; margin-bottom: 10px; min-height: 18px; }
 
   /* APP */
   .app-screen { display: none; }
-  header {
-    background: #000; border-bottom: 1px solid var(--border);
-    padding: 16px 20px; display: flex; align-items: center; justify-content: space-between;
-    position: sticky; top: 0; z-index: 100;
-  }
-  header h1 { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800; color: #fff; }
+  header { background: #000; border-bottom: 1px solid var(--border); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; gap: 10px; }
+  header h1 { font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 800; color: #fff; flex-shrink: 0; }
   header h1 span { color: var(--accent); }
+  .header-right { display: flex; align-items: center; gap: 8px; }
   .badge { background: var(--surface); border: 1px solid var(--border); padding: 4px 10px; font-size: 0.65rem; border-radius: 4px; color: var(--muted); }
+  .lang-toggle { background: var(--surface); border: 1px solid var(--accent); padding: 5px 10px; font-size: 0.65rem; font-weight: 700; border-radius: 4px; color: var(--accent); cursor: pointer; letter-spacing: 0.05em; }
 
-  main { max-width: 900px; margin: 0 auto; padding: 20px 16px; }
+  main { max-width: 900px; margin: 0 auto; padding: 16px; }
 
-  .tabs { display: flex; background: var(--surface); border-radius: 10px; padding: 4px; margin-bottom: 20px; gap: 4px; }
-  .tab { flex: 1; padding: 9px 4px; font-size: 0.62rem; font-weight: 700; background: none; border: none; color: var(--muted); cursor: pointer; border-radius: 7px; transition: all 0.15s; text-transform: uppercase; text-align: center; line-height: 1.3; }
+  /* TABS */
+  .tabs-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 18px; scrollbar-width: none; }
+  .tabs-wrapper::-webkit-scrollbar { display: none; }
+  .tabs { display: flex; background: var(--surface); border-radius: 10px; padding: 4px; gap: 3px; min-width: max-content; }
+  .tab { padding: 9px 12px; font-size: 0.6rem; font-weight: 700; background: none; border: none; color: var(--muted); cursor: pointer; border-radius: 7px; transition: all 0.15s; text-transform: uppercase; white-space: nowrap; }
   .tab.active { background: var(--accent); color: #111; }
 
   .panel { display: none; }
   .panel.active { display: block; }
 
   .section-title { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
-
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 14px; }
 
-  .status-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 18px; }
-  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 10px; }
-  .stat-label { font-size: 0.52rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
-  .stat-value { font-size: 1.8rem; font-weight: 800; line-height: 1; color: #fff; }
+  /* STATS */
+  .status-bar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 18px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 8px; }
+  .stat-label { font-size: 0.48rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; line-height: 1.3; }
+  .stat-value { font-size: 1.4rem; font-weight: 800; line-height: 1; color: #fff; }
   .stat-value.warn { color: var(--warn); }
   .stat-value.danger { color: var(--danger); }
   .stat-value.venc { color: var(--venc); }
+  .stat-value.waste { color: var(--accent2); }
 
+  /* FORMS */
   .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
   .form-group.full { grid-column: 1 / -1; }
   .form-group label { display: block; font-size: 0.6rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
-  .form-group input, .form-group select {
-    width: 100%; background: #0a0a0a; border: 1px solid var(--border);
-    color: #fff; padding: 10px 12px; font-size: 0.9rem; border-radius: 6px;
-    outline: none; -webkit-appearance: none; appearance: none;
-  }
+  .form-group input, .form-group select { width: 100%; background: #0a0a0a; border: 1px solid var(--border); color: #fff; padding: 10px 12px; font-size: 0.9rem; border-radius: 6px; outline: none; -webkit-appearance: none; appearance: none; }
   .form-group input:focus, .form-group select:focus { border-color: var(--accent); }
 
-  .btn-add { display: block; width: 100%; padding: 12px; background: var(--accent); color: #111; font-family: 'Syne', sans-serif; font-size: 0.9rem; font-weight: 800; border: none; border-radius: 8px; cursor: pointer; }
+  .input-scan-wrap { display: flex; gap: 8px; align-items: stretch; }
+  .input-scan-wrap input, .input-scan-wrap select { flex: 1; }
+  .btn-scan { background: var(--accent); color: #111; border: none; border-radius: 6px; padding: 0 14px; font-size: 1.1rem; cursor: pointer; flex-shrink: 0; font-weight: 700; }
 
+  .btn-add { display: block; width: 100%; padding: 12px; background: var(--accent); color: #111; font-family: 'Syne', sans-serif; font-size: 0.9rem; font-weight: 800; border: none; border-radius: 8px; cursor: pointer; }
+  .btn-ok { background: var(--ok) !important; color: #111 !important; }
+  .btn-secondary { display: block; width: 100%; padding: 10px; background: transparent; color: var(--muted); font-size: 0.85rem; font-weight: 700; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; margin-top: 8px; }
+
+  /* PRODUCT LIST */
   .product-list { display: flex; flex-direction: column; gap: 8px; }
   .product-item { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid #333; border-radius: 8px; padding: 13px 12px; }
   .product-item.low { border-left-color: var(--warn); }
   .product-item.critical { border-left-color: var(--danger); }
   .product-item.expiring { border-left-color: var(--venc); }
   .product-item.expired { border-left-color: var(--danger); background: #1a1020; }
-
   .product-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-  .product-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.9rem; color: #fff; }
-  .product-meta { font-size: 0.68rem; color: var(--muted); margin-top: 3px; line-height: 1.5; }
+  .product-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.88rem; color: #fff; }
+  .product-meta { font-size: 0.65rem; color: var(--muted); margin-top: 3px; line-height: 1.6; }
   .tag-venc { color: var(--venc); }
   .tag-expired { color: var(--danger); }
-
-  .product-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-  .product-qty { font-size: 1.5rem; font-weight: 800; min-width: 36px; text-align: right; }
+  .product-right { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+  .product-qty { font-size: 1.3rem; font-weight: 800; min-width: 32px; text-align: right; }
   .product-qty.ok { color: var(--ok); }
   .product-qty.low { color: var(--warn); }
   .product-qty.critical { color: var(--danger); }
-
-  /* EDIT QTY INLINE */
   .edit-row { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); align-items: center; gap: 8px; }
   .edit-row.open { display: flex; }
   .edit-row input { flex: 1; background: #0a0a0a; border: 1px solid var(--border); color: #fff; padding: 8px 10px; font-size: 0.9rem; border-radius: 6px; outline: none; }
   .edit-row input:focus { border-color: var(--accent); }
   .btn-confirm { padding: 8px 14px; background: var(--accent); color: #111; font-weight: 700; font-size: 0.8rem; border: none; border-radius: 6px; cursor: pointer; }
   .btn-cancel-edit { padding: 8px 10px; background: #2a2a2a; color: var(--muted); font-size: 0.8rem; border: none; border-radius: 6px; cursor: pointer; }
-
-  .btn-sm { padding: 7px 11px; font-size: 0.75rem; font-weight: 700; border: none; border-radius: 5px; cursor: pointer; }
+  .btn-sm { padding: 6px 8px; font-size: 0.7rem; font-weight: 700; border: none; border-radius: 5px; cursor: pointer; }
   .btn-out { background: var(--warn); color: #111; }
   .btn-edit { background: #2a2a2a; color: #aaa; border: 1px solid #444; }
   .btn-del { background: #2a2a2a; color: #ff6666; border: 1px solid #444; }
+  .ean-tag { font-size: 0.58rem; color: #555; font-family: monospace; }
 
+  /* RECEIPT */
+  .receipt-items-list { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 12px; }
+  .receipt-item-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+  .receipt-item-row:last-child { border-bottom: none; }
+  .receipt-item-name { font-weight: 600; }
+  .receipt-item-qty { color: var(--ok); font-weight: 700; }
+  .btn-remove-receipt { background: none; border: none; color: #ff6666; cursor: pointer; font-size: 1rem; padding: 0 4px; }
+  .photo-label { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #0a0a0a; border: 1px dashed var(--border); border-radius: 6px; cursor: pointer; font-size: 0.8rem; color: var(--muted); }
+  .photo-label:hover { border-color: var(--accent); color: var(--accent); }
+  .photo-input { display: none; }
+  .photo-preview { width: 100%; height: 110px; object-fit: cover; border-radius: 6px; margin-top: 8px; display: none; }
+
+  /* BUY LIST */
   .buy-item { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--accent2); border-radius: 8px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
   .buy-item.venc-item { border-left-color: var(--venc); }
-  .buy-name { font-weight: 700; font-size: 0.9rem; color: #fff; }
-  .buy-info { font-size: 0.68rem; color: var(--muted); margin-top: 2px; }
-  .buy-qty { font-weight: 700; color: var(--accent2); font-size: 0.85rem; flex-shrink: 0; }
+  .buy-item.anomaly-item { border-left-color: var(--danger); }
+  .buy-name { font-weight: 700; font-size: 0.88rem; color: #fff; }
+  .buy-info { font-size: 0.65rem; color: var(--muted); margin-top: 2px; }
+  .buy-qty { font-weight: 700; color: var(--accent2); font-size: 0.82rem; flex-shrink: 0; text-align: right; }
   .buy-qty.venc { color: var(--venc); }
+  .buy-qty.anomaly { color: var(--danger); }
 
-  .log-item { padding: 10px 0; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; }
+  /* LOG */
+  .log-item { padding: 10px 0; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-start; font-size: 0.8rem; gap: 10px; }
   .log-item:last-child { border-bottom: none; }
-  .log-time { color: var(--muted); font-size: 0.68rem; }
+  .log-icon { font-size: 0.95rem; flex-shrink: 0; margin-top: 1px; }
+  .log-time { color: var(--muted); font-size: 0.62rem; white-space: nowrap; }
   .log-out { color: var(--danger); font-weight: 700; }
+  .log-in { color: var(--ok); font-weight: 700; }
+  .log-waste { color: var(--accent2); font-weight: 700; }
+  .filter-bar { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+  .filter-btn { padding: 5px 10px; font-size: 0.6rem; font-weight: 700; background: var(--surface); border: 1px solid var(--border); color: var(--muted); border-radius: 5px; cursor: pointer; }
+  .filter-btn.active { background: var(--accent); color: #111; border-color: var(--accent); }
 
+  /* HACCP */
+  .haccp-log { display: flex; flex-direction: column; gap: 6px; }
+  .haccp-row { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--border); border-radius: 8px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; }
+  .haccp-row.ok { border-left-color: var(--ok); }
+  .haccp-row.bad { border-left-color: var(--danger); }
+  .haccp-location { font-weight: 700; font-size: 0.85rem; }
+  .haccp-meta { font-size: 0.63rem; color: var(--muted); margin-top: 2px; line-height: 1.5; }
+  .haccp-temp { font-size: 1.4rem; font-weight: 800; flex-shrink: 0; }
+  .haccp-temp.ok { color: var(--ok); }
+  .haccp-temp.bad { color: var(--danger); }
+  .haccp-badge { font-size: 0.58rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
+  .haccp-badge.ok { background: rgba(68,221,136,0.15); color: var(--ok); }
+  .haccp-badge.bad { background: rgba(255,68,68,0.15); color: var(--danger); }
+  .haccp-info-bar { font-size: 0.63rem; color: var(--muted); margin-bottom: 12px; line-height: 1.7; background: #0a0a0a; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border); }
+
+  /* EMPTY */
   .empty-state { text-align: center; padding: 36px 20px; color: var(--muted); font-size: 0.8rem; border: 1px dashed var(--border); border-radius: 10px; }
   .empty-state strong { display: block; font-family: 'Syne', sans-serif; font-size: 0.9rem; color: var(--text); margin-bottom: 4px; }
 
+  /* MODAL */
   .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 200; align-items: center; justify-content: center; padding: 24px; }
   .modal-overlay.open { display: flex; }
   .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; width: 100%; max-width: 340px; }
@@ -134,6 +167,29 @@
   .modal-btns { display: flex; gap: 8px; }
   .modal-btn { flex: 1; padding: 12px; background: var(--accent); color: #111; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 0.9rem; border: none; border-radius: 8px; cursor: pointer; }
   .modal-btn.cancel { background: #2a2a2a; color: var(--muted); border: 1px solid #444; }
+
+  /* SCANNER */
+  .scanner-modal { display: none; position: fixed; inset: 0; background: #000; z-index: 300; flex-direction: column; align-items: center; justify-content: center; }
+  .scanner-modal.open { display: flex; }
+  .scanner-wrap { position: relative; width: 100%; max-width: 420px; }
+  #scanner-viewport { width: 100%; }
+  #scanner-viewport video { width: 100%; display: block; }
+  #scanner-viewport canvas { display: none !important; }
+  .scanner-frame { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 220px; height: 110px; border: 2px solid var(--accent); border-radius: 10px; pointer-events: none; }
+  .scanner-line { position: absolute; left: 10px; right: 10px; height: 2px; background: var(--accent); opacity: 0.8; top: 30%; animation: scanline 1.8s ease-in-out infinite; }
+  @keyframes scanline { 0%,100% { top: 20%; } 50% { top: 75%; } }
+  .scanner-status { color: #fff; font-size: 0.88rem; margin-top: 20px; text-align: center; opacity: 0.75; padding: 0 24px; }
+  .scanner-close { margin-top: 18px; padding: 12px 36px; background: var(--surface); color: #fff; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9rem; font-weight: 700; cursor: pointer; }
+
+  /* BANNER */
+  .notif-banner { position: fixed; top: 62px; left: 50%; transform: translateX(-50%); background: var(--danger); color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; z-index: 150; display: none; box-shadow: 0 4px 16px rgba(0,0,0,0.5); max-width: 90%; text-align: center; }
+  .notif-banner.show { display: block; animation: slideDown 0.25s ease; }
+  .notif-banner.ok-banner { background: var(--ok); color: #111; }
+  @keyframes slideDown { from { transform: translateX(-50%) translateY(-16px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
+
+  @media (max-width: 380px) {
+    .status-bar { grid-template-columns: repeat(3, 1fr); }
+  }
 </style>
 </head>
 <body>
@@ -142,54 +198,69 @@
 <div class="login-screen" id="login-screen">
   <div class="login-box">
     <h1>lager<span>blick</span></h1>
-    <p>Controle de estoque</p>
+    <p>Controle de estoque inteligente</p>
     <input type="password" id="login-input" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
     <div class="login-error" id="login-error"></div>
     <button class="btn-add" onclick="doLogin()">Entrar</button>
   </div>
 </div>
 
+<!-- BANNER -->
+<div class="notif-banner" id="notif-banner"></div>
+
 <!-- APP -->
 <div class="app-screen" id="app-screen">
   <header>
     <h1>lager<span>blick</span></h1>
-    <span class="badge" id="total-badge">0 itens</span>
+    <div class="header-right">
+      <span class="badge" id="total-badge">0 itens</span>
+      <button class="lang-toggle" id="lang-btn" onclick="toggleLang()">DE</button>
+    </div>
   </header>
 
   <main>
-    <div class="tabs">
-      <button class="tab active" onclick="switchTab('estoque',this)">Estoque</button>
-      <button class="tab" onclick="switchTab('saidas',this)">Saída</button>
-      <button class="tab" onclick="switchTab('compras',this)">Compras</button>
-      <button class="tab" onclick="switchTab('log',this)">Histórico</button>
+    <div class="tabs-wrapper">
+      <div class="tabs">
+        <button class="tab active" id="tab-estoque"     onclick="switchTab('estoque',this)">📦 Estoque</button>
+        <button class="tab"        id="tab-recebimento" onclick="switchTab('recebimento',this)">🚚 Recebimento</button>
+        <button class="tab"        id="tab-saidas"      onclick="switchTab('saidas',this)">📤 Saídas</button>
+        <button class="tab"        id="tab-haccp"       onclick="switchTab('haccp',this)">🌡 HACCP</button>
+        <button class="tab"        id="tab-compras"     onclick="switchTab('compras',this)">🛒 Compras</button>
+        <button class="tab"        id="tab-log"         onclick="switchTab('log',this)">📋 Histórico</button>
+      </div>
     </div>
 
-    <!-- ESTOQUE -->
+    <!-- ===== ESTOQUE ===== -->
     <div class="panel active" id="panel-estoque">
       <div class="status-bar">
-        <div class="stat"><div class="stat-label">Total</div><div class="stat-value" id="stat-total">0</div></div>
-        <div class="stat"><div class="stat-label">Atenção</div><div class="stat-value warn" id="stat-low">0</div></div>
-        <div class="stat"><div class="stat-label">Crítico</div><div class="stat-value danger" id="stat-critical">0</div></div>
-        <div class="stat"><div class="stat-label">Vencendo</div><div class="stat-value venc" id="stat-venc">0</div></div>
+        <div class="stat"><div class="stat-label" data-i18n="statTotal">Total</div><div class="stat-value" id="stat-total">0</div></div>
+        <div class="stat"><div class="stat-label" data-i18n="statLow">Atenção</div><div class="stat-value warn" id="stat-low">0</div></div>
+        <div class="stat"><div class="stat-label" data-i18n="statCrit">Crítico</div><div class="stat-value danger" id="stat-critical">0</div></div>
+        <div class="stat"><div class="stat-label" data-i18n="statVenc">Vencendo</div><div class="stat-value venc" id="stat-venc">0</div></div>
+        <div class="stat"><div class="stat-label" data-i18n="statWaste">Desperdício/sem</div><div class="stat-value waste" id="stat-waste">€0</div></div>
       </div>
 
       <div class="card">
-        <div class="section-title" style="margin-bottom:14px">Adicionar produto</div>
+        <div class="section-title" style="margin-bottom:14px" data-i18n="addProduct">Adicionar produto</div>
         <div class="form-grid">
           <div class="form-group full">
-            <label>Nome</label>
-            <input type="text" id="new-name" placeholder="ex: Frango">
+            <label data-i18n="labelName">Nome</label>
+            <div class="input-scan-wrap">
+              <input type="text" id="new-name" placeholder="Nome ou escaneie o código...">
+              <button class="btn-scan" onclick="openScanner('add')" title="Escanear código de barras">📷</button>
+            </div>
+            <div style="font-size:0.6rem;color:var(--muted);margin-top:5px;min-height:14px" id="ean-status"></div>
           </div>
           <div class="form-group">
-            <label>Qtd atual</label>
-            <input type="number" id="new-qty" placeholder="0" min="0">
+            <label data-i18n="labelQty">Qtd atual</label>
+            <input type="number" id="new-qty" placeholder="0" min="0" step="0.1">
           </div>
           <div class="form-group">
-            <label>Qtd mínima</label>
-            <input type="number" id="new-min" placeholder="0" min="0">
+            <label data-i18n="labelMin">Qtd mínima</label>
+            <input type="number" id="new-min" placeholder="0" min="0" step="0.1">
           </div>
           <div class="form-group">
-            <label>Unidade</label>
+            <label data-i18n="labelUnit">Unidade</label>
             <select id="new-unit">
               <option value="un">un (unidade)</option>
               <option value="kg">kg</option>
@@ -201,65 +272,178 @@
             </select>
           </div>
           <div class="form-group">
-            <label>Vencimento (opcional)</label>
+            <label data-i18n="labelExp">Vencimento (opcional)</label>
             <input type="date" id="new-exp">
           </div>
+          <div class="form-group">
+            <label data-i18n="labelPrice">Preço unit. € (opcional)</label>
+            <input type="number" id="new-price" placeholder="0.00" min="0" step="0.01">
+          </div>
         </div>
-        <button class="btn-add" onclick="addProduct()">+ Adicionar</button>
+        <button class="btn-add" onclick="addProduct()">+ <span data-i18n="btnAdd">Adicionar</span></button>
       </div>
 
-      <div class="section-title">Produtos</div>
+      <div class="section-title" data-i18n="sectionProducts">Produtos</div>
       <div class="product-list" id="product-list">
-        <div class="empty-state"><strong>Nenhum produto</strong>Adicione acima</div>
+        <div class="empty-state"><strong data-i18n="emptyTitle">Nenhum produto</strong><span data-i18n="emptySub">Adicione acima ou escaneie um código 📷</span></div>
       </div>
     </div>
 
-    <!-- SAIDAS -->
-    <div class="panel" id="panel-saidas">
+    <!-- ===== RECEBIMENTO ===== -->
+    <div class="panel" id="panel-recebimento">
       <div class="card">
-        <div class="section-title" style="margin-bottom:14px">Registrar saída</div>
+        <div class="section-title" style="margin-bottom:14px" data-i18n="recvTitle">Registrar recebimento</div>
         <div class="form-grid">
           <div class="form-group full">
-            <label>Produto</label>
-            <select id="out-product"><option value="">Selecione...</option></select>
+            <label data-i18n="recvProduct">Produto</label>
+            <div class="input-scan-wrap">
+              <select id="recv-product"><option value="">Selecione...</option></select>
+              <button class="btn-scan" onclick="openScanner('recv')" title="Escanear">📷</button>
+            </div>
           </div>
           <div class="form-group">
-            <label>Quantidade</label>
-            <input type="number" id="out-qty" placeholder="1" min="1">
+            <label data-i18n="recvQty">Quantidade recebida</label>
+            <input type="number" id="recv-qty" placeholder="0" min="0" step="0.1">
           </div>
           <div class="form-group">
-            <label>Motivo</label>
-            <select id="out-reason">
-              <option>Consumo</option>
-              <option>Vencimento</option>
-              <option>Quebra</option>
-              <option>Outro</option>
+            <label data-i18n="recvSupplier">Fornecedor</label>
+            <select id="recv-supplier">
+              <option value="Transgourmet">Transgourmet</option>
+              <option value="Metro">Metro</option>
+              <option value="Selgros">Selgros</option>
+              <option value="Outro">Outro</option>
             </select>
           </div>
         </div>
-        <button class="btn-add" onclick="registerOut()">Confirmar saída</button>
+        <div class="form-group" style="margin-bottom:12px">
+          <label data-i18n="recvPhoto">Foto da entrega (opcional)</label>
+          <label class="photo-label" for="recv-photo">
+            📷 <span id="recv-photo-label" data-i18n="recvPhotoBtn">Tirar foto ou selecionar arquivo</span>
+          </label>
+          <input type="file" accept="image/*" capture="environment" id="recv-photo" class="photo-input"
+            onchange="previewPhoto(this,'recv-preview','recv-photo-label')">
+          <img id="recv-preview" class="photo-preview" alt="Foto">
+        </div>
+        <button class="btn-add" onclick="addToReceipt()">+ <span data-i18n="recvAddItem">Adicionar ao recebimento</span></button>
+      </div>
+
+      <div id="receipt-items-wrapper" style="display:none">
+        <div class="section-title" data-i18n="recvItems">Itens do recebimento</div>
+        <div class="receipt-items-list" id="receipt-items-list"></div>
+        <button class="btn-add btn-ok" onclick="confirmReceipt()">✓ <span data-i18n="recvConfirm">Confirmar recebimento</span></button>
+        <button class="btn-secondary" onclick="clearReceipt()" data-i18n="recvCancel">Cancelar</button>
+      </div>
+
+      <div style="margin-top:20px">
+        <div class="section-title" data-i18n="recvHistory">Últimos recebimentos</div>
+        <div id="receipt-history">
+          <div class="empty-state"><strong data-i18n="recvEmpty">Sem recebimentos</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SAIDAS ===== -->
+    <div class="panel" id="panel-saidas">
+      <div class="card">
+        <div class="section-title" style="margin-bottom:14px" data-i18n="outTitle">Registrar saída</div>
+        <div class="form-grid">
+          <div class="form-group full">
+            <label data-i18n="outProduct">Produto</label>
+            <select id="out-product"><option value="">Selecione...</option></select>
+          </div>
+          <div class="form-group">
+            <label data-i18n="outQty">Quantidade</label>
+            <input type="number" id="out-qty" placeholder="1" min="0.1" step="0.1">
+          </div>
+          <div class="form-group">
+            <label data-i18n="outReason">Motivo</label>
+            <select id="out-reason">
+              <option value="Consumo">Consumo</option>
+              <option value="Desperdício">🗑 Desperdício</option>
+              <option value="Vencimento">⚠ Vencimento</option>
+              <option value="Quebra">Quebra</option>
+              <option value="Outro">Outro</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn-add" onclick="registerOut()" data-i18n="outConfirm">Confirmar saída</button>
       </div>
       <div id="out-alert"></div>
     </div>
 
-    <!-- COMPRAS -->
-    <div class="panel" id="panel-compras">
-      <div class="section-title">Para repor</div>
-      <div id="buy-list-container">
-        <div class="empty-state"><strong>Tudo em ordem</strong>Itens abaixo do mínimo aparecem aqui</div>
+    <!-- ===== HACCP ===== -->
+    <div class="panel" id="panel-haccp">
+      <div class="card">
+        <div class="section-title" style="margin-bottom:10px">🌡 <span data-i18n="haccpTitle">Registrar temperatura</span></div>
+        <div class="haccp-info-bar" data-i18n="haccpInfo">
+          ℹ Padrões DE: Kühlschrank ≤ 7°C &nbsp;·&nbsp; Tiefkühler ≤ -18°C &nbsp;·&nbsp; Kühltheke ≤ 7°C &nbsp;·&nbsp; Warmhalte ≥ 65°C
+        </div>
+        <div class="form-grid">
+          <div class="form-group full">
+            <label data-i18n="haccpLocation">Local</label>
+            <select id="haccp-location">
+              <option value="Kühlschrank 1">Kühlschrank 1 (Geladeira 1)</option>
+              <option value="Kühlschrank 2">Kühlschrank 2 (Geladeira 2)</option>
+              <option value="Tiefkühler 1">Tiefkühler 1 (Freezer 1)</option>
+              <option value="Tiefkühler 2">Tiefkühler 2 (Freezer 2)</option>
+              <option value="Kühltheke">Kühltheke (Balcão frio)</option>
+              <option value="Warmhalte">Warmhalte (Banho-maria)</option>
+              <option value="Lager">Lager (Depósito)</option>
+              <option value="Küche">Küche (Cozinha)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label data-i18n="haccpTemp">Temperatura (°C)</label>
+            <input type="number" id="haccp-temp" placeholder="ex: 4" step="0.1" onkeydown="if(event.key==='Enter')addHACCP()">
+          </div>
+          <div class="form-group">
+            <label data-i18n="haccpNote">Observação (opcional)</label>
+            <input type="text" id="haccp-note" placeholder="...">
+          </div>
+        </div>
+        <button class="btn-add" onclick="addHACCP()">✓ <span data-i18n="haccpSave">Registrar</span></button>
+      </div>
+      <div class="section-title" data-i18n="haccpRecent">Registros recentes</div>
+      <div class="haccp-log" id="haccp-log">
+        <div class="empty-state"><strong data-i18n="haccpEmpty">Sem registros</strong></div>
       </div>
     </div>
 
-    <!-- LOG -->
+    <!-- ===== COMPRAS ===== -->
+    <div class="panel" id="panel-compras">
+      <div id="buy-list-container">
+        <div class="empty-state"><strong>✓ <span data-i18n="buyOk">Tudo em ordem</span></strong><span data-i18n="buySub">Alertas de reposição aparecem aqui</span></div>
+      </div>
+    </div>
+
+    <!-- ===== HISTÓRICO ===== -->
     <div class="panel" id="panel-log">
-      <div class="section-title">Movimentações</div>
+      <div class="filter-bar">
+        <button class="filter-btn active" onclick="filterLog('all',this)" data-i18n="logAll">Todos</button>
+        <button class="filter-btn" onclick="filterLog('entrada',this)" data-i18n="logIn">📥 Entradas</button>
+        <button class="filter-btn" onclick="filterLog('saida',this)" data-i18n="logOut">📤 Saídas</button>
+        <button class="filter-btn" onclick="filterLog('desperdicio',this)" data-i18n="logWaste">🗑 Desperdício</button>
+        <button class="filter-btn" onclick="filterLog('recebimento',this)" data-i18n="logRecv">🚚 Recebimentos</button>
+      </div>
       <div class="card">
         <div id="log-container">
-          <div class="empty-state"><strong>Sem registros</strong>As saídas aparecem aqui</div>
+          <div class="empty-state"><strong data-i18n="logEmpty">Sem registros</strong></div>
         </div>
       </div>
     </div>
   </main>
+</div>
+
+<!-- SCANNER MODAL -->
+<div class="scanner-modal" id="scanner-modal">
+  <div class="scanner-wrap">
+    <div id="scanner-viewport"></div>
+    <div class="scanner-frame">
+      <div class="scanner-line"></div>
+    </div>
+  </div>
+  <div class="scanner-status" id="scanner-status">📷 Aponte para o código de barras</div>
+  <button class="scanner-close" onclick="closeScanner()">Cancelar</button>
 </div>
 
 <!-- MODAL -->
@@ -268,54 +452,155 @@
     <h2 id="modal-title"></h2>
     <p id="modal-msg"></p>
     <div class="modal-btns">
-      <button class="modal-btn cancel" id="modal-cancel" onclick="closeModal()" style="display:none">Cancelar</button>
+      <button class="modal-btn cancel" id="modal-cancel" onclick="closeModal()">Cancelar</button>
       <button class="modal-btn" id="modal-ok" onclick="closeModal()">OK</button>
     </div>
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2/dist/quagga.min.js"></script>
 <script>
+// ============================================================
+// LAGERBLICK v2.0
+// ============================================================
+
 const SENHA = 'lager2024';
 
+const HACCP_LIMITS = {
+  'Kühlschrank 1': { min: 0, max: 7 },
+  'Kühlschrank 2': { min: 0, max: 7 },
+  'Tiefkühler 1':  { min: -30, max: -18 },
+  'Tiefkühler 2':  { min: -30, max: -18 },
+  'Kühltheke':     { min: 0, max: 7 },
+  'Warmhalte':     { min: 65, max: 100 },
+  'Lager':         { min: 8, max: 25 },
+  'Küche':         { min: 5, max: 35 },
+};
+
+// ---- DATA ----
+let products  = JSON.parse(localStorage.getItem('lb_products')  || '[]');
+let log       = JSON.parse(localStorage.getItem('lb_log')       || '[]');
+let receipts  = JSON.parse(localStorage.getItem('lb_receipts')  || '[]');
+let haccpLog  = JSON.parse(localStorage.getItem('lb_haccp')     || '[]');
+let lang      = localStorage.getItem('lb_lang') || 'pt';
+let receiptItems   = [];
+let scanTarget     = 'add';
+let pendingEAN     = null;
+let activeLogFilter = 'all';
+let scannerRunning = false;
+let bannerTimeout;
+
+// ---- I18N ----
+const i18n = {
+  pt: {
+    statTotal:'Total', statLow:'Atenção', statCrit:'Crítico', statVenc:'Vencendo', statWaste:'Desperdício/sem',
+    addProduct:'Adicionar produto', labelName:'Nome', labelQty:'Qtd atual', labelMin:'Qtd mínima',
+    labelUnit:'Unidade', labelExp:'Vencimento (opcional)', labelPrice:'Preço unit. € (opcional)',
+    btnAdd:'Adicionar', sectionProducts:'Produtos', emptyTitle:'Nenhum produto', emptySub:'Adicione acima ou escaneie 📷',
+    recvTitle:'Registrar recebimento', recvProduct:'Produto', recvQty:'Quantidade recebida',
+    recvSupplier:'Fornecedor', recvPhoto:'Foto da entrega (opcional)', recvPhotoBtn:'Tirar foto ou selecionar arquivo',
+    recvAddItem:'Adicionar ao recebimento', recvItems:'Itens do recebimento',
+    recvConfirm:'Confirmar recebimento', recvCancel:'Cancelar', recvHistory:'Últimos recebimentos', recvEmpty:'Sem recebimentos',
+    outTitle:'Registrar saída', outProduct:'Produto', outQty:'Quantidade', outReason:'Motivo', outConfirm:'Confirmar saída',
+    haccpTitle:'Registrar temperatura', haccpLocation:'Local', haccpTemp:'Temperatura (°C)', haccpNote:'Observação (opcional)',
+    haccpSave:'Registrar', haccpRecent:'Registros recentes', haccpEmpty:'Sem registros',
+    haccpInfo:'ℹ Padrões DE: Kühlschrank ≤ 7°C · Tiefkühler ≤ -18°C · Kühltheke ≤ 7°C · Warmhalte ≥ 65°C',
+    buyOk:'Tudo em ordem', buySub:'Alertas de reposição aparecem aqui',
+    logAll:'Todos', logIn:'📥 Entradas', logOut:'📤 Saídas', logWaste:'🗑 Desperdício', logRecv:'🚚 Recebimentos', logEmpty:'Sem registros',
+    tabEstoque:'📦 Estoque', tabRecv:'🚚 Recebimento', tabSaidas:'📤 Saídas',
+    tabHACCP:'🌡 HACCP', tabCompras:'🛒 Compras', tabLog:'📋 Histórico',
+  },
+  de: {
+    statTotal:'Gesamt', statLow:'Achtung', statCrit:'Kritisch', statVenc:'Ablauf', statWaste:'Abfall/Wo',
+    addProduct:'Produkt hinzufügen', labelName:'Name', labelQty:'Akt. Menge', labelMin:'Mindestmenge',
+    labelUnit:'Einheit', labelExp:'Ablaufdatum (optional)', labelPrice:'Stückpreis € (optional)',
+    btnAdd:'Hinzufügen', sectionProducts:'Produkte', emptyTitle:'Keine Produkte', emptySub:'Oben hinzufügen oder scannen 📷',
+    recvTitle:'Wareneingang erfassen', recvProduct:'Produkt', recvQty:'Eingegangene Menge',
+    recvSupplier:'Lieferant', recvPhoto:'Lieferfoto (optional)', recvPhotoBtn:'Foto aufnehmen oder auswählen',
+    recvAddItem:'Zur Lieferung hinzufügen', recvItems:'Lieferungsartikel',
+    recvConfirm:'Wareneingang bestätigen', recvCancel:'Abbrechen', recvHistory:'Letzte Wareneingänge', recvEmpty:'Keine Eingänge',
+    outTitle:'Ausgabe erfassen', outProduct:'Produkt', outQty:'Menge', outReason:'Grund', outConfirm:'Ausgabe bestätigen',
+    haccpTitle:'Temperatur erfassen', haccpLocation:'Ort', haccpTemp:'Temperatur (°C)', haccpNote:'Bemerkung (optional)',
+    haccpSave:'Erfassen', haccpRecent:'Letzte Einträge', haccpEmpty:'Keine Einträge',
+    haccpInfo:'ℹ Grenzwerte: Kühlschrank ≤ 7°C · Tiefkühler ≤ -18°C · Kühltheke ≤ 7°C · Warmhalte ≥ 65°C',
+    buyOk:'Alles in Ordnung', buySub:'Auffüllwarnungen erscheinen hier',
+    logAll:'Alle', logIn:'📥 Eingänge', logOut:'📤 Ausgaben', logWaste:'🗑 Abfall', logRecv:'🚚 Wareneingänge', logEmpty:'Keine Einträge',
+    tabEstoque:'📦 Lager', tabRecv:'🚚 Wareneingang', tabSaidas:'📤 Ausgabe',
+    tabHACCP:'🌡 HACCP', tabCompras:'🛒 Einkauf', tabLog:'📋 Verlauf',
+  }
+};
+
+function t(key) { return (i18n[lang] && i18n[lang][key]) || (i18n.pt[key]) || key; }
+
+function applyLang() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+      el.placeholder = t(key);
+    } else {
+      el.textContent = t(key);
+    }
+  });
+  const tabMap = [
+    ['tab-estoque', 'tabEstoque'], ['tab-recebimento', 'tabRecv'],
+    ['tab-saidas', 'tabSaidas'], ['tab-haccp', 'tabHACCP'],
+    ['tab-compras', 'tabCompras'], ['tab-log', 'tabLog'],
+  ];
+  tabMap.forEach(([id, key]) => { const el = document.getElementById(id); if (el) el.textContent = t(key); });
+  document.getElementById('lang-btn').textContent = lang === 'pt' ? 'DE' : 'PT';
+  document.documentElement.lang = lang === 'pt' ? 'pt-BR' : 'de';
+}
+
+function toggleLang() {
+  lang = lang === 'pt' ? 'de' : 'pt';
+  localStorage.setItem('lb_lang', lang);
+  applyLang();
+}
+
+// ---- LOGIN ----
 function doLogin() {
   const val = document.getElementById('login-input').value;
   if (val === SENHA) {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app-screen').style.display = 'block';
-    sessionStorage.setItem('auth', '1');
-    renderProducts();
+    sessionStorage.setItem('lb_auth', '1');
+    init();
   } else {
-    document.getElementById('login-error').textContent = 'Senha incorreta.';
+    document.getElementById('login-error').textContent = lang === 'de' ? 'Falsches Passwort.' : 'Senha incorreta.';
     document.getElementById('login-input').value = '';
   }
 }
 
-// Auto-login se já autenticado na sessão
-if (sessionStorage.getItem('auth') === '1') {
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app-screen').style.display = 'block';
+function init() {
+  applyLang();
+  renderProducts();
+  renderHACCP();
+  renderReceiptHistory();
+  requestNotifPermission();
 }
 
-let products = JSON.parse(localStorage.getItem('est_p') || '[]');
-let log = JSON.parse(localStorage.getItem('est_l') || '[]');
-let pendingDeleteId = null;
-let onConfirmCallback = null;
-
+// ---- SAVE ----
 function save() {
-  localStorage.setItem('est_p', JSON.stringify(products));
-  localStorage.setItem('est_l', JSON.stringify(log));
+  localStorage.setItem('lb_products', JSON.stringify(products));
+  localStorage.setItem('lb_log',      JSON.stringify(log));
+  localStorage.setItem('lb_receipts', JSON.stringify(receipts));
+  localStorage.setItem('lb_haccp',    JSON.stringify(haccpLog));
 }
 
+// ---- TABS ----
 function switchTab(tab, el) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   el.classList.add('active');
   document.getElementById('panel-' + tab).classList.add('active');
-  if (tab === 'saidas') updateOutSelect();
-  if (tab === 'compras') renderBuyList();
-  if (tab === 'log') renderLog();
+  if (tab === 'saidas')      updateOutSelect();
+  if (tab === 'recebimento') { updateRecvSelect(); renderReceiptHistory(); }
+  if (tab === 'compras')     renderBuyList();
+  if (tab === 'log')         renderLog();
+  if (tab === 'haccp')       renderHACCP();
 }
 
+// ---- HELPERS ----
 function getStatus(p) {
   if (p.qty <= 0) return 'critical';
   if (p.qty <= p.min) return 'low';
@@ -332,31 +617,39 @@ function getDaysUntilExp(exp) {
 function expLabel(exp) {
   const days = getDaysUntilExp(exp);
   if (days === null) return null;
-  if (days < 0) return { text: 'VENCIDO', cls: 'tag-expired' };
-  if (days === 0) return { text: 'Vence hoje!', cls: 'tag-venc' };
-  if (days <= 7) return { text: 'Vence em ' + days + 'd', cls: 'tag-venc' };
-  return { text: 'Vence ' + new Date(exp + 'T00:00:00').toLocaleDateString('pt-BR'), cls: '' };
+  if (days < 0)  return { text: 'VENCIDO', cls: 'tag-expired' };
+  if (days === 0) return { text: lang === 'de' ? 'Läuft heute ab!' : 'Vence hoje!', cls: 'tag-venc' };
+  if (days <= 7) return { text: (lang === 'de' ? 'Läuft in ' : 'Vence em ') + days + 'd', cls: 'tag-venc' };
+  return { text: (lang === 'de' ? 'Ablauf ' : 'Vence ') + new Date(exp + 'T00:00:00').toLocaleDateString('de-DE'), cls: '' };
 }
 
+// ---- PRODUCTS ----
 function addProduct() {
-  const name = document.getElementById('new-name').value.trim();
-  const qty = parseFloat(document.getElementById('new-qty').value);
-  const min = parseFloat(document.getElementById('new-min').value);
-  const unit = document.getElementById('new-unit').value;
-  const exp = document.getElementById('new-exp').value || null;
+  const name  = document.getElementById('new-name').value.trim();
+  const qty   = parseFloat(document.getElementById('new-qty').value);
+  const min   = parseFloat(document.getElementById('new-min').value);
+  const unit  = document.getElementById('new-unit').value;
+  const exp   = document.getElementById('new-exp').value || null;
+  const price = parseFloat(document.getElementById('new-price').value) || 0;
   if (!name || isNaN(qty) || isNaN(min)) return showAlert('Atenção', 'Preencha nome, quantidade e mínimo.');
-  products.push({ id: Date.now(), name, qty, min, unit, exp });
+  const ean = pendingEAN || null;
+  products.push({ id: Date.now(), name, qty, min, unit, exp, price, ean });
+  log.unshift({ id: Date.now(), time: now(), type: 'entrada', name, qty, unit, reason: 'Cadastro inicial' });
   save();
-  document.getElementById('new-name').value = '';
-  document.getElementById('new-qty').value = '';
-  document.getElementById('new-min').value = '';
-  document.getElementById('new-exp').value = '';
+  document.getElementById('new-name').value  = '';
+  document.getElementById('new-qty').value   = '';
+  document.getElementById('new-min').value   = '';
+  document.getElementById('new-exp').value   = '';
+  document.getElementById('new-price').value = '';
+  document.getElementById('ean-status').textContent = '';
+  pendingEAN = null;
   renderProducts();
+  showBanner((lang === 'de' ? 'Produkt hinzugefügt ✓' : 'Produto adicionado! ✓'), 'ok');
 }
 
 function confirmRemove(id) {
   const p = products.find(x => x.id === id);
-  showConfirm('Remover produto?', 'Tem certeza que quer remover "' + p.name + '"?', () => {
+  showConfirm(lang === 'de' ? 'Produkt entfernen?' : 'Remover produto?', '"' + p.name + '"', () => {
     products = products.filter(x => x.id !== id);
     save(); renderProducts();
   });
@@ -365,10 +658,11 @@ function confirmRemove(id) {
 function quickOut(id) {
   const p = products.find(x => x.id === id);
   if (!p) return;
-  if (p.qty <= 0) { showAlert('Zerado', p.name + ' já está zerado.'); return; }
-  p.qty = Math.round((p.qty - 1) * 100) / 100;
-  log.unshift({ time: new Date().toLocaleString('pt-BR'), name: p.name, qty: 1, unit: p.unit, reason: 'Consumo' });
+  if (p.qty <= 0) { showAlert('', p.name + (lang === 'de' ? ' ist leer.' : ' já está zerado.')); return; }
+  p.qty = round2(p.qty - 1);
+  log.unshift({ id: Date.now(), time: now(), type: 'saida', name: p.name, qty: 1, unit: p.unit, reason: 'Consumo' });
   save(); renderProducts();
+  checkLowStock(p);
 }
 
 function toggleEdit(id) {
@@ -385,127 +679,472 @@ function toggleEdit(id) {
 function confirmEdit(id) {
   const p = products.find(x => x.id === id);
   const val = parseFloat(document.getElementById('edit-input-' + id).value);
-  if (isNaN(val) || val < 0) return showAlert('Inválido', 'Digite uma quantidade válida.');
-  const diff = Math.round((p.qty - val) * 100) / 100;
-  p.qty = Math.round(val * 100) / 100;
-  if (diff !== 0) log.unshift({ time: new Date().toLocaleString('pt-BR'), name: p.name, qty: Math.abs(diff), unit: p.unit, reason: diff > 0 ? 'Ajuste manual (saída)' : 'Ajuste manual (entrada)' });
+  if (isNaN(val) || val < 0) return showAlert('', lang === 'de' ? 'Ungültige Menge.' : 'Quantidade inválida.');
+  const diff = round2(p.qty - val);
+  p.qty = round2(val);
+  if (diff !== 0) {
+    const type = diff > 0 ? 'saida' : 'entrada';
+    log.unshift({ id: Date.now(), time: now(), type, name: p.name, qty: Math.abs(diff), unit: p.unit, reason: lang === 'de' ? 'Manuelle Anpassung' : 'Ajuste manual' });
+  }
   save(); renderProducts();
+  document.getElementById('edit-row-' + id).classList.remove('open');
 }
 
 function renderProducts() {
+  updateStats();
   const list = document.getElementById('product-list');
   if (!products.length) {
-    list.innerHTML = '<div class="empty-state"><strong>Nenhum produto</strong>Adicione acima</div>';
-    updateStats(); return;
+    list.innerHTML = '<div class="empty-state"><strong>' + t('emptyTitle') + '</strong>' + t('emptySub') + '</div>';
+    return;
   }
+  const sorted = [...products].sort((a, b) => {
+    const ord = { critical: 0, low: 1, ok: 2 };
+    const sa = getStatus(a), sb = getStatus(b);
+    return ord[sa] !== ord[sb] ? ord[sa] - ord[sb] : a.name.localeCompare(b.name);
+  });
 
-  list.innerHTML = products.map(p => {
+  list.innerHTML = sorted.map(p => {
     const s = getStatus(p);
     const days = getDaysUntilExp(p.exp);
     const el = expLabel(p.exp);
-    const isExpired = days !== null && days < 0;
+    const isExpired  = days !== null && days < 0;
     const isExpiring = days !== null && days >= 0 && days <= 7;
     let itemClass = s;
     if (isExpired) itemClass = 'expired';
     else if (isExpiring && s === 'ok') itemClass = 'expiring';
 
-    let metaParts = ['mín: ' + p.min + ' ' + (p.unit||'un')];
-    if (s !== 'ok') metaParts.push(s === 'low' ? '⚠ atenção' : '⛔ crítico');
-    if (el) metaParts.push('<span class="' + el.cls + '">' + el.text + '</span>');
+    let meta = ['mín: ' + p.min + ' ' + (p.unit||'un')];
+    if (p.ean)   meta.push('<span class="ean-tag">EAN:' + p.ean + '</span>');
+    if (p.price) meta.push('€' + p.price.toFixed(2));
+    if (s === 'low')      meta.push('⚠ ' + (lang === 'de' ? 'Achtung' : 'atenção'));
+    if (s === 'critical') meta.push('⛔ ' + (lang === 'de' ? 'Kritisch' : 'crítico'));
+    if (el) meta.push('<span class="' + el.cls + '">' + el.text + '</span>');
 
     return `<div class="product-item ${itemClass}">
       <div class="product-top">
         <div style="flex:1;min-width:0">
           <div class="product-name">${p.name}</div>
-          <div class="product-meta">${metaParts.join(' · ')}</div>
+          <div class="product-meta">${meta.join(' · ')}</div>
         </div>
         <div class="product-right">
-          <div class="product-qty ${s}">${p.qty} <span style="font-size:0.75rem;font-weight:400;color:var(--muted)">${p.unit||'un'}</span></div>
+          <div class="product-qty ${s}">${p.qty}<span style="font-size:0.65rem;font-weight:400;color:var(--muted)"> ${p.unit||'un'}</span></div>
           <button class="btn-sm btn-out" onclick="quickOut(${p.id})">−1</button>
           <button class="btn-sm btn-edit" onclick="toggleEdit(${p.id})">✏</button>
           <button class="btn-sm btn-del" onclick="confirmRemove(${p.id})">✕</button>
         </div>
       </div>
       <div class="edit-row" id="edit-row-${p.id}">
-        <input type="number" id="edit-input-${p.id}" placeholder="Nova quantidade" min="0" step="0.1" value="${p.qty}">
-        <button class="btn-confirm" onclick="confirmEdit(${p.id})">Salvar</button>
+        <input type="number" id="edit-input-${p.id}" min="0" step="0.1" value="${p.qty}">
+        <button class="btn-confirm" onclick="confirmEdit(${p.id})">✓</button>
         <button class="btn-cancel-edit" onclick="toggleEdit(${p.id})">✕</button>
       </div>
     </div>`;
   }).join('');
-  updateStats();
 }
 
 function updateStats() {
-  const low = products.filter(p => getStatus(p) === 'low').length;
+  const low  = products.filter(p => getStatus(p) === 'low').length;
   const crit = products.filter(p => getStatus(p) === 'critical').length;
   const venc = products.filter(p => { const d = getDaysUntilExp(p.exp); return d !== null && d <= 3; }).length;
-  document.getElementById('stat-total').textContent = products.length;
-  document.getElementById('stat-low').textContent = low;
+  const weekAgo = Date.now() - 7 * 86400000;
+  let wasteCost = 0;
+  log.filter(l => (l.type === 'desperdicio') && new Date(l.time).getTime() > weekAgo).forEach(l => {
+    const p = products.find(x => x.name === l.name);
+    if (p && p.price) wasteCost += l.qty * p.price;
+  });
+  document.getElementById('stat-total').textContent    = products.length;
+  document.getElementById('stat-low').textContent      = low;
   document.getElementById('stat-critical').textContent = crit;
-  document.getElementById('stat-venc').textContent = venc;
-  document.getElementById('total-badge').textContent = products.length + ' itens';
+  document.getElementById('stat-venc').textContent     = venc;
+  document.getElementById('stat-waste').textContent    = '€' + wasteCost.toFixed(0);
+  document.getElementById('total-badge').textContent   = products.length + (lang === 'de' ? ' Art.' : ' itens');
 }
 
-function updateOutSelect() {
-  const sel = document.getElementById('out-product');
+// ---- RECEBIMENTO ----
+function updateRecvSelect() {
+  const sel = document.getElementById('recv-product');
   sel.innerHTML = '<option value="">Selecione...</option>' +
     products.map(p => `<option value="${p.id}">${p.name} (${p.qty} ${p.unit||'un'})</option>`).join('');
 }
 
-function registerOut() {
-  const id = parseInt(document.getElementById('out-product').value);
-  const qty = parseFloat(document.getElementById('out-qty').value);
-  const reason = document.getElementById('out-reason').value;
-  if (!id || isNaN(qty) || qty <= 0) return showAlert('Atenção', 'Selecione produto e quantidade.');
+function addToReceipt() {
+  const id  = parseInt(document.getElementById('recv-product').value);
+  const qty = parseFloat(document.getElementById('recv-qty').value);
+  const supplier = document.getElementById('recv-supplier').value;
+  if (!id || isNaN(qty) || qty <= 0) return showAlert('Atenção', t('outProduct') + ' / ' + t('outQty'));
   const p = products.find(x => x.id === id);
   if (!p) return;
-  if (qty > p.qty) return showAlert('Inválido', 'Só há ' + p.qty + ' ' + (p.unit||'un') + ' de ' + p.name + '.');
-  p.qty = Math.round((p.qty - qty) * 100) / 100;
-  log.unshift({ time: new Date().toLocaleString('pt-BR'), name: p.name, qty, unit: p.unit||'un', reason });
+  receiptItems.push({ productId: id, name: p.name, qty, unit: p.unit||'un', supplier });
+  document.getElementById('recv-qty').value = '';
+  renderReceiptItems();
+  document.getElementById('receipt-items-wrapper').style.display = 'block';
+}
+
+function renderReceiptItems() {
+  document.getElementById('receipt-items-list').innerHTML = receiptItems.map((item, i) => `
+    <div class="receipt-item-row">
+      <div>
+        <div class="receipt-item-name">${item.name}</div>
+        <div style="font-size:0.63rem;color:var(--muted)">${item.supplier}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="receipt-item-qty">+${item.qty} ${item.unit}</span>
+        <button class="btn-remove-receipt" onclick="removeReceiptItem(${i})">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+function removeReceiptItem(i) {
+  receiptItems.splice(i, 1);
+  renderReceiptItems();
+  if (!receiptItems.length) document.getElementById('receipt-items-wrapper').style.display = 'none';
+}
+
+function confirmReceipt() {
+  if (!receiptItems.length) return;
+  const photoImg = document.getElementById('recv-preview');
+  const photo = (photoImg.style.display !== 'none' && photoImg.src) ? photoImg.src : null;
+  receiptItems.forEach(item => {
+    const p = products.find(x => x.id === item.productId);
+    if (p) {
+      p.qty = round2(p.qty + item.qty);
+      log.unshift({ id: Date.now() + Math.random(), time: now(), type: 'entrada', name: item.name, qty: item.qty, unit: item.unit, reason: 'Recebimento — ' + item.supplier });
+    }
+  });
+  receipts.unshift({ id: Date.now(), time: now(), items: [...receiptItems], photo, supplier: receiptItems[0]?.supplier || '' });
+  save();
+  receiptItems = [];
+  document.getElementById('receipt-items-wrapper').style.display = 'none';
+  document.getElementById('recv-qty').value = '';
+  document.getElementById('recv-preview').style.display = 'none';
+  document.getElementById('recv-photo-label').textContent = t('recvPhotoBtn');
+  renderReceiptHistory();
+  renderProducts();
+  showBanner(t('recvConfirm') + ' ✓', 'ok');
+}
+
+function clearReceipt() {
+  receiptItems = [];
+  document.getElementById('receipt-items-wrapper').style.display = 'none';
+}
+
+function renderReceiptHistory() {
+  const c = document.getElementById('receipt-history');
+  if (!receipts.length) {
+    c.innerHTML = '<div class="empty-state"><strong>' + t('recvEmpty') + '</strong></div>';
+    return;
+  }
+  c.innerHTML = receipts.slice(0, 10).map(r => `
+    <div class="card" style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div>
+          <div style="font-weight:700;font-size:0.85rem">🚚 ${r.supplier}</div>
+          <div style="font-size:0.63rem;color:var(--muted)">${r.time}</div>
+        </div>
+        <span style="font-size:0.65rem;color:var(--ok);font-weight:700">${r.items.length} ${r.items.length === 1 ? 'item' : 'itens'}</span>
+      </div>
+      ${r.items.map(i => `<div style="font-size:0.75rem;color:var(--muted);padding:2px 0">${i.name}: <span style="color:var(--ok)">+${i.qty} ${i.unit}</span></div>`).join('')}
+      ${r.photo ? `<img src="${r.photo}" style="width:100%;height:80px;object-fit:cover;border-radius:6px;margin-top:8px">` : ''}
+    </div>`).join('');
+}
+
+// ---- SAIDAS ----
+function updateOutSelect() {
+  document.getElementById('out-product').innerHTML = '<option value="">Selecione...</option>' +
+    products.map(p => `<option value="${p.id}">${p.name} (${p.qty} ${p.unit||'un'})</option>`).join('');
+}
+
+function registerOut() {
+  const id     = parseInt(document.getElementById('out-product').value);
+  const qty    = parseFloat(document.getElementById('out-qty').value);
+  const reason = document.getElementById('out-reason').value;
+  if (!id || isNaN(qty) || qty <= 0) return showAlert('Atenção', t('outProduct') + ' / ' + t('outQty'));
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  if (qty > p.qty) return showAlert('', p.name + ': ' + p.qty + ' ' + (p.unit||'un'));
+  p.qty = round2(p.qty - qty);
+  const type = (reason === 'Desperdício' || reason === 'Vencimento') ? 'desperdicio' : 'saida';
+  log.unshift({ id: Date.now(), time: now(), type, name: p.name, qty, unit: p.unit||'un', reason });
   save(); renderProducts(); updateOutSelect();
   document.getElementById('out-qty').value = '';
   const a = document.getElementById('out-alert');
   if (getStatus(p) !== 'ok') {
-    a.innerHTML = `<div class="buy-item" style="margin-top:12px"><div><div class="buy-name">⚠ ${p.name} baixo</div><div class="buy-info">Atual: ${p.qty} ${p.unit||'un'} · Mín: ${p.min}</div></div></div>`;
+    a.innerHTML = `<div class="buy-item" style="margin-top:12px"><div><div class="buy-name">⚠ ${p.name}</div><div class="buy-info">${p.qty} ${p.unit||'un'} · mín: ${p.min}</div></div></div>`;
+    checkLowStock(p);
   } else a.innerHTML = '';
+  showBanner(type === 'desperdicio' ? '🗑 ' + (lang === 'de' ? 'Abfall erfasst' : 'Desperdício registrado') : '✓ OK', type === 'desperdicio' ? '' : 'ok');
 }
 
+// ---- HACCP ----
+function addHACCP() {
+  const location = document.getElementById('haccp-location').value;
+  const temp     = parseFloat(document.getElementById('haccp-temp').value);
+  const note     = document.getElementById('haccp-note').value.trim();
+  if (isNaN(temp)) return showAlert('', lang === 'de' ? 'Bitte Temperatur eingeben.' : 'Insira a temperatura.');
+  const limits = HACCP_LIMITS[location] || { min: -99, max: 99 };
+  const isWarm = location === 'Warmhalte';
+  const ok = isWarm ? (temp >= limits.min) : (temp <= limits.max && temp >= limits.min);
+  const status = ok ? 'ok' : 'bad';
+  haccpLog.unshift({ id: Date.now(), time: now(), location, temp, status, note });
+  document.getElementById('haccp-temp').value = '';
+  document.getElementById('haccp-note').value = '';
+  save();
+  renderHACCP();
+  if (status === 'bad') {
+    showBanner('⚠ ' + location + ': ' + temp + '°C — ' + (lang === 'de' ? 'Grenzwert überschritten!' : 'Fora do limite!'), '');
+    checkNotif('⚠ HACCP', location + ': ' + temp + '°C');
+  } else {
+    showBanner('🌡 ✓ ' + location + ': ' + temp + '°C', 'ok');
+  }
+}
+
+function renderHACCP() {
+  const c = document.getElementById('haccp-log');
+  if (!haccpLog.length) {
+    c.innerHTML = '<div class="empty-state"><strong>' + t('haccpEmpty') + '</strong></div>';
+    return;
+  }
+  const limits_label = { ok: lang === 'de' ? 'OK' : 'OK', bad: lang === 'de' ? 'ALARM' : 'ALERTA' };
+  c.innerHTML = haccpLog.slice(0, 40).map(h => {
+    const limits = HACCP_LIMITS[h.location] || { min: -99, max: 99 };
+    const isWarm = h.location === 'Warmhalte';
+    return `<div class="haccp-row ${h.status}">
+      <div style="flex:1;min-width:0">
+        <div class="haccp-location">${h.location} <span class="haccp-badge ${h.status}">${limits_label[h.status]}</span></div>
+        <div class="haccp-meta">${h.time}${h.note ? ' · ' + h.note : ''}<br>${isWarm ? 'Min: ' + limits.min + '°C' : 'Max: ' + limits.max + '°C · Min: ' + limits.min + '°C'}</div>
+      </div>
+      <div class="haccp-temp ${h.status}">${h.temp}°C</div>
+    </div>`;
+  }).join('');
+}
+
+// ---- BUY LIST ----
 function renderBuyList() {
   const c = document.getElementById('buy-list-container');
-  const low = products.filter(p => getStatus(p) !== 'ok');
-  const venc = products.filter(p => { const d = getDaysUntilExp(p.exp); return d !== null && d <= 7; });
-  if (!low.length && !venc.length) {
-    c.innerHTML = '<div class="empty-state"><strong>Tudo em ordem</strong>Itens abaixo do mínimo ou vencendo aparecem aqui</div>';
+  const low       = products.filter(p => getStatus(p) !== 'ok');
+  const venc      = products.filter(p => { const d = getDaysUntilExp(p.exp); return d !== null && d <= 7; });
+  const anomalies = detectAnomalies();
+
+  if (!low.length && !venc.length && !anomalies.length) {
+    c.innerHTML = '<div class="empty-state"><strong>✓ ' + t('buyOk') + '</strong>' + t('buySub') + '</div>';
     return;
   }
   let html = '';
+
+  if (anomalies.length) {
+    html += '<div class="section-title" style="margin-bottom:8px;color:var(--danger)">⚡ ' + (lang === 'de' ? 'Ungewöhnlicher Verbrauch' : 'Consumo acima do normal') + '</div>';
+    html += anomalies.map(a => `<div class="buy-item anomaly-item" style="margin-bottom:8px">
+      <div><div class="buy-name">${a.name}</div><div class="buy-info">${lang === 'de' ? 'Letzte 3T:' : 'Últimos 3d:'} ${a.recentOut} ${a.unit} · ${lang === 'de' ? 'Ø' : 'média:'} ${a.avgOut} ${a.unit}/3d</div></div>
+      <div class="buy-qty anomaly">${lang === 'de' ? 'prüfen' : 'verificar'}<br><span style="font-size:0.6rem">${a.current} ${a.unit}</span></div>
+    </div>`).join('');
+  }
+
   if (venc.length) {
-    html += '<div class="section-title" style="margin-bottom:8px;color:var(--venc)">⚠ Vencendo em breve</div>';
+    html += '<div class="section-title" style="margin:' + (anomalies.length ? '14px' : '0') + ' 0 8px;color:var(--venc)">⚠ ' + (lang === 'de' ? 'Ablauf bald' : 'Vencendo em breve') + '</div>';
     html += venc.map(p => {
       const el = expLabel(p.exp);
-      return `<div class="buy-item venc-item"><div><div class="buy-name">${p.name}</div><div class="buy-info tag-venc">${el ? el.text : ''}</div></div><div class="buy-qty venc">verificar</div></div>`;
+      return `<div class="buy-item venc-item" style="margin-bottom:8px">
+        <div><div class="buy-name">${p.name}</div><div class="buy-info tag-venc">${el ? el.text : ''} · ${p.qty} ${p.unit||'un'}</div></div>
+        <div class="buy-qty venc">${lang === 'de' ? 'prüfen' : 'verificar'}</div>
+      </div>`;
     }).join('');
   }
+
   if (low.length) {
-    if (venc.length) html += '<div class="section-title" style="margin:16px 0 8px">Repor estoque</div>';
-    html += low.map(p => `<div class="buy-item"><div><div class="buy-name">${p.name}</div><div class="buy-info">atual: ${p.qty} ${p.unit||'un'} · mín: ${p.min}</div></div><div class="buy-qty">repor ~${Math.max(p.min * 2 - p.qty, p.min)} ${p.unit||'un'}</div></div>`).join('');
+    if (anomalies.length || venc.length) html += '<div class="section-title" style="margin:14px 0 8px">' + (lang === 'de' ? 'Nachbestellen' : 'Repor estoque') + '</div>';
+    html += low.map(p => {
+      const suggest = Math.max(Math.ceil(p.min * 2 - p.qty), p.min);
+      return `<div class="buy-item" style="margin-bottom:8px">
+        <div><div class="buy-name">${p.name}</div><div class="buy-info">${lang === 'de' ? 'aktuell' : 'atual'}: ${p.qty} · min: ${p.min} ${p.unit||'un'}</div></div>
+        <div class="buy-qty">${lang === 'de' ? 'ca.' : '~'}${suggest} ${p.unit||'un'}</div>
+      </div>`;
+    }).join('');
   }
   c.innerHTML = html;
 }
 
-function renderLog() {
-  const c = document.getElementById('log-container');
-  if (!log.length) { c.innerHTML = '<div class="empty-state"><strong>Sem registros</strong>As saídas aparecem aqui</div>'; return; }
-  c.innerHTML = log.slice(0, 50).map(l => `<div class="log-item">
-    <div><div>${l.name} · <span class="log-out">−${l.qty} ${l.unit||'un'}</span></div><div class="log-time">${l.reason}</div></div>
-    <div class="log-time">${l.time}</div>
-  </div>`).join('');
+function detectAnomalies() {
+  const anomalies = [];
+  const now3  = Date.now() - 3 * 86400000;
+  const now6  = Date.now() - 6 * 86400000;
+  products.forEach(p => {
+    const outs = log.filter(l => l.name === p.name && (l.type === 'saida' || l.type === 'desperdicio'));
+    if (outs.length < 3) return;
+    const last3 = outs.filter(l => new Date(l.time).getTime() > now3).reduce((s,l) => s+l.qty, 0);
+    const prev3 = outs.filter(l => { const t = new Date(l.time).getTime(); return t > now6 && t <= now3; }).reduce((s,l) => s+l.qty, 0);
+    if (last3 > 0 && prev3 > 0 && last3 > prev3 * 1.6) {
+      anomalies.push({ name: p.name, unit: p.unit||'un', current: p.qty, recentOut: round2(last3), avgOut: round2(prev3) });
+    }
+  });
+  return anomalies;
 }
 
+// ---- LOG ----
+function filterLog(type, el) {
+  activeLogFilter = type;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderLog();
+}
+
+function renderLog() {
+  const c = document.getElementById('log-container');
+  let filtered = log;
+  if (activeLogFilter === 'entrada')     filtered = log.filter(l => l.type === 'entrada' && !(l.reason||'').startsWith('Recebimento'));
+  if (activeLogFilter === 'saida')       filtered = log.filter(l => l.type === 'saida');
+  if (activeLogFilter === 'desperdicio') filtered = log.filter(l => l.type === 'desperdicio');
+  if (activeLogFilter === 'recebimento') filtered = log.filter(l => (l.reason||'').startsWith('Recebimento'));
+  if (!filtered.length) {
+    c.innerHTML = '<div class="empty-state"><strong>' + t('logEmpty') + '</strong></div>';
+    return;
+  }
+  const icons = { entrada: '📥', saida: '📤', desperdicio: '🗑' };
+  c.innerHTML = filtered.slice(0, 100).map(l => {
+    const icon = icons[l.type] || '📋';
+    const cls  = l.type === 'entrada' ? 'log-in' : l.type === 'desperdicio' ? 'log-waste' : 'log-out';
+    const sign = l.type === 'entrada' ? '+' : '−';
+    return `<div class="log-item">
+      <span class="log-icon">${icon}</span>
+      <div style="flex:1;min-width:0">
+        <div>${l.name} · <span class="${cls}">${sign}${l.qty} ${l.unit||'un'}</span></div>
+        <div class="log-time">${l.reason||''}</div>
+      </div>
+      <div class="log-time">${l.time}</div>
+    </div>`;
+  }).join('');
+}
+
+// ---- SCANNER ----
+function openScanner(target) {
+  scanTarget = target;
+  document.getElementById('scanner-modal').classList.add('open');
+  document.getElementById('scanner-status').textContent = '📷 ' + (lang === 'de' ? 'Barcode scannen...' : 'Aponte para o código de barras...');
+
+  if (typeof Quagga === 'undefined') {
+    document.getElementById('scanner-status').textContent = '❌ ' + (lang === 'de' ? 'Kamera nicht verfügbar (HTTPS erforderlich).' : 'Câmera não disponível. Use HTTPS.');
+    return;
+  }
+
+  Quagga.init({
+    inputStream: {
+      type: 'LiveStream',
+      target: document.querySelector('#scanner-viewport'),
+      constraints: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+    },
+    decoder: { readers: ['ean_reader', 'ean_8_reader', 'code_128_reader', 'upc_reader'] },
+    locate: true,
+  }, err => {
+    if (err) {
+      document.getElementById('scanner-status').textContent = '❌ ' + (lang === 'de' ? 'Kamera: ' : 'Câmera: ') + err;
+      return;
+    }
+    Quagga.start();
+    scannerRunning = true;
+  });
+
+  let lastCode = null, lastTime = 0;
+  Quagga.onDetected(result => {
+    const code = result.codeResult.code;
+    const now2 = Date.now();
+    if (code === lastCode && now2 - lastTime < 2000) return;
+    lastCode = code; lastTime = now2;
+    closeScanner();
+    handleScannedCode(code);
+  });
+}
+
+function closeScanner() {
+  if (scannerRunning && typeof Quagga !== 'undefined') {
+    try { Quagga.stop(); } catch(e) {}
+    scannerRunning = false;
+  }
+  document.getElementById('scanner-modal').classList.remove('open');
+  document.getElementById('scanner-viewport').innerHTML = '';
+}
+
+async function handleScannedCode(ean) {
+  if (scanTarget === 'recv') {
+    const p = products.find(x => x.ean === ean);
+    if (p) {
+      document.getElementById('recv-product').value = p.id;
+      showBanner('✓ ' + p.name, 'ok');
+    } else {
+      showAlert('EAN ' + ean, lang === 'de' ? 'Nicht gefunden. Zuerst im Lager erfassen.' : 'Não cadastrado. Adicione no Estoque primeiro.');
+    }
+    return;
+  }
+
+  // add mode: lookup Open Food Facts
+  pendingEAN = ean;
+  document.getElementById('new-name').value = '🔍...';
+  document.getElementById('ean-status').textContent = '';
+
+  try {
+    const res  = await fetch('https://world.openfoodfacts.org/api/v0/product/' + ean + '.json');
+    const data = await res.json();
+    if (data.status === 1) {
+      const name = data.product.product_name_de || data.product.product_name_en || data.product.product_name || '';
+      document.getElementById('new-name').value = name;
+      document.getElementById('ean-status').textContent = '✓ EAN ' + ean + (name ? ' — ' + name : ' — ' + (lang === 'de' ? 'Name manuell eingeben' : 'Digite o nome manualmente'));
+      document.getElementById('ean-status').style.color = 'var(--ok)';
+      showBanner('✓ EAN ' + ean, 'ok');
+    } else {
+      document.getElementById('new-name').value = '';
+      document.getElementById('ean-status').textContent = '⚠ EAN ' + ean + (lang === 'de' ? ' — unbekannt. Name manuell eingeben.' : ' — não encontrado. Digite o nome.');
+      document.getElementById('ean-status').style.color = 'var(--warn)';
+    }
+  } catch(e) {
+    document.getElementById('new-name').value = '';
+    document.getElementById('ean-status').textContent = 'EAN: ' + ean + (lang === 'de' ? ' (offline)' : ' (sem internet)');
+    document.getElementById('ean-status').style.color = 'var(--muted)';
+  }
+}
+
+// ---- PHOTO ----
+function previewPhoto(input, previewId, labelId) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById(previewId);
+    img.src = e.target.result;
+    img.style.display = 'block';
+    document.getElementById(labelId).textContent = '✓ ' + (lang === 'de' ? 'Foto ausgewählt' : 'Foto selecionada');
+  };
+  reader.readAsDataURL(file);
+}
+
+// ---- NOTIFICATIONS ----
+async function requestNotifPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    await Notification.requestPermission();
+  }
+}
+
+function checkNotif(title, body) {
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification(title, { body });
+  }
+}
+
+function checkLowStock(p) {
+  if (getStatus(p) === 'critical') checkNotif('⛔ ' + p.name, lang === 'de' ? 'Lager leer!' : 'Estoque zerado!');
+  else if (getStatus(p) === 'low') checkNotif('⚠ ' + p.name, p.qty + ' ' + (p.unit||'un') + ' — min: ' + p.min);
+}
+
+// ---- BANNER ----
+function showBanner(msg, type) {
+  const b = document.getElementById('notif-banner');
+  b.textContent = msg;
+  b.className = 'notif-banner show' + (type === 'ok' ? ' ok-banner' : '');
+  clearTimeout(bannerTimeout);
+  bannerTimeout = setTimeout(() => b.classList.remove('show'), 3000);
+}
+
+// ---- MODALS ----
 function showAlert(title, msg) {
   document.getElementById('modal-title').textContent = title;
-  document.getElementById('modal-msg').textContent = msg;
+  document.getElementById('modal-msg').textContent   = msg;
   document.getElementById('modal-cancel').style.display = 'none';
   document.getElementById('modal-ok').textContent = 'OK';
   document.getElementById('modal-ok').onclick = closeModal;
@@ -514,16 +1153,26 @@ function showAlert(title, msg) {
 
 function showConfirm(title, msg, callback) {
   document.getElementById('modal-title').textContent = title;
-  document.getElementById('modal-msg').textContent = msg;
+  document.getElementById('modal-msg').textContent   = msg;
   document.getElementById('modal-cancel').style.display = 'flex';
-  document.getElementById('modal-ok').textContent = 'Confirmar';
+  document.getElementById('modal-ok').textContent = lang === 'de' ? 'Bestätigen' : 'Confirmar';
   document.getElementById('modal-ok').onclick = () => { closeModal(); callback(); };
   document.getElementById('modal').classList.add('open');
 }
 
 function closeModal() { document.getElementById('modal').classList.remove('open'); }
 
-if (sessionStorage.getItem('auth') === '1') renderProducts();
+// ---- UTILS ----
+function round2(n) { return Math.round(n * 100) / 100; }
+function now()     { return new Date().toLocaleString(lang === 'de' ? 'de-DE' : 'pt-BR'); }
+
+// ---- BOOT ----
+if (sessionStorage.getItem('lb_auth') === '1') {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display  = 'block';
+  window.addEventListener('DOMContentLoaded', init);
+  if (document.readyState !== 'loading') init();
+}
 </script>
 </body>
 </html>
