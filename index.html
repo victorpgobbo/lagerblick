@@ -97,6 +97,28 @@ input,select{font-family:inherit}
 .cfg-btn.danger{background:var(--red)}
 .cfg-meta{display:flex;justify-content:space-between;font-size:.8125rem;color:var(--t2);padding:8px 0;border-top:1px solid var(--border);margin-top:12px}
 .cfg-meta strong{color:var(--t1);font-weight:600}
+
+/* ─── BATCHES / LOTES ───────────────────────────────── */
+.batches-section{margin-top:8px;padding-top:14px;border-top:1px dashed var(--border)}
+.batches-hdr{font-size:.75rem;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.batches-cnt{background:var(--em-l);color:var(--em-t);padding:1px 8px;border-radius:10px;font-size:.6875rem;font-weight:700}
+.batch-row{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-s);padding:11px 12px;margin-bottom:8px}
+.batch-row:last-child{margin-bottom:0}
+.batch-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.batch-title{font-size:.8125rem;font-weight:700;color:var(--t1);display:flex;align-items:center;gap:8px}
+.batch-flag{font-size:.625rem;font-weight:700;padding:2px 7px;border-radius:8px;text-transform:uppercase;letter-spacing:.04em}
+.batch-flag.fifo{background:var(--em-l);color:var(--em-t)}
+.batch-flag.exp{background:var(--red-l);color:var(--red-t)}
+.batch-rm{background:transparent;border:none;color:var(--red);padding:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:6px}
+.batch-rm:active{background:var(--red-l)}
+.batch-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.batch-field{display:flex;flex-direction:column;gap:3px}
+.batch-field-wide{grid-column:1/-1}
+.batch-field label{font-size:.6875rem;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.04em}
+.batch-field input{background:#fff;border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:.8125rem;color:var(--t1);outline:none;font-family:inherit}
+.batch-field input:focus{border-color:var(--em)}
+.batch-save{width:100%;background:var(--surface);color:var(--t1);border:1.5px solid var(--border);border-radius:var(--r-s);padding:9px;font-size:.8125rem;font-weight:600;cursor:pointer;transition:background .15s}
+.batch-save:active{background:var(--em-l);border-color:var(--em);color:var(--em-t)}
 .hdr-brand{display:flex;align-items:center;gap:10px}
 .hdr-wordmark{font-family:'Syne',sans-serif;font-size:1.25rem;font-weight:800;color:var(--t1);letter-spacing:-0.01em}
 .hdr-wordmark span{color:var(--em)}
@@ -945,6 +967,7 @@ let products = JSON.parse(localStorage.getItem('lb4_p') || '[]');
 let log      = JSON.parse(localStorage.getItem('lb4_l') || '[]');
 let receipts = JSON.parse(localStorage.getItem('lb4_r') || '[]');
 let haccpLog = JSON.parse(localStorage.getItem('lb4_h') || '[]');
+let batches  = JSON.parse(localStorage.getItem('lb4_b') || '[]');
 let lang     = localStorage.getItem('lb4_lang') || 'pt';
 let basket   = [];
 let selSupplier = 'Transgourmet';
@@ -1069,6 +1092,10 @@ function pinDel(){
 
 // ── BOOT ──
 function boot(){
+  _migrateProductsToBatches();   // migration única pré-render
+  // Recompute em todos os produtos pra garantir consistência se batches/products
+  // ficaram dessincronizados (ex: após import de backup)
+  products.forEach(p=>_recomputeProduct(p.id));
   applyLang(); renderAll();
   renderHACCPGrid(); renderHACCPLog(); renderHACCPProg();
   renderRecvHist(); updateRecvSel();
@@ -1099,6 +1126,7 @@ function save(){
   let   okL=_trySetItem('lb4_l',JSON.stringify(log));
   const okR=_trySetItem('lb4_r',JSON.stringify(receipts));
   let   okH=_trySetItem('lb4_h',JSON.stringify(haccpLog));
+  const okB=_trySetItem('lb4_b',JSON.stringify(batches));
 
   // Se algo falhou (quota), trunca agressivo e tenta de novo
   if(!okL){
@@ -1110,12 +1138,13 @@ function save(){
     okH=_trySetItem('lb4_h',JSON.stringify(haccpLog));
   }
   // Liberar cache de lookup se ainda assim falhou
-  if(!okP||!okL||!okR||!okH){
+  if(!okP||!okL||!okR||!okH||!okB){
     try{ localStorage.removeItem('lb4_cache'); }catch(_){}
     _trySetItem('lb4_p',JSON.stringify(products));
     _trySetItem('lb4_l',JSON.stringify(log));
     _trySetItem('lb4_r',JSON.stringify(receipts));
     _trySetItem('lb4_h',JSON.stringify(haccpLog));
+    _trySetItem('lb4_b',JSON.stringify(batches));
     toast(lang==='de'?'⚠ Speicher fast voll — Daten gekürzt':'⚠ Memória quase cheia — dados antigos removidos','warn');
   }
 }
@@ -1242,6 +1271,7 @@ function cardHTML(p, showActions=true){
         <label>${t('formSupplier')}</label>
         <input class="e-input" type="text" id="pedit-sup-${p.id}" value="${p.supplier||''}" placeholder="Fornecedor...">
       </div>
+      ${renderBatchesSection(p.id)}
       <div class="e-actions">
         <button class="btn-e-save" onclick="saveCardEdit(${p.id})">${t('formSave')}</button>
         <button class="btn-e-cancel" onclick="toggleCardEdit(${p.id})">Cancelar</button>
@@ -1249,6 +1279,71 @@ function cardHTML(p, showActions=true){
       </div>
     </div>
   </div>`;
+}
+
+// Renderiza lista de lotes (batches) dentro do edit-card do produto.
+// Cada lote pode ser editado individualmente (qty/lot/exp) ou removido.
+function renderBatchesSection(productId){
+  const list=getBatchesOf(productId);
+  if(list.length===0) return '';
+  const today=new Date().toISOString().slice(0,10);
+  const items=list.map((b,i)=>{
+    const isExp = b.exp && b.exp<today;
+    const flag = isExp ? '<span class="batch-flag exp">'+(lang==='de'?'abgelaufen':'vencido')+'</span>'
+                       : (i===0 && b.exp ? '<span class="batch-flag fifo">FIFO</span>' : '');
+    const expVal = b.exp||'';
+    const lotVal = (b.lot||'').replace(/"/g,'&quot;');
+    return `<div class="batch-row" id="batch-row-${b.id}">
+      <div class="batch-head">
+        <div class="batch-title">${(lang==='de'?'Charge ':'Lote ')}${i+1}${flag}</div>
+        <button class="batch-rm" onclick="deleteBatchUI(${b.id})" aria-label="Remover">${ico('trash',13)}</button>
+      </div>
+      <div class="batch-grid">
+        <div class="batch-field">
+          <label>${t('formQty')}</label>
+          <input type="number" min="0" step="0.1" value="${b.qty}" id="batch-qty-${b.id}">
+        </div>
+        <div class="batch-field">
+          <label>${t('formExp')}</label>
+          <input type="date" value="${expVal}" id="batch-exp-${b.id}">
+        </div>
+        <div class="batch-field batch-field-wide">
+          <label>${t('formLot')}</label>
+          <input type="text" value="${lotVal}" id="batch-lot-${b.id}" placeholder="—">
+        </div>
+      </div>
+      <button class="batch-save" onclick="saveBatchEdit(${b.id},${productId})">${lang==='de'?'Charge speichern':'Salvar lote'}</button>
+    </div>`;
+  }).join('');
+  return `<div class="batches-section">
+    <div class="batches-hdr">${lang==='de'?'Chargen (FIFO)':'Lotes (FIFO)'} <span class="batches-cnt">${list.length}</span></div>
+    ${items}
+  </div>`;
+}
+
+function saveBatchEdit(batchId, productId){
+  const qty=parseFloat(document.getElementById('batch-qty-'+batchId).value);
+  const exp=document.getElementById('batch-exp-'+batchId).value||null;
+  const lot=document.getElementById('batch-lot-'+batchId).value.trim()||null;
+  if(isNaN(qty)||qty<0){ toast(lang==='de'?'Menge prüfen':'Verifique a quantidade','warn'); return; }
+  updateBatch(batchId, {qty, exp, lot});
+  save(); renderAll();
+  toast(t('toastSaved'),'success');
+}
+
+function deleteBatchUI(batchId){
+  const b=batches.find(x=>x.id===batchId); if(!b) return;
+  showConfirm(
+    lang==='de'?'Charge entfernen?':'Remover lote?',
+    (lang==='de'?'Charge mit ':'Lote com ')+b.qty+' '+(lang==='de'?'wird entfernt.':'será removido.'),
+    ()=>{
+      deleteBatch(batchId);
+      log.unshift({ id:_uid(), time:ts(), type:'out', productId:b.productId, name:(products.find(p=>p.id===b.productId)?.name)||'?', qty:b.qty, unit:(products.find(p=>p.id===b.productId)?.unit)||'un', reason:(lang==='de'?'Charge entfernt':'Lote removido')+(b.lot?' · '+b.lot:'') });
+      save(); renderAll();
+      toast(lang==='de'?'Charge entfernt':'Lote removido','warn');
+    },
+    lang==='de'?'Entfernen':'Remover'
+  );
 }
 
 // ── HOME ──
@@ -1405,8 +1500,14 @@ function saveNewProduct(){
   const lot=document.getElementById('f-lot').value.trim();
   const supplier=document.getElementById('f-supplier').value.trim();
   if(!name||isNaN(qty)||isNaN(min)){ toast('Preencha nome, quantidade e mínimo','warn'); return; }
-  products.push({ id:_uid(), name, qty, min, unit, price, exp, ean:pendingEAN, lot, supplier });
-  log.unshift({ id:_uid(), time:ts(), type:'in', name, qty, unit, reason:'Cadastro' });
+  const newId=_uid();
+  // Catálogo: sem qty/exp/lot — esses vêm dos batches
+  products.push({ id:newId, name, qty:0, min, unit, price, ean:pendingEAN, supplier, exp:null, lot:null });
+  // Se o operador digitou qty inicial, cria um batch já no cadastro
+  if(qty>0){
+    addBatch({ productId:newId, qty, exp:exp||null, lot:lot||null, supplier:supplier||null, costPrice:price||0 });
+  }
+  log.unshift({ id:_uid(), time:ts(), type:'in', productId:newId, name, qty, unit, reason:'Cadastro' });
   if(pendingEAN && exp) _shelfAdd(pendingEAN, exp);
   save();
   ['f-name','f-qty','f-min','f-price','f-exp','f-lot','f-supplier'].forEach(id=>document.getElementById(id).value='');
@@ -1433,18 +1534,50 @@ function saveCardEdit(id){
   const lot=(document.getElementById('pedit-lot-'+id).value||'').trim();
   const supplier=(document.getElementById('pedit-sup-'+id).value||'').trim();
   if(!name||isNaN(qty)||isNaN(min)||qty<0||min<0){ toast(lang==='de'?'Felder prüfen':'Verifique os campos','warn'); return; }
-  const diff=r2(p.qty-qty);
-  p.name=name; p.qty=r2(qty); p.min=r2(min); p.unit=unit; p.price=price; p.exp=exp; p.lot=lot; p.supplier=supplier;
-  if(diff!==0) log.unshift({ id:_uid(), time:ts(), type:diff>0?'out':'in', name:p.name, qty:Math.abs(diff), unit:p.unit, reason:lang==='de'?'Manuelle Anpassung':'Ajuste manual' });
+
+  // Atualiza sempre: dados de catálogo
+  p.name=name; p.min=r2(min); p.unit=unit; p.price=price; p.supplier=supplier;
+
+  const hasBatches = getBatchesOf(id).length>0;
+  if(hasBatches){
+    // Modelo lotes: qty/exp/lot vêm dos batches. Form principal só altera catálogo.
+    // Se operador mudou qty no form principal, criamos batch de ajuste pra equilibrar.
+    const diff=r2(qty-p.qty);
+    if(diff>0){
+      addBatch({ productId:p.id, qty:diff, exp:exp||null, lot:lot||null, supplier:supplier||null, costPrice:price });
+      log.unshift({ id:_uid(), time:ts(), type:'in', productId:p.id, name:p.name, qty:diff, unit:p.unit, price, reason:lang==='de'?'Manuelle Anpassung +':'Ajuste manual +' });
+    } else if(diff<0){
+      const taken=consumeFromProduct(p.id, Math.abs(diff));
+      log.unshift({ id:_uid(), time:ts(), type:'out', productId:p.id, name:p.name, qty:Math.abs(diff), unit:p.unit, price, reason:lang==='de'?'Manuelle Anpassung −':'Ajuste manual −', batches:taken });
+    }
+    // exp/lot do form principal não são aplicados quando há batches (são derivados)
+  } else {
+    // Modelo legado (sem batches ainda): aplica direto + cria batch se qty>0
+    const diff=r2(p.qty-qty);
+    p.qty=r2(qty); p.exp=exp; p.lot=lot;
+    if(diff!==0) log.unshift({ id:_uid(), time:ts(), type:diff>0?'out':'in', productId:p.id, name:p.name, qty:Math.abs(diff), unit:p.unit, price, reason:lang==='de'?'Manuelle Anpassung':'Ajuste manual' });
+    // Se passou a ter qty, materializa em batch (entra no FIFO daqui em diante)
+    if(qty>0){
+      addBatch({ productId:p.id, qty, exp:exp||null, lot:lot||null, supplier:supplier||null, costPrice:price });
+    }
+  }
+
   if(p.ean && exp) _shelfAdd(p.ean, exp);
   save(); renderAll(); updateRecvSel(); toast(t('toastSaved'),'success');
 }
 function quickAdj(id,delta){
   const p=products.find(x=>x.id===id); if(!p) return;
   const nq=r2(p.qty+delta); if(nq<0) return;
-  p.qty=nq;
-  if(delta<0) log.unshift({ id:_uid(), time:ts(), type:'out', name:p.name, qty:Math.abs(delta), unit:p.unit, reason:'Consumo' });
-  else         log.unshift({ id:_uid(), time:ts(), type:'in',  name:p.name, qty:delta, unit:p.unit, reason:'Ajuste +1' });
+  if(delta<0){
+    // Consumo: FIFO
+    const consumed=consumeFromProduct(p.id, Math.abs(delta));
+    if(consumed.length===0) p.qty=nq; // fallback legado
+    log.unshift({ id:_uid(), time:ts(), type:'out', productId:p.id, name:p.name, qty:Math.abs(delta), unit:p.unit, price:p.price||0, reason:lang==='de'?'Verbrauch':'Consumo', batches:consumed });
+  } else {
+    // Ajuste positivo: cria batch sem exp (sem origem de fornecedor)
+    addBatch({ productId:p.id, qty:delta, costPrice:p.price||0, supplier:p.supplier||null });
+    log.unshift({ id:_uid(), time:ts(), type:'in', productId:p.id, name:p.name, qty:delta, unit:p.unit, price:p.price||0, reason:lang==='de'?'Anpassung +1':'Ajuste +1' });
+  }
   save(); renderAll(); if(delta<0) checkLow(p);
 }
 function quickRecv(id){
@@ -1473,8 +1606,12 @@ function confirmWasteQty(){
   const p=products.find(x=>x.id===pendingWasteId); if(!p) return;
   if(isNaN(qty)||qty<=0){ toast(lang==='de'?'Menge eingeben':'Informe a quantidade','warn'); return; }
   if(qty>p.qty){ toast(lang==='de'?'Nicht genug Bestand':'Estoque insuficiente','warn'); return; }
-  p.qty=r2(p.qty-qty);
-  log.unshift({ id:_uid(), time:ts(), type:'waste', productId:p.id, name:p.name, qty, unit:p.unit, price:p.price||0, reason:lang==='de'?'Abfall':'Desperdício' });
+  // FIFO: consome dos batches que vencem primeiro
+  const consumed=consumeFromProduct(p.id, qty);
+  // Se não tem batches (produto legado sem migration), decrementa direto
+  if(consumed.length===0) p.qty=r2(p.qty-qty);
+  const lotInfo = consumed.length ? ' · '+consumed.map(c=>c.lot||'—').filter((v,i,a)=>a.indexOf(v)===i).join('/') : '';
+  log.unshift({ id:_uid(), time:ts(), type:'waste', productId:p.id, name:p.name, qty, unit:p.unit, price:p.price||0, reason:(lang==='de'?'Abfall':'Desperdício')+lotInfo, batches:consumed });
   save(); renderAll();
   document.getElementById('waste-ov').classList.remove('open');
   toast(t('toastWaste'),'warn');
@@ -1483,6 +1620,7 @@ function confirmDelete(id){
   const p=products.find(x=>x.id===id); if(!p) return;
   showConfirm(t('confirmDel'),'"'+p.name+'" — '+t('confirmDelMsg'),()=>{
     products=products.filter(x=>x.id!==id);
+    batches=batches.filter(b=>b.productId!==id); // remove lotes orfaos
     save(); renderAll(); updateRecvSel();
     toast(lang==='de'?'Entfernt':'Removido','success');
   }, lang==='de'?'Entfernen':'Remover');
@@ -1499,35 +1637,61 @@ function selSupplierFn(s,el){
   document.querySelectorAll('.sup-btn').forEach(b=>b.classList.remove('sel'));
   el.classList.add('sel');
 }
+// Pendente do último scan GS1 no modo recv (lot + exp leídos da caixa do fornecedor)
+let pendingBatchInfo=null;
 function addToBasket(){
   const id=parseInt(document.getElementById('recv-prod-sel').value);
   const qty=parseFloat(document.getElementById('recv-qty').value);
   if(!id||isNaN(qty)||qty<=0){ toast(t('recvBasket')+'?','warn'); return; }
   const p=products.find(x=>x.id===id); if(!p) return;
-  basket.push({ productId:id, name:p.name, qty, unit:p.unit, supplier:selSupplier });
+  // Consome o lot/exp do último scan GS1 — caixa do fornecedor (Transgourmet etc)
+  const lot=pendingBatchInfo?.lot||null;
+  const exp=pendingBatchInfo?.exp||null;
+  basket.push({ productId:id, name:p.name, qty, unit:p.unit, supplier:selSupplier, lot, exp });
+  pendingBatchInfo=null; // limpa pra próxima entrada
   document.getElementById('recv-qty').value='';
   renderBasket(); document.getElementById('basket-wrap').style.display='block';
 }
 function renderBasket(){
   document.getElementById('basket-cnt').textContent=basket.length;
-  document.getElementById('basket-items').innerHTML=basket.map((item,i)=>`
+  document.getElementById('basket-items').innerHTML=basket.map((item,i)=>{
+    const meta=[];
+    if(item.lot) meta.push((lang==='de'?'Ch.':'Lote ')+item.lot);
+    if(item.exp) meta.push((lang==='de'?'MHD ':'Val ')+new Date(item.exp+'T00:00:00').toLocaleDateString(lang==='de'?'de-DE':'pt-BR'));
+    const metaLine=meta.length?`<div class="basket-item-sup" style="color:var(--em-t)">${meta.join(' · ')}</div>`:'';
+    return `
     <div class="basket-item">
       <div>
         <div class="basket-item-name">${item.name}</div>
-        <div class="basket-item-sup">${item.supplier}</div>
+        <div class="basket-item-sup">${item.supplier||''}</div>
+        ${metaLine}
       </div>
       <div style="display:flex;align-items:center;gap:8px">
         <span class="basket-item-qty">+${item.qty} ${item.unit}</span>
         <button class="btn-basket-rm" onclick="removeBasket(${i})">${ico('trash',14)}</button>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 function removeBasket(i){ basket.splice(i,1); renderBasket(); if(!basket.length) document.getElementById('basket-wrap').style.display='none'; }
 function confirmBasket(){
   if(!basket.length) return;
   basket.forEach(item=>{
     const p=products.find(x=>x.id===item.productId);
-    if(p){ p.qty=r2(p.qty+item.qty); log.unshift({ id:_uid(), time:ts(), type:'in', name:item.name, qty:item.qty, unit:item.unit, reason:'Recebimento — '+item.supplier }); }
+    if(!p) return;
+    // Cria batch novo (NÃO soma em batch existente — cada recebimento = lote separado pra FIFO)
+    addBatch({
+      productId: item.productId,
+      qty: item.qty,
+      exp: item.exp||null,
+      lot: item.lot||null,
+      supplier: item.supplier||null,
+      costPrice: p.price||0
+    });
+    // Aprende shelf-life se veio com validade
+    if(p.ean && item.exp) _shelfAdd(p.ean, item.exp);
+    const lotInfo = item.lot ? ' · '+(lang==='de'?'Ch.':'Lote ')+item.lot : '';
+    log.unshift({ id:_uid(), time:ts(), type:'in', productId:item.productId, name:item.name, qty:item.qty, unit:item.unit, price:p.price||0, reason:(lang==='de'?'Wareneingang — ':'Recebimento — ')+(item.supplier||'')+lotInfo });
   });
   receipts.unshift({ id:_uid(), time:ts(), items:[...basket], supplier:basket[0]?.supplier||'' });
   save(); basket=[]; document.getElementById('basket-wrap').style.display='none';
@@ -2078,6 +2242,142 @@ function confirmFactoryReset(){
   );
 }
 
+// ════════════════════════════════════════════════════════════════
+//  BATCHES / LOTES — FIFO real
+// ════════════════════════════════════════════════════════════════
+// batch: { id, productId, qty, exp, lot, supplier, receivedAt:ts, costPrice }
+// Regras:
+// - product.qty/exp/lot são *derivados* da soma/min dos batches do produto
+// - consumo (waste/quickAdj-/recipe) faz FIFO: batch que vence primeiro
+// - recebimento NUNCA soma em batch existente — sempre cria batch novo
+// - produto sem batches = legado/manual (compat com pré-sprint-3)
+
+// Migration: gera batches a partir dos products existentes que têm qty>0
+function _migrateProductsToBatches(){
+  if(batches.length>0) return; // já migrado ou usado em produção
+  const flag=localStorage.getItem('lb4_b_migrated');
+  if(flag) return;
+  const created=[];
+  for(const p of products){
+    if((p.qty||0)>0){
+      created.push({
+        id:_uid(),
+        productId:p.id,
+        qty:r2(p.qty),
+        exp:p.exp||null,
+        lot:p.lot||null,
+        supplier:p.supplier||null,
+        receivedAt:new Date().toISOString(),
+        costPrice:p.price||0,
+        legacy:true
+      });
+    }
+  }
+  if(created.length){
+    batches=created;
+    _trySetItem('lb4_b',JSON.stringify(batches));
+  }
+  localStorage.setItem('lb4_b_migrated','1');
+}
+
+// Retorna batches do produto, ordenados FIFO (vence primeiro = primeiro a sair).
+// Batches sem exp ficam por último (validade desconhecida → não pressiona FIFO).
+function getBatchesOf(productId){
+  return batches
+    .filter(b=>b.productId===productId && b.qty>0)
+    .sort((a,b)=>{
+      const ae=a.exp||'9999-99-99', be=b.exp||'9999-99-99';
+      if(ae!==be) return ae<be?-1:1;
+      // Mesmo exp: usa receivedAt (mais antigo primeiro)
+      return (a.receivedAt||'').localeCompare(b.receivedAt||'');
+    });
+}
+
+// Recalcula campos derivados do produto a partir dos seus batches.
+// Mantém compatibilidade com cardHTML/getStatus/daysUntil/filtros.
+function _recomputeProduct(productId){
+  const p=products.find(x=>x.id===productId); if(!p) return;
+  const list=getBatchesOf(productId);
+  if(list.length===0){
+    p.qty=0;
+    // mantém exp/lot do último estado pra histórico de UI; novos consumos zeram naturalmente
+    return;
+  }
+  p.qty=r2(list.reduce((s,b)=>s+b.qty,0));
+  const fifo=list[0];
+  p.exp=fifo.exp||null;
+  p.lot=fifo.lot||null;
+}
+
+// Cria batch novo (recebimento ou cadastro inicial com estoque).
+// Atualiza product.qty/exp/lot automaticamente. NÃO chama save().
+function addBatch({productId, qty, exp=null, lot=null, supplier=null, costPrice=0}){
+  if(!productId||!(qty>0)) return null;
+  const b={
+    id:_uid(), productId, qty:r2(qty),
+    exp:exp||null, lot:lot||null, supplier:supplier||null,
+    receivedAt:new Date().toISOString(),
+    costPrice:costPrice||0
+  };
+  batches.push(b);
+  _recomputeProduct(productId);
+  return b;
+}
+
+// Consumo FIFO: tira `qty` do produto, decrementando batches em ordem.
+// Retorna array de batches consumidos com {batchId, lot, exp, qty} pra log/auditoria.
+// Se qty pedido > estoque disponível, consome até zerar e retorna parcial.
+function consumeFromProduct(productId, qty){
+  if(!(qty>0)) return [];
+  const consumed=[];
+  let remaining=r2(qty);
+  for(const b of getBatchesOf(productId)){
+    if(remaining<=0) break;
+    const take=Math.min(b.qty, remaining);
+    b.qty=r2(b.qty-take);
+    remaining=r2(remaining-take);
+    consumed.push({batchId:b.id, lot:b.lot, exp:b.exp, qty:take});
+  }
+  // Remove batches zerados
+  batches=batches.filter(b=>!(b.productId===productId && b.qty<=0));
+  _recomputeProduct(productId);
+  return consumed;
+}
+
+// Edita um batch específico (qty/exp/lot). Recomputa o produto.
+function updateBatch(batchId, patch){
+  const b=batches.find(x=>x.id===batchId); if(!b) return false;
+  if(patch.qty!==undefined)  b.qty=r2(Math.max(0,patch.qty));
+  if(patch.exp!==undefined)  b.exp=patch.exp||null;
+  if(patch.lot!==undefined)  b.lot=patch.lot||null;
+  if(b.qty<=0) batches=batches.filter(x=>x.id!==batchId);
+  _recomputeProduct(b.productId);
+  return true;
+}
+
+// Remove batch específico (ex: descarte total de uma caixa contaminada)
+function deleteBatch(batchId){
+  const b=batches.find(x=>x.id===batchId); if(!b) return;
+  const pid=b.productId;
+  batches=batches.filter(x=>x.id!==batchId);
+  _recomputeProduct(pid);
+}
+
+// Disponibilidade real de um produto considerando vencidos? (descarte FIFO ignora vencidos)
+function getProductStockSummary(productId){
+  const list=getBatchesOf(productId);
+  const today=new Date().toISOString().slice(0,10);
+  let total=0, expired=0, near=0;
+  for(const b of list){
+    total+=b.qty;
+    if(b.exp){
+      if(b.exp<today)            expired+=b.qty;
+      else if(daysUntil(b.exp)<=3) near+=b.qty;
+    }
+  }
+  return {total:r2(total), expired:r2(expired), near:r2(near), count:list.length};
+}
+
 // ── SHELF-LIFE MEMORY ──
 // Aprende o tempo típico de validade (em dias a partir do recebimento) por EAN.
 // Estrutura: { [ean]: { samples:[{ts, days}], avg:number, n:number } }
@@ -2154,8 +2454,17 @@ async function handleEAN(ean){
   if(scanMode==='recv'){
     const p=products.find(x=>x.ean===ean);
     if(p){
+      // EAN-13 puro: não tem lot/exp. Mas se houver shelf-life para esse EAN, sugere validade.
+      const shelf=_shelfGet(ean);
+      const expGuess = shelf?.avg ? _shelfSuggestDate(shelf.avg) : null;
+      pendingBatchInfo = { lot:null, exp:expGuess };
       goPage('receber',document.getElementById('nav-receber'));
-      setTimeout(()=>{ document.getElementById('recv-prod-sel').value=p.id; document.getElementById('recv-qty').focus(); toast(p.name,'success'); },150);
+      setTimeout(()=>{
+        document.getElementById('recv-prod-sel').value=p.id;
+        document.getElementById('recv-qty').focus();
+        const note = expGuess ? p.name+' · Val ≈ +'+shelf.avg+(lang==='de'?'T':'d') : p.name;
+        toast(note,'success');
+      },150);
       return;
     }
   }
@@ -2336,6 +2645,8 @@ async function handleGS1(gs1){
   if(scanMode==='recv'){
     const existing=ean13?products.find(p=>p.ean&&(p.ean===ean13||p.ean===gtin)):null;
     if(existing){
+      // CRÍTICO: preserva lot + exp do GS1 (Transgourmet/Selgros) pro batch que será criado
+      pendingBatchInfo = { lot:lot||null, exp:exp||null };
       goPage('receber',document.getElementById('nav-receber'));
       setTimeout(()=>{
         document.getElementById('recv-prod-sel').value=existing.id;
