@@ -202,6 +202,48 @@ input,select{font-family:inherit}
 .btn-fsave:active{opacity:.9}
 .btn-fcancel{background:var(--surface2);color:var(--t2);font-size:.9375rem;font-weight:600;padding:13px 16px;border:1.5px solid var(--border);border-radius:var(--r-s);cursor:pointer}
 
+/* ─── BRIEFING ──────────────────────────────────────── */
+.briefing-hdr{margin-bottom:16px}
+.briefing-greeting{font-size:1.5rem;font-weight:800;color:var(--t1);letter-spacing:-.025em;line-height:1.2}
+.briefing-date{font-size:.875rem;color:var(--t2);margin-top:3px;font-weight:500}
+.action-cards{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.action-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:13px 15px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:background .15s;box-shadow:var(--sh-s);width:100%;text-align:left}
+.action-card:active{background:var(--surface2)}
+.ac-ico{width:36px;height:36px;border-radius:var(--r-s);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ac-ico.em{background:var(--em-l);color:var(--em)}
+.ac-ico.red{background:var(--red-l);color:var(--red)}
+.ac-ico.amb{background:var(--amb-l);color:var(--amb)}
+.ac-body{flex:1;min-width:0}
+.ac-title{font-size:.9375rem;font-weight:700;color:var(--t1)}
+.ac-sub{font-size:.75rem;color:var(--t2);margin-top:2px}
+.ac-arrow{color:var(--t3);flex-shrink:0;display:flex;align-items:center}
+
+/* ─── ORDER LIST MODAL ───────────────────────────────── */
+.order-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:200;align-items:flex-end;justify-content:center}
+.order-ov.open{display:flex}
+.order-sheet{background:var(--surface);border-radius:var(--r-xl) var(--r-xl) 0 0;width:100%;max-width:480px;max-height:88vh;display:flex;flex-direction:column;box-shadow:var(--sh-l)}
+.order-hdr{padding:16px 20px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
+.order-hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.order-title{font-size:1rem;font-weight:700;color:var(--t1)}
+.order-sub{font-size:.75rem;color:var(--t3);margin-bottom:10px}
+.order-btns{display:flex;gap:6px}
+.btn-order-copy{display:flex;align-items:center;gap:6px;padding:9px 14px;border-radius:var(--r-s);font-size:.8125rem;font-weight:700;background:var(--em);color:#fff;border:none;cursor:pointer;transition:opacity .15s}
+.btn-order-copy:active{opacity:.88}
+.btn-order-csv{display:flex;align-items:center;gap:6px;padding:9px 12px;border-radius:var(--r-s);font-size:.8125rem;font-weight:700;background:var(--surface2);color:var(--t2);border:1.5px solid var(--border);cursor:pointer}
+.btn-order-csv:active{background:var(--border)}
+.order-body{flex:1;overflow-y:auto;padding:0 20px 32px}
+.order-sup-hdr{font-size:.6875rem;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;padding:16px 0 8px;border-bottom:1px solid var(--border)}
+.order-item{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border)}
+.order-item:last-child{border-bottom:none}
+.order-item-left{flex:1;min-width:0}
+.order-item-name{font-size:.9375rem;font-weight:600;color:var(--t1)}
+.order-item-info{font-size:.6875rem;color:var(--t2);margin-top:2px}
+.order-item-right{text-align:right;flex-shrink:0}
+.order-item-need{font-size:1.375rem;font-weight:800;color:var(--em);line-height:1;letter-spacing:-.02em}
+.order-item-unit{font-size:.6875rem;color:var(--t3);font-weight:600;text-transform:uppercase}
+.order-empty{text-align:center;padding:40px 20px;color:var(--t3)}
+.order-empty strong{display:block;color:var(--t2);font-size:.9375rem;font-weight:600;margin-bottom:4px}
+
 /* ─── RECEBER PAGE ───────────────────────────────────── */
 .recv-wrap{padding:16px}
 .recv-hero{background:var(--em);border-radius:var(--r-l);padding:26px 20px;text-align:center;margin-bottom:20px;cursor:pointer;transition:opacity .15s,transform .1s;box-shadow:0 4px 20px rgba(5,150,105,.22)}
@@ -396,6 +438,13 @@ input,select{font-family:inherit}
     <div class="page active" id="page-home">
       <div class="home-wrap">
 
+        <div class="briefing-hdr">
+          <div class="briefing-greeting" id="briefing-greeting">Bom dia</div>
+          <div class="briefing-date" id="briefing-date"></div>
+        </div>
+
+        <div class="action-cards" id="action-cards"></div>
+
         <div class="alert-bar" id="alert-bar">
           <div class="alert-bar-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -519,6 +568,10 @@ input,select{font-family:inherit}
           <div class="field">
             <label data-i="formExp">Vencimento</label>
             <input type="date" id="f-exp">
+          </div>
+          <div class="field">
+            <label data-i="formSupplier">Fornecedor</label>
+            <input type="text" id="f-supplier" placeholder="Ex: Transgourmet, Metro...">
           </div>
           <div class="form-actions">
             <button class="btn-fsave" onclick="saveNewProduct()" data-i="formSave">Salvar</button>
@@ -694,6 +747,32 @@ input,select{font-family:inherit}
   </div>
 </div>
 
+<!-- ORDER LIST MODAL -->
+<div class="order-ov" id="order-ov" onclick="closeOrderList(event)">
+  <div class="order-sheet">
+    <div class="order-hdr">
+      <div class="order-hdr-top">
+        <div class="order-title" id="order-title">Lista de pedido</div>
+        <button onclick="closeOrderList(null)" style="background:none;border:none;color:var(--t3);cursor:pointer;display:flex;align-items:center;padding:4px">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="order-sub" id="order-sub"></div>
+      <div class="order-btns">
+        <button class="btn-order-copy" onclick="copyOrderList()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          <span id="order-copy-lbl">Copiar para WhatsApp</span>
+        </button>
+        <button class="btn-order-csv" onclick="exportCSV('order')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          CSV
+        </button>
+      </div>
+    </div>
+    <div class="order-body" id="order-body"></div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
@@ -782,6 +861,7 @@ const T = {
     toastHACCPBad:'Temperatura fora do limite', toastWaste:'Desperdício registrado',
     limitsLabel:'Limite', haccpModalSub:'Insira a temperatura atual',
     haccpProgLabel:'Registros hoje', notReg:'Não registrado', notRegYet:'Ainda não registrado',
+    formSupplier:'Fornecedor',
   },
   de:{
     navHome:'Start', navEstoque:'Lager', navReceber:'Eingang',
@@ -807,6 +887,7 @@ const T = {
     toastHACCPBad:'Temperatur außerhalb des Grenzwerts', toastWaste:'Abfall erfasst',
     limitsLabel:'Grenzwert', haccpModalSub:'Aktuelle Temperatur eingeben',
     haccpProgLabel:'Einträge heute', notReg:'Nicht erfasst', notRegYet:'Noch nicht erfasst',
+    formSupplier:'Lieferant',
   }
 };
 
@@ -988,6 +1069,10 @@ function cardHTML(p, showActions=true){
         <label>${t('formExp')}</label>
         <input class="e-input" type="date" id="pedit-exp-${p.id}" value="${p.exp||''}">
       </div>
+      <div class="e-row">
+        <label>${t('formSupplier')}</label>
+        <input class="e-input" type="text" id="pedit-sup-${p.id}" value="${p.supplier||''}" placeholder="Fornecedor...">
+      </div>
       <div class="e-actions">
         <button class="btn-e-save" onclick="saveCardEdit(${p.id})">${t('formSave')}</button>
         <button class="btn-e-cancel" onclick="toggleCardEdit(${p.id})">Cancelar</button>
@@ -998,6 +1083,77 @@ function cardHTML(p, showActions=true){
 }
 
 // ── HOME ──
+function getGreeting(){
+  const h=new Date().getHours();
+  if(lang==='de'){
+    if(h<12) return 'Guten Morgen';
+    if(h<18) return 'Guten Tag';
+    return 'Guten Abend';
+  }
+  if(h<12) return 'Bom dia';
+  if(h<18) return 'Boa tarde';
+  return 'Boa noite';
+}
+function getBriefingDate(){
+  const d=new Date();
+  const days=lang==='de'
+    ?['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag']
+    :['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+  const months=lang==='de'
+    ?['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember']
+    :['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  return days[d.getDay()]+', '+d.getDate()+' de '+months[d.getMonth()];
+}
+const CHEVRON=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`;
+function renderBriefingCards(){
+  const todayStart=new Date(); todayStart.setHours(0,0,0,0);
+  const doneKeys=new Set(haccpLog.filter(h=>h.id>=todayStart.getTime()).map(h=>h.key));
+  const haccpDone=doneKeys.size; const haccpTotal=HACCP_CFG.length;
+  const orderItems=products.filter(p=>p.qty<p.min);
+  const expiringItems=products.filter(p=>{ const d=daysUntil(p.exp); return d!==null&&d>=0&&d<=3; });
+  const cards=[];
+
+  if(orderItems.length>0){
+    cards.push(`<button class="action-card" onclick="openOrderList()">
+      <div class="ac-ico red">${ico('alert',18)}</div>
+      <div class="ac-body">
+        <div class="ac-title">${lang==='de'?'Bestellung erforderlich':'Pedir hoje'}</div>
+        <div class="ac-sub">${orderItems.length} ${lang==='de'?'Produkt(e) unter Mindestbestand':'produto(s) abaixo do mínimo'}</div>
+      </div>
+      <div class="ac-arrow">${CHEVRON}</div>
+    </button>`);
+  } else {
+    cards.push(`<div class="action-card" style="cursor:default;border-color:rgba(5,150,105,.25);background:var(--em-l)">
+      <div class="ac-ico em">${ico('check',18)}</div>
+      <div class="ac-body">
+        <div class="ac-title" style="color:var(--em-t)">${lang==='de'?'Bestand in Ordnung':'Estoque OK'}</div>
+        <div class="ac-sub" style="color:var(--em)">${lang==='de'?'Kein Produkt unter Mindestbestand':'Nenhum produto abaixo do mínimo'}</div>
+      </div>
+    </div>`);
+  }
+
+  const haccpOk=haccpDone>=haccpTotal;
+  cards.push(`<button class="action-card" onclick="goPage('haccp',document.getElementById('nav-haccp'))">
+    <div class="ac-ico ${haccpOk?'em':'amb'}">${ico(haccpOk?'check':'alert',18)}</div>
+    <div class="ac-body">
+      <div class="ac-title">HACCP</div>
+      <div class="ac-sub">${haccpDone} / ${haccpTotal} ${lang==='de'?'Standorte heute erfasst':'locais registrados hoje'}</div>
+    </div>
+    <div class="ac-arrow">${CHEVRON}</div>
+  </button>`);
+
+  if(expiringItems.length>0){
+    cards.push(`<button class="action-card" onclick="goPage('estoque',document.getElementById('nav-estoque'));setTimeout(()=>setPill('expiring',document.querySelector('[onclick*=expiring]')),80)">
+      <div class="ac-ico amb">${ico('alert',18)}</div>
+      <div class="ac-body">
+        <div class="ac-title">${lang==='de'?'Ablauf in Kürze':'Vencimento próximo'}</div>
+        <div class="ac-sub">${expiringItems.length} ${lang==='de'?'Produkt(e) läuft in ≤3 Tagen ab':'produto(s) vencem em ≤3 dias'}</div>
+      </div>
+      <div class="ac-arrow">${CHEVRON}</div>
+    </button>`);
+  }
+  return cards.join('');
+}
 function renderHome(){
   const crit = products.filter(p=>getStatus(p)==='critical').length;
   const venc = products.filter(p=>{ const d=daysUntil(p.exp); return d!==null&&d<=3; }).length;
@@ -1012,6 +1168,10 @@ function renderHome(){
   document.getElementById('h-crit').textContent  = crit;
   document.getElementById('h-venc').textContent  = venc;
   document.getElementById('h-waste').textContent = '€'+wasteCost.toFixed(0);
+
+  document.getElementById('briefing-greeting').textContent = getGreeting();
+  document.getElementById('briefing-date').textContent     = getBriefingDate();
+  document.getElementById('action-cards').innerHTML        = renderBriefingCards();
 
   const bar=document.getElementById('alert-bar');
   if(problems>0){ bar.classList.add('show'); document.getElementById('alert-bar-count').textContent=problems; }
@@ -1059,11 +1219,12 @@ function saveNewProduct(){
   const unit=document.getElementById('f-unit').value;
   const price=parseFloat(document.getElementById('f-price').value)||0;
   const exp=document.getElementById('f-exp').value||null;
+  const supplier=document.getElementById('f-supplier').value.trim();
   if(!name||isNaN(qty)||isNaN(min)){ toast('Preencha nome, quantidade e mínimo','warn'); return; }
-  products.push({ id:Date.now(), name, qty, min, unit, price, exp, ean:pendingEAN });
+  products.push({ id:Date.now(), name, qty, min, unit, price, exp, ean:pendingEAN, supplier });
   log.unshift({ id:Date.now(), time:ts(), type:'in', name, qty, unit, reason:'Cadastro' });
   save();
-  ['f-name','f-qty','f-min','f-price','f-exp'].forEach(id=>document.getElementById(id).value='');
+  ['f-name','f-qty','f-min','f-price','f-exp','f-supplier'].forEach(id=>document.getElementById(id).value='');
   pendingEAN=null; document.getElementById('f-ean-hint').textContent='';
   toggleAddForm(); renderAll(); updateRecvSel();
   toast(t('toastSaved'),'success');
@@ -1084,9 +1245,10 @@ function saveCardEdit(id){
   const unit=document.getElementById('pedit-unit-'+id).value;
   const price=parseFloat(document.getElementById('pedit-price-'+id).value)||0;
   const exp=document.getElementById('pedit-exp-'+id).value||null;
+  const supplier=(document.getElementById('pedit-sup-'+id).value||'').trim();
   if(!name||isNaN(qty)||isNaN(min)||qty<0||min<0){ toast(lang==='de'?'Felder prüfen':'Verifique os campos','warn'); return; }
   const diff=r2(p.qty-qty);
-  p.name=name; p.qty=r2(qty); p.min=r2(min); p.unit=unit; p.price=price; p.exp=exp;
+  p.name=name; p.qty=r2(qty); p.min=r2(min); p.unit=unit; p.price=price; p.exp=exp; p.supplier=supplier;
   if(diff!==0) log.unshift({ id:Date.now(), time:ts(), type:diff>0?'out':'in', name:p.name, qty:Math.abs(diff), unit:p.unit, reason:lang==='de'?'Manuelle Anpassung':'Ajuste manual' });
   save(); renderAll(); updateRecvSel(); toast(t('toastSaved'),'success');
 }
@@ -1395,6 +1557,69 @@ function closeConfirm(e){
   document.getElementById('confirm-ov').classList.remove('open');
 }
 
+// ── ORDER LIST ──
+function _orderGroups(){
+  const items=products.filter(p=>p.qty<p.min).sort((a,b)=>{
+    const sa=a.supplier||(lang==='de'?'Andere':'Outro');
+    const sb=b.supplier||(lang==='de'?'Andere':'Outro');
+    return sa.localeCompare(sb)||a.name.localeCompare(b.name);
+  });
+  const bySupplier={};
+  items.forEach(p=>{
+    const s=p.supplier||(lang==='de'?'Andere':'Outro');
+    if(!bySupplier[s]) bySupplier[s]=[];
+    bySupplier[s].push(p);
+  });
+  return { items, bySupplier };
+}
+function openOrderList(){
+  const { items, bySupplier }=_orderGroups();
+  document.getElementById('order-title').textContent  = lang==='de'?'Einkaufsliste':'Lista de pedido';
+  document.getElementById('order-copy-lbl').textContent = lang==='de'?'Kopieren':'Copiar';
+  if(!items.length){
+    document.getElementById('order-sub').textContent='';
+    document.getElementById('order-body').innerHTML=
+      `<div class="order-empty"><strong>${lang==='de'?'Alles in Ordnung':'Tudo em estoque'}</strong>
+       <span>${lang==='de'?'Keine Bestellungen nötig':'Nenhum produto abaixo do mínimo'}</span></div>`;
+  } else {
+    document.getElementById('order-sub').textContent=items.length+' '+(lang==='de'?'Produkt(e) unter Mindestbestand':'produto(s) abaixo do mínimo');
+    document.getElementById('order-body').innerHTML=Object.entries(bySupplier).map(([sup,ps])=>`
+      <div class="order-sup-hdr">${sup}</div>
+      ${ps.map(p=>{
+        const need=Math.ceil(r2(p.min-p.qty+(p.min*0.2)));
+        return `<div class="order-item">
+          <div class="order-item-left">
+            <div class="order-item-name">${p.name}</div>
+            <div class="order-item-info">${lang==='de'?'Aktuell':'Atual'}: ${p.qty} · Min: ${p.min} ${p.unit}</div>
+          </div>
+          <div class="order-item-right">
+            <div class="order-item-need">${need}</div>
+            <div class="order-item-unit">${p.unit}</div>
+          </div>
+        </div>`;
+      }).join('')}`).join('');
+  }
+  document.getElementById('order-ov').classList.add('open');
+}
+function closeOrderList(e){
+  if(e&&e.target!==document.getElementById('order-ov')) return;
+  document.getElementById('order-ov').classList.remove('open');
+}
+function copyOrderList(){
+  const { items, bySupplier }=_orderGroups();
+  if(!items.length){ toast(lang==='de'?'Keine Bestellungen':'Nada a pedir','warn'); return; }
+  const today=new Date().toLocaleDateString(lang==='de'?'de-DE':'pt-BR');
+  let text=(lang==='de'?'Einkaufsliste':'Lista de Pedido')+' — '+today+'\n\n';
+  Object.entries(bySupplier).forEach(([sup,ps])=>{
+    text+=sup+':\n';
+    ps.forEach(p=>{ const n=Math.ceil(r2(p.min-p.qty+(p.min*0.2))); text+='• '+p.name+': '+n+' '+p.unit+'\n'; });
+    text+='\n';
+  });
+  navigator.clipboard.writeText(text.trim())
+    .then(()=>toast(lang==='de'?'Kopiert!':'Copiado!','success'))
+    .catch(()=>toast('×','error'));
+}
+
 // ── EXPORT CSV ──
 function exportCSV(type){
   let csv='', filename='';
@@ -1411,6 +1636,11 @@ function exportCSV(type){
     filename='lagerblick-haccp.csv';
     csv=(lang==='de'?'Datum,Standort,Temperatur,Status':'Data,Local,Temperatura,Status')+'\n';
     csv+=haccpLog.map(h=>[h.time,h.name,h.temp+'°C',h.ok?'OK':(lang==='de'?'ALARM':'ALERTA')].map(q).join(',')).join('\n');
+  } else if(type==='order'){
+    filename='lagerblick-pedido.csv';
+    csv=(lang==='de'?'Lieferant,Produkt,Aktuell,Mindest,Einheit,Bestellmenge':'Fornecedor,Produto,Atual,Minimo,Unidade,Pedir')+'\n';
+    const { items }=_orderGroups();
+    csv+=items.map(p=>[p.supplier||'',p.name,p.qty,p.min,p.unit,Math.ceil(r2(p.min-p.qty+(p.min*0.2)))].map(q).join(',')).join('\n');
   }
   const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
   const url=URL.createObjectURL(blob);
