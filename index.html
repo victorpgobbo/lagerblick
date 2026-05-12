@@ -570,6 +570,10 @@ input,select{font-family:inherit}
             <input type="date" id="f-exp">
           </div>
           <div class="field">
+            <label data-i="formLot">Lote / Batch</label>
+            <input type="text" id="f-lot" placeholder="Nº do lote...">
+          </div>
+          <div class="field">
             <label data-i="formSupplier">Fornecedor</label>
             <input type="text" id="f-supplier" placeholder="Ex: Transgourmet, Metro...">
           </div>
@@ -861,7 +865,7 @@ const T = {
     toastHACCPBad:'Temperatura fora do limite', toastWaste:'Desperdício registrado',
     limitsLabel:'Limite', haccpModalSub:'Insira a temperatura atual',
     haccpProgLabel:'Registros hoje', notReg:'Não registrado', notRegYet:'Ainda não registrado',
-    formSupplier:'Fornecedor',
+    formSupplier:'Fornecedor', formLot:'Lote / Batch',
   },
   de:{
     navHome:'Start', navEstoque:'Lager', navReceber:'Eingang',
@@ -887,7 +891,7 @@ const T = {
     toastHACCPBad:'Temperatur außerhalb des Grenzwerts', toastWaste:'Abfall erfasst',
     limitsLabel:'Grenzwert', haccpModalSub:'Aktuelle Temperatur eingeben',
     haccpProgLabel:'Einträge heute', notReg:'Nicht erfasst', notRegYet:'Noch nicht erfasst',
-    formSupplier:'Lieferant',
+    formSupplier:'Lieferant', formLot:'Charge / Los',
   }
 };
 
@@ -1005,6 +1009,7 @@ function cardHTML(p, showActions=true){
   else if(isExpiring && s==='ok') cls='expiring';
 
   let meta=['min: '+p.min+' '+p.unit];
+  if(p.lot)   meta.push('<span style="color:var(--t3)">'+t('formLot')+': '+p.lot+'</span>');
   if(p.price) meta.push('€'+p.price.toFixed(2));
   if(et) meta.push('<span style="color:'+(et.bad?'var(--red)':'var(--amb)')+'">'+et.text+'</span>');
 
@@ -1068,6 +1073,10 @@ function cardHTML(p, showActions=true){
       <div class="e-row">
         <label>${t('formExp')}</label>
         <input class="e-input" type="date" id="pedit-exp-${p.id}" value="${p.exp||''}">
+      </div>
+      <div class="e-row">
+        <label>${t('formLot')}</label>
+        <input class="e-input" type="text" id="pedit-lot-${p.id}" value="${p.lot||''}" placeholder="Nº lote...">
       </div>
       <div class="e-row">
         <label>${t('formSupplier')}</label>
@@ -1219,12 +1228,13 @@ function saveNewProduct(){
   const unit=document.getElementById('f-unit').value;
   const price=parseFloat(document.getElementById('f-price').value)||0;
   const exp=document.getElementById('f-exp').value||null;
+  const lot=document.getElementById('f-lot').value.trim();
   const supplier=document.getElementById('f-supplier').value.trim();
   if(!name||isNaN(qty)||isNaN(min)){ toast('Preencha nome, quantidade e mínimo','warn'); return; }
-  products.push({ id:Date.now(), name, qty, min, unit, price, exp, ean:pendingEAN, supplier });
+  products.push({ id:Date.now(), name, qty, min, unit, price, exp, ean:pendingEAN, lot, supplier });
   log.unshift({ id:Date.now(), time:ts(), type:'in', name, qty, unit, reason:'Cadastro' });
   save();
-  ['f-name','f-qty','f-min','f-price','f-exp','f-supplier'].forEach(id=>document.getElementById(id).value='');
+  ['f-name','f-qty','f-min','f-price','f-exp','f-lot','f-supplier'].forEach(id=>document.getElementById(id).value='');
   pendingEAN=null; document.getElementById('f-ean-hint').textContent='';
   toggleAddForm(); renderAll(); updateRecvSel();
   toast(t('toastSaved'),'success');
@@ -1245,10 +1255,11 @@ function saveCardEdit(id){
   const unit=document.getElementById('pedit-unit-'+id).value;
   const price=parseFloat(document.getElementById('pedit-price-'+id).value)||0;
   const exp=document.getElementById('pedit-exp-'+id).value||null;
+  const lot=(document.getElementById('pedit-lot-'+id).value||'').trim();
   const supplier=(document.getElementById('pedit-sup-'+id).value||'').trim();
   if(!name||isNaN(qty)||isNaN(min)||qty<0||min<0){ toast(lang==='de'?'Felder prüfen':'Verifique os campos','warn'); return; }
   const diff=r2(p.qty-qty);
-  p.name=name; p.qty=r2(qty); p.min=r2(min); p.unit=unit; p.price=price; p.exp=exp; p.supplier=supplier;
+  p.name=name; p.qty=r2(qty); p.min=r2(min); p.unit=unit; p.price=price; p.exp=exp; p.lot=lot; p.supplier=supplier;
   if(diff!==0) log.unshift({ id:Date.now(), time:ts(), type:diff>0?'out':'in', name:p.name, qty:Math.abs(diff), unit:p.unit, reason:lang==='de'?'Manuelle Anpassung':'Ajuste manual' });
   save(); renderAll(); updateRecvSel(); toast(t('toastSaved'),'success');
 }
@@ -1459,10 +1470,18 @@ function openScanner(mode){
     Quagga.start(); scannerOn=true;
   });
   Quagga.onDetected(result=>{
-    const code=result.codeResult.code, now2=Date.now();
+    const code=result.codeResult.code;
+    const fmt=result.codeResult.format;
+    const now2=Date.now();
     if(code===lastCode&&now2-lastTime<2000) return;
     lastCode=code; lastTime=now2;
-    closeScanner(); handleEAN(code);
+    closeScanner();
+    // GS1-128: Code128 que contém FNC1 (0x1d) ou começa com AI numérico
+    if(fmt==='code_128'&&(code.includes('\x1d')||/^\d{2}/.test(code))){
+      const gs1=parseGS1(code);
+      if(Object.keys(gs1).length>=1){ handleGS1(gs1); return; }
+    }
+    handleEAN(code);
   });
 }
 function closeScanner(){
@@ -1523,6 +1542,154 @@ async function handleEAN(ean){
     document.getElementById('f-name').focus();
     document.getElementById('f-ean-hint').textContent='EAN: '+ean;
     document.getElementById('f-ean-hint').style.color='var(--t2)';
+  }
+}
+
+// ── GS1-128 PARSER ──
+function parseGS1(raw){
+  // Formato com parênteses: (01)12345(17)260630...
+  if(raw.includes('(')){
+    const res={}, re=/\((\d{2,4})\)([^(]*)/g; let m;
+    while((m=re.exec(raw))!==null) res[m[1]]=m[2].replace(/\x1d/g,'').trim();
+    return res;
+  }
+  // Formato raw: separador FNC1 = 0x1d; strip leading FNC1
+  const FNC1='\x1d';
+  const s=raw.replace(/^\x1d/,'');
+  const res={};
+  // AIs de comprimento FIXO {ai: n_chars_dos_dados}
+  function fixedLen(ai){
+    if(ai==='00') return 18;
+    if(['01','02','03'].includes(ai)) return 14;
+    if(['11','12','13','14','15','16','17','18','19'].includes(ai)) return 6;
+    if(ai==='20') return 2;
+    if(ai==='8001') return 14; if(ai==='8005') return 6; if(ai==='8006') return 18;
+    // Medidas (31xx 32xx ... 36xx) → sempre 6 dígitos
+    if(/^3[1-6]\d\d$/.test(ai)) return 6;
+    return null; // comprimento variável
+  }
+  let i=0;
+  while(i<s.length){
+    if(s[i]===FNC1){ i++; continue; }
+    let matched=false;
+    for(const alen of [4,3,2]){
+      const ai=s.substring(i,i+alen);
+      if(!/^\d+$/.test(ai)) continue;
+      const fl=fixedLen(ai);
+      if(fl!==null){
+        const val=s.substring(i+alen,i+alen+fl);
+        if(val.length===fl){ res[ai]=val; i+=alen+fl; matched=true; break; }
+      } else if(alen<=3){
+        // Variável: lê até FNC1 ou fim
+        const dstart=i+alen;
+        const si=s.indexOf(FNC1,dstart);
+        const dend=si===-1?s.length:si;
+        res[ai]=s.substring(dstart,dend);
+        i=dend; matched=true; break;
+      }
+    }
+    if(!matched) i++;
+  }
+  return res;
+}
+function gs1Date(yymmdd){
+  if(!yymmdd||yymmdd.length!==6) return null;
+  const yy=parseInt(yymmdd.substring(0,2));
+  const mm=yymmdd.substring(2,4); const dd=yymmdd.substring(4,6);
+  const year=(yy<50?2000:1900)+yy;
+  const day=dd==='00'?'01':dd;
+  return year+'-'+mm+'-'+day;
+}
+function gs1Measure(ai, val){
+  // Último dígito do AI = casas decimais
+  const dec=parseInt(ai[ai.length-1]);
+  const n=parseInt(val);
+  return isNaN(n)?null:n/Math.pow(10,dec);
+}
+
+async function handleGS1(gs1){
+  // ── Extrair campos ──────────────────────────────────
+  const gtin  = gs1['01']||gs1['02']||null;
+  const lot   = gs1['10']||gs1['21']||null;      // lote ou serial
+  const expRaw= gs1['17']||gs1['15']||gs1['16']||null; // validade
+  const exp   = gs1Date(expRaw);
+  const prodRaw=gs1['11']||null;
+  const prodDate=gs1Date(prodRaw);
+
+  // Quantidade: peso (kg) > volume (L) > contagem
+  let qty=null, unit=null;
+  for(let d=0;d<=9;d++){
+    const k='310'+d; if(gs1[k]!==undefined){ qty=gs1Measure(k,gs1[k]); unit='kg'; break; }
+  }
+  if(qty===null) for(let d=0;d<=9;d++){
+    const k='315'+d; if(gs1[k]!==undefined){ qty=gs1Measure(k,gs1[k]); unit='L'; break; }
+  }
+  if(qty===null&&gs1['37']){ qty=parseInt(gs1['37'])||null; unit='un'; }
+
+  // EAN-13 derivado do GTIN-14 (strip leading zero)
+  const ean13=gtin?gtin.replace(/^0/,''):null;
+
+  // ── Modo RECEBER com produto já cadastrado ──────────
+  if(scanMode==='recv'){
+    const existing=ean13?products.find(p=>p.ean&&(p.ean===ean13||p.ean===gtin)):null;
+    if(existing){
+      goPage('receber',document.getElementById('nav-receber'));
+      setTimeout(()=>{
+        document.getElementById('recv-prod-sel').value=existing.id;
+        if(qty) document.getElementById('recv-qty').value=qty;
+        document.getElementById('recv-qty').focus();
+        const parts=[existing.name];
+        if(lot)  parts.push((lang==='de'?'Charge':'Lote')+': '+lot);
+        if(exp)  parts.push('Val: '+new Date(exp+'T00:00:00').toLocaleDateString(lang==='de'?'de-DE':'pt-BR'));
+        toast(parts.join(' · '),'success');
+      },150);
+      return;
+    }
+    toast(lang==='de'?'Neues Produkt — bitte ausfüllen':'Produto novo — preencha e cadastre','warn');
+  }
+
+  // ── Abre form de cadastro ───────────────────────────
+  goPage('estoque',document.getElementById('nav-estoque'));
+  setTimeout(()=>{ if(!document.getElementById('add-form').classList.contains('open')) toggleAddForm(); },100);
+  if(ean13) pendingEAN=ean13;
+
+  // Pré-preenche campos disponíveis imediatamente
+  if(lot)  document.getElementById('f-lot').value=lot;
+  if(exp)  document.getElementById('f-exp').value=exp;
+  if(qty!=null){ document.getElementById('f-qty').value=qty; }
+  if(unit) document.getElementById('f-unit').value=unit;
+
+  // Hint com dados lidos
+  const hintParts=[];
+  if(lot)      hintParts.push((lang==='de'?'Charge':'Lote')+': '+lot);
+  if(exp)      hintParts.push('Val: '+new Date(exp+'T00:00:00').toLocaleDateString(lang==='de'?'de-DE':'pt-BR'));
+  if(prodDate) hintParts.push((lang==='de'?'Prod':'Fabricado')+': '+new Date(prodDate+'T00:00:00').toLocaleDateString(lang==='de'?'de-DE':'pt-BR'));
+  if(qty!=null&&unit) hintParts.push(qty+' '+unit);
+  document.getElementById('f-ean-hint').style.color='var(--em)';
+  document.getElementById('f-ean-hint').textContent=hintParts.length?hintParts.join(' · '):'GS1-128 ✓';
+
+  // Busca nome pelo GTIN online
+  if(gtin){
+    document.getElementById('f-name').value=lang==='de'?'Buscando…':'Buscando…';
+    let name='';
+    try{
+      const r1=await fetch('https://world.openfoodfacts.org/api/v0/product/'+ean13+'.json');
+      const d1=await r1.json();
+      if(d1.status===1) name=d1.product.product_name_de||d1.product.product_name_en||d1.product.product_name||'';
+    }catch(_){}
+    if(!name){
+      try{
+        const r2=await fetch('https://api.upcitemdb.com/prod/trial/lookup?upc='+ean13);
+        const d2=await r2.json();
+        if(d2.code==='OK'&&d2.items&&d2.items[0]) name=d2.items[0].title||'';
+      }catch(_){}
+    }
+    document.getElementById('f-name').value=name;
+    if(name) document.getElementById('f-qty').focus();
+    else     document.getElementById('f-name').focus();
+  } else {
+    document.getElementById('f-name').value='';
+    document.getElementById('f-name').focus();
   }
 }
 
