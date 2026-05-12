@@ -119,6 +119,52 @@ input,select{font-family:inherit}
 .batch-field input:focus{border-color:var(--em)}
 .batch-save{width:100%;background:var(--surface);color:var(--t1);border:1.5px solid var(--border);border-radius:var(--r-s);padding:9px;font-size:.8125rem;font-weight:600;cursor:pointer;transition:background .15s}
 .batch-save:active{background:var(--em-l);border-color:var(--em);color:var(--em-t)}
+
+/* ─── RECEITAS ─────────────────────────────────────── */
+.rec-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;gap:14px}
+.rec-hdr-ttl{font-size:1.25rem;font-weight:800;color:var(--t1);letter-spacing:-.02em}
+.rec-hdr-sub{font-size:.8125rem;color:var(--t2);margin-top:3px;line-height:1.4}
+.rec-add-btn{background:var(--em);color:#fff;border:none;border-radius:var(--r-s);padding:10px 16px;font-size:.875rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;flex-shrink:0}
+.rec-add-btn:active{background:var(--em-d)}
+.rec-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;margin-bottom:12px}
+.rec-card-hdr{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px}
+.rec-card-name{font-size:1rem;font-weight:700;color:var(--t1);letter-spacing:-.01em;line-height:1.25}
+.rec-card-yield{font-size:.75rem;color:var(--t2);margin-top:2px}
+.rec-card-fc{padding:5px 11px;border-radius:14px;font-size:.6875rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.rec-card-fc.good{background:var(--em-l);color:var(--em-t)}
+.rec-card-fc.mid{background:var(--amb-l);color:var(--amb-t)}
+.rec-card-fc.bad{background:var(--red-l);color:var(--red-t)}
+.rec-card-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.rec-stat{background:var(--surface2);border-radius:var(--r-s);padding:8px 10px}
+.rec-stat-lbl{font-size:.625rem;color:var(--t2);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.rec-stat-val{font-size:.9375rem;font-weight:700;color:var(--t1);margin-top:2px}
+.rec-card-ings{font-size:.8125rem;color:var(--t2);line-height:1.5;border-top:1px dashed var(--border);padding-top:10px;margin-bottom:12px}
+.rec-card-ings strong{color:var(--t1);font-weight:600}
+.rec-card-actions{display:flex;gap:8px}
+.rec-act-btn{flex:1;background:var(--em);color:#fff;border:none;border-radius:var(--r-s);padding:11px;font-size:.875rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+.rec-act-btn.sec{background:var(--surface2);color:var(--t1);border:1.5px solid var(--border)}
+.rec-act-btn.danger{background:transparent;color:var(--red);border:1.5px solid transparent;flex:0;padding:11px 12px}
+.rec-act-btn:active{opacity:.85}
+.rec-empty{text-align:center;padding:36px 20px;color:var(--t3)}
+.rec-empty strong{display:block;color:var(--t1);font-weight:700;margin-top:10px;margin-bottom:4px}
+
+/* Recipe editor form */
+.rec-form-row{margin-bottom:14px}
+.rec-form-row label{display:block;font-size:.75rem;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
+.rec-form-row input{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-s);padding:11px 13px;font-size:.9375rem;color:var(--t1);outline:none;font-family:inherit}
+.rec-form-row input:focus{border-color:var(--em);background:#fff}
+.rec-form-2col{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rec-ing-list{margin-top:6px}
+.rec-ing-row{display:grid;grid-template-columns:1fr 80px 60px 36px;gap:6px;margin-bottom:6px;align-items:center}
+.rec-ing-row select,.rec-ing-row input{background:var(--surface2);border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-size:.8125rem;color:var(--t1);outline:none;font-family:inherit;width:100%}
+.rec-ing-row select:focus,.rec-ing-row input:focus{border-color:var(--em);background:#fff}
+.rec-ing-row .rec-ing-rm{background:transparent;border:none;color:var(--red);padding:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:6px}
+.rec-add-ing{margin-top:6px;width:100%;background:var(--surface2);border:1.5px dashed var(--border);border-radius:var(--r-s);padding:10px;font-size:.8125rem;font-weight:600;color:var(--t2);cursor:pointer}
+.rec-add-ing:active{background:var(--em-l);border-color:var(--em);color:var(--em-t)}
+.rec-form-actions{display:flex;gap:10px;margin-top:18px;padding-top:16px;border-top:1px solid var(--border)}
+.rec-form-actions button{flex:1;border-radius:var(--r-s);padding:13px;font-size:.9375rem;font-weight:700;cursor:pointer;border:none}
+.rec-form-save{background:var(--em);color:#fff}
+.rec-form-cancel{background:var(--surface2);color:var(--t1);border:1.5px solid var(--border)}
 .hdr-brand{display:flex;align-items:center;gap:10px}
 .hdr-wordmark{font-family:'Syne',sans-serif;font-size:1.25rem;font-weight:800;color:var(--t1);letter-spacing:-0.01em}
 .hdr-wordmark span{color:var(--em)}
@@ -295,6 +341,29 @@ input,select{font-family:inherit}
 .recv-hero-ico{width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;color:#fff}
 .recv-hero-ttl{font-size:1.1875rem;font-weight:700;color:#fff;margin-bottom:4px}
 .recv-hero-sub{font-size:.8125rem;color:rgba(255,255,255,.72)}
+.recv-cont-btn{width:100%;background:var(--surface);border:1.5px solid var(--em);border-radius:var(--r);padding:14px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px;cursor:pointer;text-align:left;transition:background .15s}
+.recv-cont-btn:active{background:var(--em-l)}
+.recv-cont-ico{width:38px;height:38px;border-radius:50%;background:var(--em-l);color:var(--em-t);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.recv-cont-ttl{font-size:.9375rem;font-weight:700;color:var(--t1);letter-spacing:-.01em}
+.recv-cont-sub{font-size:.75rem;color:var(--t2);margin-top:2px;line-height:1.4}
+
+/* Continuous scanner UI dentro do overlay */
+.cont-panel{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.88);backdrop-filter:blur(8px);color:#fff;padding:14px 16px 18px;max-height:50vh;display:flex;flex-direction:column;border-top:1px solid rgba(255,255,255,.12)}
+.cont-panel-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.cont-panel-ttl{font-size:.875rem;font-weight:700}
+.cont-panel-cnt{background:var(--em);color:#fff;padding:2px 10px;border-radius:10px;font-size:.6875rem;font-weight:700}
+.cont-list{flex:1;overflow-y:auto;margin-bottom:10px;max-height:30vh}
+.cont-list-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:.8125rem}
+.cont-list-item:last-child{border-bottom:none}
+.cont-list-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:8px}
+.cont-list-meta{color:rgba(255,255,255,.55);font-size:.6875rem}
+.cont-list-qty{font-weight:700;color:var(--em-l)}
+.cont-list-empty{padding:20px 0;text-align:center;color:rgba(255,255,255,.45);font-size:.8125rem}
+.cont-actions{display:flex;gap:8px}
+.cont-done{flex:1;background:var(--em);color:#fff;border:none;border-radius:8px;padding:12px;font-size:.875rem;font-weight:700;cursor:pointer}
+.cont-done:disabled{opacity:.4}
+.cont-done:active{background:var(--em-d)}
+.cont-undo{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:0 14px;font-size:.8125rem;font-weight:600;cursor:pointer}
 
 .div-row{display:flex;align-items:center;gap:12px;margin-bottom:16px}
 .div-line{flex:1;height:1px;background:var(--border)}
@@ -655,6 +724,16 @@ input,select{font-family:inherit}
           <div class="recv-hero-sub" data-i="recvHeroSub">Aponte a câmera para o código de barras</div>
         </div>
 
+        <button class="recv-cont-btn" onclick="openContinuousDelivery()">
+          <div class="recv-cont-ico">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          </div>
+          <div class="recv-cont-txt">
+            <div class="recv-cont-ttl" data-i="recvContTitle">Modo entrega contínua</div>
+            <div class="recv-cont-sub" data-i="recvContSub">Para descarregar várias caixas em sequência (Transgourmet)</div>
+          </div>
+        </button>
+
         <div class="div-row">
           <div class="div-line"></div>
           <div class="div-txt" data-i="recvOr">ou selecione manualmente</div>
@@ -717,6 +796,26 @@ input,select{font-family:inherit}
 
         <div class="sec-hdr" data-i="haccpRecent">Registros recentes</div>
         <div class="haccp-log" id="haccp-log"></div>
+
+      </div>
+    </div>
+
+    <!-- ── RECEITAS / FICHA TÉCNICA ── -->
+    <div class="page" id="page-recipes">
+      <div class="home-wrap">
+
+        <div class="rec-hdr">
+          <div>
+            <div class="rec-hdr-ttl" data-i="recTitle">Receitas</div>
+            <div class="rec-hdr-sub" data-i="recSub">Ficha técnica com custo, food cost e produção via FIFO.</div>
+          </div>
+          <button class="rec-add-btn" onclick="openRecipeForm(null)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span data-i="recAdd">Nova</span>
+          </button>
+        </div>
+
+        <div class="rec-list" id="rec-list"></div>
 
       </div>
     </div>
@@ -821,6 +920,12 @@ input,select{font-family:inherit}
       </div>
       <span data-i="navReceber">Receber</span>
     </button>
+    <button class="nav-btn" id="nav-recipes" onclick="goPage('recipes',this)">
+      <div class="nav-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 13.87A4 4 0 017.41 6a5.11 5.11 0 011.05-1.54 5 5 0 017.08 0A5.11 5.11 0 0116.59 6 4 4 0 0118 13.87V21H6Z"/><line x1="6" y1="17" x2="18" y2="17"/></svg>
+      </div>
+      <span data-i="navRecipes">Receitas</span>
+    </button>
     <button class="nav-btn" id="nav-haccp" onclick="goPage('haccp',this)">
       <div class="nav-icon">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V3.5a2.5 2.5 0 00-5 0v11.26a4.5 4.5 0 105 0z"/></svg>
@@ -840,11 +945,24 @@ input,select{font-family:inherit}
     </div>
   </div>
   <div class="scanner-hint" id="scanner-hint">Aponte para o código de barras</div>
-  <div class="scanner-manual">
+  <div class="scanner-manual" id="scanner-manual-wrap">
     <input type="text" inputmode="numeric" pattern="\d*" id="scanner-manual-ean" placeholder="ou digite o EAN" autocomplete="off" onkeydown="if(event.key==='Enter')submitManualEAN()">
     <button class="scanner-manual-go" onclick="submitManualEAN()" aria-label="OK">OK</button>
   </div>
-  <button class="scanner-cancel" onclick="closeScanner()">Cancelar</button>
+  <button class="scanner-cancel" id="scanner-cancel-btn" onclick="closeScanner()">Cancelar</button>
+
+  <!-- Painel modo entrega contínua -->
+  <div class="cont-panel" id="cont-panel" style="display:none">
+    <div class="cont-panel-hdr">
+      <div class="cont-panel-ttl" id="cont-panel-ttl">Modo entrega</div>
+      <div class="cont-panel-cnt" id="cont-panel-cnt">0</div>
+    </div>
+    <div class="cont-list" id="cont-list"></div>
+    <div class="cont-actions">
+      <button class="cont-undo" id="cont-undo" onclick="contUndoLast()">↶</button>
+      <button class="cont-done" id="cont-done" onclick="contFinish()">Concluir</button>
+    </div>
+  </div>
 </div>
 
 <!-- ── HACCP MODAL ── -->
@@ -915,6 +1033,37 @@ input,select{font-family:inherit}
   </div>
 </div>
 
+<!-- RECIPE EDITOR -->
+<div class="order-ov" id="recipe-ov" onclick="closeRecipeForm(event)">
+  <div class="order-sheet">
+    <div class="order-hdr">
+      <div>
+        <div class="order-ttl" id="recipe-form-ttl">Nova receita</div>
+        <div class="order-sub" id="recipe-form-sub">Ficha técnica</div>
+      </div>
+      <button class="order-close" onclick="closeRecipeForm(null)" aria-label="Fechar">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="order-body" id="recipe-body" style="padding:18px 20px"></div>
+  </div>
+</div>
+
+<!-- PRODUCE RECIPE -->
+<div class="overlay" id="produce-ov" onclick="closeProduceModal(event)">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-ttl" id="produce-ttl">Produzir</div>
+    <div class="sheet-sub" id="produce-sub">Quantas vezes vai produzir esta receita?</div>
+    <input class="temp-input" type="number" id="produce-mult" min="1" step="1" value="1">
+    <div class="temp-limits" id="produce-info" style="font-size:.8125rem;color:var(--t2);padding:0 4px;line-height:1.5"></div>
+    <div class="sheet-actions">
+      <button class="btn-sh-cancel" onclick="closeProduceModal(null)">Cancelar</button>
+      <button class="btn-sh-ok" onclick="confirmProduce()">Produzir</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
@@ -951,6 +1100,8 @@ function ico(name, size=20) {
     box:`<svg ${s}><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>`,
     alert:`<svg ${s}><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
     empty:`<svg ${s}><circle cx="12" cy="12" r="10"/><path d="M8 15s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>`,
+    book:`<svg ${s}><path d="M6 13.87A4 4 0 017.41 6a5.11 5.11 0 011.05-1.54 5 5 0 017.08 0A5.11 5.11 0 0116.59 6 4 4 0 0118 13.87V21H6Z"/><line x1="6" y1="17" x2="18" y2="17"/></svg>`,
+    plus:`<svg ${s}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
   };
   return icons[name] || '';
 }
@@ -968,6 +1119,7 @@ let log      = JSON.parse(localStorage.getItem('lb4_l') || '[]');
 let receipts = JSON.parse(localStorage.getItem('lb4_r') || '[]');
 let haccpLog = JSON.parse(localStorage.getItem('lb4_h') || '[]');
 let batches  = JSON.parse(localStorage.getItem('lb4_b') || '[]');
+let recipes  = JSON.parse(localStorage.getItem('lb4_recipes') || '[]');
 let lang     = localStorage.getItem('lb4_lang') || 'pt';
 let basket   = [];
 let selSupplier = 'Transgourmet';
@@ -1127,6 +1279,7 @@ function save(){
   const okR=_trySetItem('lb4_r',JSON.stringify(receipts));
   let   okH=_trySetItem('lb4_h',JSON.stringify(haccpLog));
   const okB=_trySetItem('lb4_b',JSON.stringify(batches));
+  const okRec=_trySetItem('lb4_recipes',JSON.stringify(recipes));
 
   // Se algo falhou (quota), trunca agressivo e tenta de novo
   if(!okL){
@@ -1161,6 +1314,7 @@ function goPage(page,el){
   if(page==='haccp')   { renderHACCPGrid(); renderHACCPLog(); renderHACCPProg(); }
   if(page==='estoque') renderEst();
   if(page==='home')    renderHome();
+  if(page==='recipes') renderRecipes();
   if(page==='config')  renderConfigPage();
 }
 
@@ -1798,6 +1952,11 @@ function renderHACCPLog(){
 // Dispatcher comum: decide entre GS1 e EAN, dedupa, encerra overlay
 function _scanDispatch(code,fmt){
   if(!code) return;
+  // Modo entrega contínua: NÃO fecha o scanner, adiciona item à lista, mantém câmera ligada
+  if(contMode){
+    _contHandleScan(code,fmt);
+    return;
+  }
   closeScanner();
   // GS1-128: detectado apenas se contém FNC1 OU começa com padrão AI conhecido
   if(fmt==='code_128'||(/^\d{16,}$/.test(code)&&/^01\d{14}/.test(code))){
@@ -1817,21 +1976,168 @@ function _scanDispatch(code,fmt){
   handleEAN(code);
 }
 
+// ── MODO ENTREGA CONTÍNUA ─────────────────────────────────
+function openContinuousDelivery(){
+  contItems=[];
+  openScanner('recv-cont');
+  document.getElementById('scanner-hint').textContent=lang==='de'?'Karton scannen — Modus läuft':'Escaneie a caixa — modo ativo';
+}
+
+// Beep curto via Web Audio (sem precisar de arquivo)
+let _audioCtx=null;
+function _beep(success=true){
+  try{
+    _audioCtx=_audioCtx||new (window.AudioContext||window.webkitAudioContext)();
+    const ctx=_audioCtx;
+    const o=ctx.createOscillator(); const g=ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.type='sine';
+    o.frequency.value=success?880:200;
+    g.gain.setValueAtTime(0.0001,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.3,ctx.currentTime+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.12);
+    o.start(); o.stop(ctx.currentTime+0.15);
+  }catch(_){}
+  // Haptic feedback se disponível
+  if(navigator.vibrate) navigator.vibrate(success?40:120);
+}
+
+async function _contHandleScan(code,fmt){
+  // Decodifica o código (GS1 ou EAN)
+  let ean=null, lot=null, exp=null, qtyFromGS1=null;
+  if(fmt==='code_128'||/^\d{16,}$/.test(code)){
+    const looksGS1 = code.includes('\x1d')||/^01\d{14}/.test(code)||/^(11|15|16|17)\d{6}/.test(code)||/^10[A-Z0-9]/i.test(code);
+    if(looksGS1){
+      const gs1=parseGS1(code);
+      const gtin=gs1['01']||gs1['02']||null;
+      ean = gtin ? gtin.slice(-13) : null;
+      lot = gs1['10']||gs1['21']||null;
+      exp = gs1Date(gs1['17']||gs1['15']||gs1['16']||null);
+      // qty: peso primeiro
+      for(let d=0;d<=9;d++){ const k='310'+d; if(gs1[k]!==undefined){ qtyFromGS1={qty:gs1Measure(k,gs1[k]),unit:'kg'}; break; } }
+      if(!qtyFromGS1) for(let d=0;d<=9;d++){ const k='315'+d; if(gs1[k]!==undefined){ qtyFromGS1={qty:gs1Measure(k,gs1[k]),unit:'L'}; break; } }
+      if(!qtyFromGS1 && gs1['37']) qtyFromGS1={qty:parseInt(gs1['37'])||null, unit:'un'};
+    }
+  }
+  if(!ean) ean=code;
+
+  // Busca produto pelo EAN. Se não existe, faz lookup pra ter um nome.
+  let p = products.find(x=>x.ean===ean);
+  let isNew=false, lookupName=null;
+  if(!p){
+    isNew=true;
+    const r=await _lookupProduct(ean);
+    lookupName = r?.name || ('EAN '+ean);
+    _beep(false); // som diferente pra avisar que é produto novo
+  } else {
+    _beep(true);
+  }
+
+  // Adiciona à lista. Se já está, incrementa qty (mesmo EAN escaneado duas vezes = 2 caixas).
+  const existingIdx = contItems.findIndex(it=>it.ean===ean && it.lot===(lot||null) && it.exp===(exp||null));
+  if(existingIdx>=0){
+    contItems[existingIdx].qty += (qtyFromGS1?.qty || 1);
+  } else {
+    contItems.push({
+      ean,
+      productId: p?.id || null,
+      name: p?.name || lookupName,
+      qty: qtyFromGS1?.qty || 1,
+      unit: qtyFromGS1?.unit || p?.unit || 'un',
+      lot: lot||null,
+      exp: exp||null,
+      isNew,
+      lookupName
+    });
+  }
+  _renderContList();
+  // Feedback visual no hint
+  const hint=document.getElementById('scanner-hint');
+  const lastName = contItems[contItems.length-1].name;
+  hint.textContent = (isNew?'⚠ ':'✓ ')+lastName.substring(0,38);
+  hint.style.color = isNew ? '#fbbf24' : '#86efac';
+  setTimeout(()=>{ hint.textContent=lang==='de'?'Karton scannen — Modus läuft':'Escaneie a caixa — modo ativo'; hint.style.color='rgba(255,255,255,.65)'; }, 1200);
+}
+
+function _renderContList(){
+  const cnt=contItems.length;
+  document.getElementById('cont-panel-cnt').textContent=cnt;
+  document.getElementById('cont-done').disabled = (cnt===0);
+  const list=document.getElementById('cont-list');
+  if(cnt===0){
+    list.innerHTML='<div class="cont-list-empty">'+(lang==='de'?'Noch nichts gescannt':'Nenhuma caixa escaneada ainda')+'</div>';
+    return;
+  }
+  // Mostra do mais recente pro mais antigo
+  list.innerHTML = contItems.slice().reverse().map(it=>{
+    const meta=[];
+    if(it.lot) meta.push((lang==='de'?'Ch.':'L.')+it.lot);
+    if(it.exp) meta.push((lang==='de'?'MHD':'Val')+' '+it.exp.slice(8,10)+'/'+it.exp.slice(5,7));
+    if(it.isNew) meta.push(lang==='de'?'NEU':'NOVO');
+    return `<div class="cont-list-item">
+      <div class="cont-list-name">${it.name}<div class="cont-list-meta">${meta.join(' · ')||'EAN '+it.ean}</div></div>
+      <div class="cont-list-qty">${it.qty} ${it.unit}</div>
+    </div>`;
+  }).join('');
+}
+
+function contUndoLast(){
+  if(contItems.length===0){ closeScanner(); return; }
+  contItems.pop();
+  _renderContList();
+  if(navigator.vibrate) navigator.vibrate(20);
+}
+
+async function contFinish(){
+  if(contItems.length===0){ closeScanner(); return; }
+  // Cria batch pra cada item que tem produto. Itens novos vão pro form de cadastro? Por enquanto, ignora.
+  const toCreate = contItems.filter(it=>it.productId);
+  const newOnes  = contItems.filter(it=>!it.productId);
+  toCreate.forEach(it=>{
+    const p=products.find(x=>x.id===it.productId); if(!p) return;
+    addBatch({ productId:it.productId, qty:it.qty, exp:it.exp||null, lot:it.lot||null, supplier:'Transgourmet', costPrice:p.price||0 });
+    if(p.ean && it.exp) _shelfAdd(p.ean, it.exp);
+    const lotInfo = it.lot ? ' · L.'+it.lot : '';
+    log.unshift({ id:_uid(), time:ts(), type:'in', productId:it.productId, name:it.name, qty:it.qty, unit:it.unit, price:p.price||0, reason:(lang==='de'?'Lieferung — Transgourmet':'Entrega — Transgourmet')+lotInfo });
+  });
+  if(toCreate.length){
+    receipts.unshift({ id:_uid(), time:ts(), supplier:'Transgourmet', items: toCreate.map(it=>({productId:it.productId, name:it.name, qty:it.qty, unit:it.unit, lot:it.lot, exp:it.exp, supplier:'Transgourmet'})) });
+  }
+  save();
+  const closedItems=contItems.length;
+  contItems=[];
+  closeScanner();
+  renderAll(); renderRecvHist(); updateRecvSel();
+  toast(closedItems+' '+(lang==='de'?'Karton(s) erfasst':'caixa(s) registrada(s))')+(newOnes.length?' · '+newOnes.length+(lang==='de'?' neu':' novo(s)'):''),'success');
+  if(newOnes.length){
+    // Avisa que produtos novos não entraram — operador precisa cadastrar
+    setTimeout(()=>toast((lang==='de'?'Bitte neue Produkte separat erfassen: ':'Cadastre os novos separadamente: ')+newOnes.map(n=>n.name).slice(0,3).join(', '), 'warn'), 1600);
+  }
+}
+
 let scannerTimeout=null;
+let contMode=false; // entrega contínua ativa?
+let contItems=[];   // {productId, name, qty, unit, lot, exp, isNew}
 function openScanner(mode){
   scanMode=mode;
   document.getElementById('scanner-ov').classList.add('open');
   document.getElementById('scanner-hint').textContent=lang==='de'?'Kamera auf Barcode richten':'Aponte para o código de barras';
   const mi=document.getElementById('scanner-manual-ean'); if(mi) mi.value='';
+  // Esconde painel contínuo quando NÃO é continuous
+  const cp=document.getElementById('cont-panel');
+  if(cp) cp.style.display = (mode==='recv-cont' ? 'flex' : 'none');
+  contMode = (mode==='recv-cont');
+  if(contMode){ _renderContList(); }
 
-  // Auto-close em 90s pra não drenar bateria se operador esquece overlay aberto
+  // Auto-close: 90s pra modo normal, 5min pra modo entrega (descarregar caixas leva tempo)
   if(scannerTimeout) clearTimeout(scannerTimeout);
+  const tmOut = contMode ? 300000 : 90000;
   scannerTimeout=setTimeout(()=>{
     if(document.getElementById('scanner-ov').classList.contains('open')){
-      closeScanner();
-      toast(lang==='de'?'Scanner — Timeout':'Scanner — tempo esgotado','warn');
+      if(contMode && contItems.length>0){ contFinish(); }
+      else { closeScanner(); toast(lang==='de'?'Scanner — Timeout':'Scanner — tempo esgotado','warn'); }
     }
-  },90000);
+  },tmOut);
 
   // 1ª tentativa: BarcodeDetector nativo (Android Chrome) — não existe no iOS Safari
   if('BarcodeDetector' in window && navigator.mediaDevices?.getUserMedia){
@@ -1951,6 +2257,8 @@ function closeScanner(){
   if(bdRunning){ bdRunning=false; }
   if(bdStream){ try{bdStream.getTracks().forEach(t=>t.stop());}catch(e){} bdStream=null; }
   scannerOn=false;
+  contMode=false;
+  const cp=document.getElementById('cont-panel'); if(cp) cp.style.display='none';
   document.getElementById('scanner-ov').classList.remove('open');
   document.getElementById('scanner-vp').innerHTML='';
   const mi=document.getElementById('scanner-manual-ean'); if(mi) mi.value='';
@@ -2376,6 +2684,276 @@ function getProductStockSummary(productId){
     }
   }
   return {total:r2(total), expired:r2(expired), near:r2(near), count:list.length};
+}
+
+// ════════════════════════════════════════════════════════════════
+//  RECIPES / FICHA TÉCNICA
+// ════════════════════════════════════════════════════════════════
+// recipe: { id, name, yield, ingredients:[{productId,qty,unit}], salePrice, notes, createdAt }
+
+function recipeCost(r){
+  if(!r||!r.ingredients) return 0;
+  let total=0;
+  for(const ing of r.ingredients){
+    const p=products.find(x=>x.id===ing.productId);
+    if(!p||!p.price) continue;
+    // Conversão tolerante de unidade entre receita e produto (kg<->g, L<->ml)
+    const qty=_convertQty(ing.qty, ing.unit, p.unit);
+    total += qty * p.price;
+  }
+  return r2(total);
+}
+function recipeCostPerYield(r){
+  const y=Math.max(1, r.yield||1);
+  return r2(recipeCost(r)/y);
+}
+function recipeFoodCost(r){
+  const sp=r.salePrice||0;
+  if(sp<=0) return null;
+  return Math.round((recipeCostPerYield(r)/sp)*100);
+}
+// Conversor leve: aceita kg<->g, L<->ml. Outros casos: qty raw.
+function _convertQty(qty, fromUnit, toUnit){
+  if(!fromUnit||!toUnit||fromUnit===toUnit) return qty;
+  const f=fromUnit.toLowerCase(), t=toUnit.toLowerCase();
+  if((f==='kg'&&t==='g')||(f==='g'&&t==='kg')){ return f==='kg'?qty*1000:qty/1000; }
+  if((f==='l'&&t==='ml')||(f==='ml'&&t==='l')){ return f==='l'?qty*1000:qty/1000; }
+  return qty;
+}
+// Pré-cálculo: para produzir `mult` vezes a receita, calcular consumo necessário por produto
+function _recipeNeeds(r, mult){
+  const needs=new Map(); // productId -> qty na unidade do produto
+  for(const ing of r.ingredients){
+    const p=products.find(x=>x.id===ing.productId); if(!p) continue;
+    const need=_convertQty(ing.qty*mult, ing.unit, p.unit);
+    needs.set(p.id, (needs.get(p.id)||0)+need);
+  }
+  return needs;
+}
+function canProduceRecipe(r, mult){
+  const needs=_recipeNeeds(r,mult);
+  const missing=[];
+  for(const [pid,qty] of needs){
+    const p=products.find(x=>x.id===pid); if(!p) continue;
+    if((p.qty||0)<qty-0.0001) missing.push({name:p.name, have:p.qty, need:r2(qty), unit:p.unit});
+  }
+  return {ok:missing.length===0, missing};
+}
+function produceRecipe(r, mult){
+  const check=canProduceRecipe(r, mult);
+  if(!check.ok) return {ok:false, missing:check.missing};
+  const needs=_recipeNeeds(r,mult);
+  const detail=[];
+  let totalCost=0;
+  for(const [pid,qty] of needs){
+    const p=products.find(x=>x.id===pid); if(!p) continue;
+    const consumed=consumeFromProduct(pid, qty);
+    if(consumed.length===0) p.qty=r2(p.qty-qty); // legado
+    const cost=qty*(p.price||0);
+    totalCost+=cost;
+    log.unshift({ id:_uid(), time:ts(), type:'out', productId:pid, name:p.name, qty:r2(qty), unit:p.unit, price:p.price||0, reason:(lang==='de'?'Produktion: ':'Produção: ')+r.name+(mult>1?(' ×'+mult):''), batches:consumed, recipeId:r.id });
+  }
+  return {ok:true, totalCost:r2(totalCost), portions:mult*(r.yield||1)};
+}
+
+// ── UI RECIPES ────────────────────────────────────────────
+function renderRecipes(){
+  const el=document.getElementById('rec-list'); if(!el) return;
+  if(!recipes.length){
+    el.innerHTML=`<div class="rec-empty">${ico('book',40)}<strong>${lang==='de'?'Noch keine Rezepte':'Nenhuma receita ainda'}</strong>${lang==='de'?'Tippen Sie auf „Neu" um die erste anzulegen':'Toque em "Nova" para cadastrar a primeira'}</div>`;
+    return;
+  }
+  el.innerHTML=recipes.map(r=>{
+    const cost=recipeCost(r);
+    const costPer=recipeCostPerYield(r);
+    const fc=recipeFoodCost(r);
+    const fcCls=fc===null?'':(fc<=30?'good':fc<=40?'mid':'bad');
+    const fcTxt=fc===null?(lang==='de'?'kein VK':'sem preço'):'FC '+fc+'%';
+    const ings=r.ingredients.map(i=>{
+      const p=products.find(x=>x.id===i.productId);
+      return (p?p.name:'?')+' '+i.qty+i.unit;
+    }).join(' · ');
+    const avail=canProduceRecipe(r,1);
+    const canMake=avail.ok;
+    return `<div class="rec-card">
+      <div class="rec-card-hdr">
+        <div>
+          <div class="rec-card-name">${r.name}</div>
+          <div class="rec-card-yield">${r.yield||1} ${lang==='de'?'Portion(en)':'porção(ões)'}${r.salePrice?' · €'+r.salePrice.toFixed(2)+'/'+(lang==='de'?'Port.':'porç.'):''}</div>
+        </div>
+        ${fcCls?`<div class="rec-card-fc ${fcCls}">${fcTxt}</div>`:''}
+      </div>
+      <div class="rec-card-stats">
+        <div class="rec-stat">
+          <div class="rec-stat-lbl">${lang==='de'?'Kosten total':'Custo total'}</div>
+          <div class="rec-stat-val">€${cost.toFixed(2)}</div>
+        </div>
+        <div class="rec-stat">
+          <div class="rec-stat-lbl">${lang==='de'?'pro Portion':'por porção'}</div>
+          <div class="rec-stat-val">€${costPer.toFixed(2)}</div>
+        </div>
+        <div class="rec-stat">
+          <div class="rec-stat-lbl">${lang==='de'?'Bestand':'Estoque'}</div>
+          <div class="rec-stat-val" style="color:${canMake?'var(--em)':'var(--red)'}">${canMake?'OK':'×'}</div>
+        </div>
+      </div>
+      <div class="rec-card-ings"><strong>${lang==='de'?'Zutaten':'Ingredientes'}:</strong> ${ings||'—'}</div>
+      <div class="rec-card-actions">
+        <button class="rec-act-btn" onclick="openProduceModal(${r.id})">
+          ${ico('check',14)}
+          <span>${lang==='de'?'Produzieren':'Produzir'}</span>
+        </button>
+        <button class="rec-act-btn sec" onclick="openRecipeForm(${r.id})">${lang==='de'?'Bearbeiten':'Editar'}</button>
+        <button class="rec-act-btn danger" onclick="confirmDeleteRecipe(${r.id})" aria-label="Excluir">${ico('trash',14)}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+let editingRecipeId=null;
+function openRecipeForm(id){
+  editingRecipeId=id;
+  const r=id?recipes.find(x=>x.id===id):null;
+  document.getElementById('recipe-form-ttl').textContent=r?(lang==='de'?'Rezept bearbeiten':'Editar receita'):(lang==='de'?'Neues Rezept':'Nova receita');
+  document.getElementById('recipe-form-sub').textContent=lang==='de'?'Ficha técnica':'Ficha técnica';
+  _renderRecipeFormBody(r);
+  document.getElementById('recipe-ov').classList.add('open');
+}
+function closeRecipeForm(e){
+  if(e&&e.target!==document.getElementById('recipe-ov')) return;
+  document.getElementById('recipe-ov').classList.remove('open');
+  editingRecipeId=null;
+}
+function _renderRecipeFormBody(r){
+  const body=document.getElementById('recipe-body');
+  const ings=(r?.ingredients||[]).slice();
+  if(ings.length===0) ings.push({productId:null,qty:'',unit:'un'});
+  body.innerHTML=`
+    <div class="rec-form-row">
+      <label>${lang==='de'?'Name':'Nome'}</label>
+      <input type="text" id="rec-f-name" value="${(r?.name||'').replace(/"/g,'&quot;')}" placeholder="${lang==='de'?'z.B. Schweineschnitzel':'Ex.: Schweineschnitzel'}">
+    </div>
+    <div class="rec-form-2col">
+      <div class="rec-form-row">
+        <label>${lang==='de'?'Portionen':'Porções'}</label>
+        <input type="number" id="rec-f-yield" min="1" step="1" value="${r?.yield||1}">
+      </div>
+      <div class="rec-form-row">
+        <label>${lang==='de'?'Verkaufspreis €':'Preço venda €'}</label>
+        <input type="number" id="rec-f-price" min="0" step="0.01" value="${r?.salePrice||''}" placeholder="0,00">
+      </div>
+    </div>
+    <div class="rec-form-row">
+      <label>${lang==='de'?'Zutaten':'Ingredientes'}</label>
+      <div class="rec-ing-list" id="rec-ing-list"></div>
+      <button type="button" class="rec-add-ing" onclick="addIngredientRow()">+ ${lang==='de'?'Zutat hinzufügen':'Adicionar ingrediente'}</button>
+    </div>
+    <div class="rec-form-actions">
+      <button class="rec-form-cancel" onclick="closeRecipeForm(null)">${lang==='de'?'Abbrechen':'Cancelar'}</button>
+      <button class="rec-form-save" onclick="saveRecipe()">${lang==='de'?'Speichern':'Salvar'}</button>
+    </div>`;
+  // Renderiza ingredientes iniciais
+  document.getElementById('rec-ing-list').innerHTML='';
+  ings.forEach(ing=>_appendIngredientRow(ing));
+}
+function _appendIngredientRow(ing){
+  const list=document.getElementById('rec-ing-list'); if(!list) return;
+  const idx=list.children.length;
+  const opts=products.map(p=>`<option value="${p.id}"${ing.productId===p.id?' selected':''}>${p.name}</option>`).join('');
+  const units=['un','kg','g','L','ml','cx','pct'].map(u=>`<option value="${u}"${ing.unit===u?' selected':''}>${u}</option>`).join('');
+  const row=document.createElement('div');
+  row.className='rec-ing-row';
+  row.innerHTML=`
+    <select aria-label="Produto" id="rec-ing-p-${idx}"><option value="">— ${lang==='de'?'wählen':'escolher'} —</option>${opts}</select>
+    <input type="number" placeholder="qty" min="0" step="0.01" value="${ing.qty||''}" id="rec-ing-q-${idx}">
+    <select aria-label="Unit" id="rec-ing-u-${idx}">${units}</select>
+    <button class="rec-ing-rm" onclick="this.parentNode.remove()" aria-label="Remover">${ico('trash',13)}</button>`;
+  list.appendChild(row);
+}
+function addIngredientRow(){
+  _appendIngredientRow({productId:null,qty:'',unit:'un'});
+}
+function saveRecipe(){
+  const name=(document.getElementById('rec-f-name').value||'').trim();
+  const yieldN=parseInt(document.getElementById('rec-f-yield').value)||1;
+  const salePrice=parseFloat(document.getElementById('rec-f-price').value)||0;
+  if(!name){ toast(lang==='de'?'Name fehlt':'Falta o nome','warn'); return; }
+  // Coletar ingredientes do DOM
+  const rows=document.querySelectorAll('#rec-ing-list .rec-ing-row');
+  const ingredients=[];
+  rows.forEach((row,i)=>{
+    const pid=parseInt(document.getElementById('rec-ing-p-'+i)?.value);
+    const qty=parseFloat(document.getElementById('rec-ing-q-'+i)?.value);
+    const unit=document.getElementById('rec-ing-u-'+i)?.value||'un';
+    if(pid && qty>0) ingredients.push({productId:pid, qty, unit});
+  });
+  if(ingredients.length===0){ toast(lang==='de'?'Mindestens 1 Zutat':'Pelo menos 1 ingrediente','warn'); return; }
+  if(editingRecipeId){
+    const r=recipes.find(x=>x.id===editingRecipeId);
+    if(r){ r.name=name; r.yield=yieldN; r.salePrice=salePrice; r.ingredients=ingredients; }
+  } else {
+    recipes.push({ id:_uid(), name, yield:yieldN, salePrice, ingredients, createdAt:new Date().toISOString() });
+  }
+  save(); renderRecipes(); closeRecipeForm(null);
+  toast(t('toastSaved'),'success');
+}
+
+// PRODUZIR
+let producingRecipeId=null;
+function openProduceModal(id){
+  const r=recipes.find(x=>x.id===id); if(!r) return;
+  producingRecipeId=id;
+  document.getElementById('produce-ttl').textContent=r.name;
+  document.getElementById('produce-sub').textContent=lang==='de'?'Wie oft produzieren?':'Quantas vezes produzir?';
+  document.getElementById('produce-mult').value='1';
+  _updateProduceInfo();
+  document.getElementById('produce-ov').classList.add('open');
+  setTimeout(()=>document.getElementById('produce-mult').select(),120);
+  document.getElementById('produce-mult').oninput=_updateProduceInfo;
+}
+function _updateProduceInfo(){
+  const r=recipes.find(x=>x.id===producingRecipeId); if(!r) return;
+  const m=parseInt(document.getElementById('produce-mult').value)||1;
+  const check=canProduceRecipe(r,m);
+  const cost=r2(recipeCost(r)*m);
+  const info=document.getElementById('produce-info');
+  if(check.ok){
+    info.style.color='var(--t2)';
+    info.innerHTML=(lang==='de'?'Verbraucht ':'Vai consumir ')+'<strong>€'+cost.toFixed(2)+'</strong> '+(lang==='de'?'an Zutaten':'em ingredientes')+'<br>'+(lang==='de'?'Erzeugt ':'Produz ')+'<strong>'+(m*(r.yield||1))+'</strong> '+(lang==='de'?'Portionen':'porções');
+  } else {
+    info.style.color='var(--red-t)';
+    info.innerHTML='<strong>'+(lang==='de'?'Nicht genug Bestand':'Estoque insuficiente')+':</strong><br>'+check.missing.map(m=>'• '+m.name+' — '+(lang==='de'?'haben ':'tem ')+m.have+m.unit+(lang==='de'?', brauchen ':', precisa ')+m.need+m.unit).join('<br>');
+  }
+}
+function closeProduceModal(e){
+  if(e&&e.target!==document.getElementById('produce-ov')) return;
+  document.getElementById('produce-ov').classList.remove('open');
+}
+function confirmProduce(){
+  const r=recipes.find(x=>x.id===producingRecipeId); if(!r) return;
+  const m=parseInt(document.getElementById('produce-mult').value)||1;
+  const result=produceRecipe(r, m);
+  if(!result.ok){
+    toast(lang==='de'?'Bestand fehlt':'Faltam ingredientes','error');
+    return;
+  }
+  save(); renderAll(); renderRecipes();
+  closeProduceModal(null);
+  toast((lang==='de'?'Produziert: ':'Produzido: ')+result.portions+' '+(lang==='de'?'Portionen · €':'porções · €')+result.totalCost.toFixed(2),'success');
+}
+
+function confirmDeleteRecipe(id){
+  const r=recipes.find(x=>x.id===id); if(!r) return;
+  showConfirm(
+    lang==='de'?'Rezept entfernen?':'Remover receita?',
+    '"'+r.name+'"',
+    ()=>{
+      recipes=recipes.filter(x=>x.id!==id);
+      save(); renderRecipes();
+      toast(lang==='de'?'Entfernt':'Removida','warn');
+    },
+    lang==='de'?'Entfernen':'Remover'
+  );
 }
 
 // ── SHELF-LIFE MEMORY ──
