@@ -75,6 +75,28 @@ input,select{font-family:inherit}
 .app-screen{display:none}
 
 .app-header{position:sticky;top:0;z-index:50;height:var(--hdr);background:rgba(255,255,255,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px}
+.hdr-brand{display:flex;align-items:center;gap:8px}
+.hdr-backup-dot{display:none;width:8px;height:8px;border-radius:50%;background:var(--amb)}
+.hdr-backup-dot.show{display:inline-block}
+.hdr-actions{display:flex;align-items:center;gap:6px}
+.hdr-icon-btn{background:transparent;border:none;color:var(--t2);padding:8px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.hdr-icon-btn:active{background:var(--surface2)}
+.cfg-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:14px}
+.cfg-section h3{font-size:.875rem;font-weight:700;color:var(--t1);margin:0 0 4px;letter-spacing:-.01em}
+.cfg-section p{font-size:.8125rem;color:var(--t2);margin:0 0 14px;line-height:1.45}
+.cfg-row{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.cfg-row:last-child{margin-bottom:0}
+.cfg-row label{font-size:.75rem;color:var(--t2);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.cfg-row input{background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-s);padding:11px 13px;font-size:.9375rem;color:var(--t1);outline:none;font-family:inherit}
+.cfg-row input:focus{border-color:var(--em);background:#fff}
+.cfg-btns{display:flex;gap:10px;flex-wrap:wrap}
+.cfg-btn{flex:1;min-width:140px;background:var(--em);color:#fff;border:none;border-radius:var(--r-s);padding:13px 14px;font-size:.9375rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s}
+.cfg-btn:active{background:var(--em-d)}
+.cfg-btn.sec{background:var(--surface2);color:var(--t1);border:1.5px solid var(--border)}
+.cfg-btn.sec:active{background:var(--border)}
+.cfg-btn.danger{background:var(--red)}
+.cfg-meta{display:flex;justify-content:space-between;font-size:.8125rem;color:var(--t2);padding:8px 0;border-top:1px solid var(--border);margin-top:12px}
+.cfg-meta strong{color:var(--t1);font-weight:600}
 .hdr-brand{display:flex;align-items:center;gap:10px}
 .hdr-wordmark{font-family:'Syne',sans-serif;font-size:1.25rem;font-weight:800;color:var(--t1);letter-spacing:-0.01em}
 .hdr-wordmark span{color:var(--em)}
@@ -431,11 +453,17 @@ input,select{font-family:inherit}
   <header class="app-header">
     <div class="hdr-brand">
       <span class="hdr-wordmark">lager<span>blick</span></span>
+      <span class="hdr-backup-dot" id="hdr-backup-dot" title="Backup pendente"></span>
     </div>
-    <button class="lang-btn" id="lang-btn" onclick="toggleLang()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
-      <span id="lang-label">DE</span>
-    </button>
+    <div class="hdr-actions">
+      <button class="hdr-icon-btn" id="btn-settings" onclick="goPage('config',null)" aria-label="Settings">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      </button>
+      <button class="lang-btn" id="lang-btn" onclick="toggleLang()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+        <span id="lang-label">DE</span>
+      </button>
+    </div>
   </header>
 
   <div class="pages">
@@ -667,6 +695,84 @@ input,select{font-family:inherit}
 
         <div class="sec-hdr" data-i="haccpRecent">Registros recentes</div>
         <div class="haccp-log" id="haccp-log"></div>
+
+      </div>
+    </div>
+
+    <!-- ── CONFIG ── -->
+    <div class="page" id="page-config">
+      <div class="home-wrap">
+
+        <div class="cfg-section">
+          <h3 data-i="cfgRestTitle">Restaurante</h3>
+          <p data-i="cfgRestSub">Aparece no PDF de HACCP e no cabeçalho dos relatórios.</p>
+          <div class="cfg-row">
+            <label data-i="cfgRestName">Nome</label>
+            <input type="text" id="cfg-rest-name" placeholder="Lagerblick">
+          </div>
+          <div class="cfg-row">
+            <label data-i="cfgRestAddr">Endereço</label>
+            <input type="text" id="cfg-rest-addr" placeholder="Straße 1, 10115 Berlin">
+          </div>
+          <div class="cfg-row">
+            <label data-i="cfgRestKonz">Nº Konzession / Lizenz</label>
+            <input type="text" id="cfg-rest-konz" placeholder="DE-BE-12345">
+          </div>
+          <div class="cfg-row">
+            <label data-i="cfgRestResp">Verantwortlich / Responsável</label>
+            <input type="text" id="cfg-rest-resp" placeholder="Hans Müller">
+          </div>
+          <div class="cfg-btns">
+            <button class="cfg-btn" onclick="saveSettings()" data-i="cfgSave">Salvar</button>
+          </div>
+        </div>
+
+        <div class="cfg-section">
+          <h3 data-i="cfgBackupTitle">Backup dos dados</h3>
+          <p data-i="cfgBackupSub">Exporte um arquivo .json com todos os produtos, log, recebimentos e HACCP. Guarde em local seguro (e-mail, Drive, pendrive). Recomendamos backup semanal.</p>
+          <div class="cfg-btns">
+            <button class="cfg-btn" onclick="exportBackup()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span data-i="cfgExport">Exportar backup</span>
+            </button>
+            <button class="cfg-btn sec" onclick="document.getElementById('cfg-import-file').click()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <span data-i="cfgImport">Importar backup</span>
+            </button>
+            <input type="file" id="cfg-import-file" accept="application/json,.json" style="display:none" onchange="importBackupFile(event)">
+          </div>
+          <div class="cfg-meta">
+            <span data-i="cfgLastBackup">Último backup</span>
+            <strong id="cfg-last-backup">—</strong>
+          </div>
+          <div class="cfg-meta">
+            <span data-i="cfgStorage">Armazenamento usado</span>
+            <strong id="cfg-storage">—</strong>
+          </div>
+        </div>
+
+        <div class="cfg-section">
+          <h3 data-i="cfgExportCSVTitle">Exportar CSV</h3>
+          <p data-i="cfgExportCSVSub">Planilhas individuais para análise no Excel/LibreOffice.</p>
+          <div class="cfg-btns">
+            <button class="cfg-btn sec" onclick="exportCSV('products')" data-i="cfgCsvProd">Produtos</button>
+            <button class="cfg-btn sec" onclick="exportCSV('log')" data-i="cfgCsvLog">Movimentações</button>
+            <button class="cfg-btn sec" onclick="exportCSV('haccp')" data-i="cfgCsvHaccp">HACCP</button>
+            <button class="cfg-btn sec" onclick="exportCSV('order')" data-i="cfgCsvOrder">Pedido</button>
+          </div>
+        </div>
+
+        <div class="cfg-section">
+          <h3 data-i="cfgDangerTitle">Zona de perigo</h3>
+          <p data-i="cfgDangerSub">Apaga TODOS os dados deste dispositivo. Faça backup antes.</p>
+          <div class="cfg-btns">
+            <button class="cfg-btn danger" onclick="confirmFactoryReset()" data-i="cfgReset">Resetar app</button>
+          </div>
+        </div>
+
+        <div class="cfg-meta" style="border:none;justify-content:center;padding-top:16px">
+          <span style="color:var(--t3);font-size:.75rem">Lagerblick · v2026.05</span>
+        </div>
 
       </div>
     </div>
@@ -966,6 +1072,7 @@ function boot(){
   applyLang(); renderAll();
   renderHACCPGrid(); renderHACCPLog(); renderHACCPProg();
   renderRecvHist(); updateRecvSel();
+  updateBackupReminder();
   // Notificações: NÃO pedimos no boot (iOS Safari nega por reflexo).
   // Pedimos quando o usuário executa ação relevante — ver confirmHACCP e saveNewProduct.
 }
@@ -1018,11 +1125,14 @@ function goPage(page,el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
-  (el||document.getElementById('nav-'+page)).classList.add('active');
+  // 'config' não está no bottom nav — só ativa nav-btn se elemento foi passado
+  const navBtn=el||document.getElementById('nav-'+page);
+  if(navBtn) navBtn.classList.add('active');
   if(page==='receber') { updateRecvSel(); renderRecvHist(); }
   if(page==='haccp')   { renderHACCPGrid(); renderHACCPLog(); renderHACCPProg(); }
   if(page==='estoque') renderEst();
   if(page==='home')    renderHome();
+  if(page==='config')  renderConfigPage();
 }
 
 // ── HELPERS ──
@@ -1812,6 +1922,161 @@ window.lbDiag=function(){
   console.log('Cache:',Object.keys(cache).length,'EANs · Shelf:',Object.keys(shelf).length,'EANs');
   return {errs,cacheCount:Object.keys(cache).length,shelfCount:Object.keys(shelf).length};
 };
+
+// ── SETTINGS ──────────────────────────────────────────────
+// Estrutura: { restName, restAddr, restKonz, restResp, lastBackupTs }
+function getSettings(){
+  try{ return JSON.parse(localStorage.getItem('lb4_settings')||'{}'); }
+  catch(_){ return {}; }
+}
+function setSettings(s){
+  try{ localStorage.setItem('lb4_settings',JSON.stringify(s)); }catch(e){ _logErr('settings',null,e); }
+}
+function saveSettings(){
+  const s=getSettings();
+  s.restName=document.getElementById('cfg-rest-name').value.trim();
+  s.restAddr=document.getElementById('cfg-rest-addr').value.trim();
+  s.restKonz=document.getElementById('cfg-rest-konz').value.trim();
+  s.restResp=document.getElementById('cfg-rest-resp').value.trim();
+  setSettings(s);
+  toast(lang==='de'?'Gespeichert':'Salvo','success');
+}
+function renderConfigPage(){
+  const s=getSettings();
+  document.getElementById('cfg-rest-name').value=s.restName||'';
+  document.getElementById('cfg-rest-addr').value=s.restAddr||'';
+  document.getElementById('cfg-rest-konz').value=s.restKonz||'';
+  document.getElementById('cfg-rest-resp').value=s.restResp||'';
+  // Último backup
+  const last=s.lastBackupTs?new Date(s.lastBackupTs).toLocaleString(lang==='de'?'de-DE':'pt-BR'):(lang==='de'?'nie':'nunca');
+  document.getElementById('cfg-last-backup').textContent=last;
+  // Storage usado: aproximação somando todas as keys lb4_*
+  let bytes=0;
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i); if(!k||!k.startsWith('lb4_')) continue;
+    bytes+=(k.length+(localStorage.getItem(k)||'').length)*2; // UTF-16
+  }
+  const kb=(bytes/1024).toFixed(0);
+  const pct=Math.min(100,Math.round(bytes/(5*1024*1024)*100));
+  document.getElementById('cfg-storage').textContent=kb+' KB · ~'+pct+'% de 5 MB';
+}
+
+// ── BACKUP / RESTORE ──────────────────────────────────────
+const BACKUP_VERSION=1;
+function _buildBackupPayload(){
+  return {
+    app:'lagerblick',
+    version:BACKUP_VERSION,
+    exportedAt:new Date().toISOString(),
+    data:{
+      products: products,
+      log: log,
+      receipts: receipts,
+      haccpLog: haccpLog,
+      shelf: JSON.parse(localStorage.getItem('lb4_shelf')||'{}'),
+      cache: JSON.parse(localStorage.getItem('lb4_cache')||'{}'),
+      settings: getSettings(),
+      // sprint 3: lotes (será preenchido quando existir)
+      batches: JSON.parse(localStorage.getItem('lb4_b')||'[]'),
+      // sprint 5: receitas (será preenchido quando existir)
+      recipes: JSON.parse(localStorage.getItem('lb4_recipes')||'[]')
+    }
+  };
+}
+function exportBackup(){
+  try{
+    const payload=_buildBackupPayload();
+    const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    const stamp=new Date().toISOString().slice(0,10);
+    const restName=(getSettings().restName||'lagerblick').replace(/\W+/g,'-').toLowerCase();
+    a.href=url; a.download=restName+'-backup-'+stamp+'.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    // marca timestamp
+    const s=getSettings(); s.lastBackupTs=Date.now(); setSettings(s);
+    renderConfigPage(); updateBackupReminder();
+    toast(lang==='de'?'Backup exportiert':'Backup exportado','success');
+  }catch(e){
+    _logErr('backup-export',null,e);
+    toast(lang==='de'?'Backup-Fehler':'Erro ao exportar','error');
+  }
+}
+function importBackupFile(ev){
+  const file=ev.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const payload=JSON.parse(reader.result);
+      if(payload.app!=='lagerblick'||!payload.data) throw new Error('formato inválido');
+      // Preview pra confirmar
+      const d=payload.data;
+      const summary=(lang==='de'?'Wird ersetzt':'Vai substituir')+':\n'
+        +'• '+(d.products?.length||0)+' '+(lang==='de'?'Produkte':'produtos')+'\n'
+        +'• '+(d.log?.length||0)+' '+(lang==='de'?'Bewegungen':'movimentações')+'\n'
+        +'• '+(d.receipts?.length||0)+' '+(lang==='de'?'Lieferungen':'recebimentos')+'\n'
+        +'• '+(d.haccpLog?.length||0)+' HACCP\n'
+        +(d.batches?.length?'• '+d.batches.length+(lang==='de'?' Chargen':' lotes')+'\n':'')
+        +(d.recipes?.length?'• '+d.recipes.length+(lang==='de'?' Rezepte':' receitas')+'\n':'')
+        +'\n'+(lang==='de'?'Aktuelle Daten gehen verloren!':'Os dados atuais serão perdidos!');
+      showConfirm(
+        lang==='de'?'Backup wiederherstellen?':'Restaurar backup?',
+        summary,
+        ()=>_applyBackup(payload),
+        lang==='de'?'Wiederherstellen':'Restaurar'
+      );
+    }catch(e){
+      _logErr('backup-import',null,e);
+      toast(lang==='de'?'Datei ungültig':'Arquivo inválido','error');
+    }
+  };
+  reader.readAsText(file);
+  ev.target.value=''; // permite re-importar mesmo arquivo
+}
+function _applyBackup(payload){
+  try{
+    const d=payload.data;
+    if(Array.isArray(d.products)) products=d.products;
+    if(Array.isArray(d.log))      log=d.log;
+    if(Array.isArray(d.receipts)) receipts=d.receipts;
+    if(Array.isArray(d.haccpLog)) haccpLog=d.haccpLog;
+    if(d.settings)                setSettings(d.settings);
+    if(d.shelf)   localStorage.setItem('lb4_shelf',JSON.stringify(d.shelf));
+    if(d.cache)   localStorage.setItem('lb4_cache',JSON.stringify(d.cache));
+    if(Array.isArray(d.batches))  localStorage.setItem('lb4_b',JSON.stringify(d.batches));
+    if(Array.isArray(d.recipes))  localStorage.setItem('lb4_recipes',JSON.stringify(d.recipes));
+    save();
+    renderAll(); renderHACCPGrid(); renderHACCPLog(); renderHACCPProg(); renderRecvHist(); updateRecvSel();
+    renderConfigPage();
+    toast(lang==='de'?'Wiederhergestellt':'Restaurado','success');
+  }catch(e){
+    _logErr('backup-apply',null,e);
+    toast(lang==='de'?'Wiederherstellung fehlgeschlagen':'Falha ao restaurar','error');
+  }
+}
+
+// Aviso visual de backup atrasado (>7 dias sem backup)
+function updateBackupReminder(){
+  const dot=document.getElementById('hdr-backup-dot'); if(!dot) return;
+  const s=getSettings();
+  const stale = !s.lastBackupTs || (Date.now()-s.lastBackupTs)>7*86400000;
+  // Só mostra se houver dados — não polui app vazio
+  const hasData = products.length>0 || log.length>0;
+  dot.classList.toggle('show', stale && hasData);
+}
+
+function confirmFactoryReset(){
+  showConfirm(
+    lang==='de'?'Alles löschen?':'Apagar tudo?',
+    lang==='de'?'Alle Produkte, Bewegungen, HACCP und Einstellungen werden entfernt. Diese Aktion kann nicht rückgängig gemacht werden.':'Todos os produtos, movimentações, HACCP e configurações serão removidos. Esta ação não pode ser desfeita.',
+    ()=>{
+      ['lb4_p','lb4_l','lb4_r','lb4_h','lb4_settings','lb4_shelf','lb4_cache','lb4_err','lb4_b','lb4_recipes'].forEach(k=>localStorage.removeItem(k));
+      location.reload();
+    },
+    lang==='de'?'Ja, alles löschen':'Sim, apagar'
+  );
+}
 
 // ── SHELF-LIFE MEMORY ──
 // Aprende o tempo típico de validade (em dias a partir do recebimento) por EAN.
