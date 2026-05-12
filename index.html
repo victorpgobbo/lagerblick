@@ -367,8 +367,14 @@ input,select{font-family:inherit}
 .scanner-aim-i::after{bottom:0;right:0;border-width:0 2px 2px 0}
 .scanner-line{position:absolute;left:10px;right:10px;height:1.5px;background:var(--em);opacity:.9;animation:sl 1.8s ease-in-out infinite}
 @keyframes sl{0%,100%{top:15%}50%{top:80%}}
-.scanner-hint{color:rgba(255,255,255,.65);font-size:.875rem;margin-top:28px;text-align:center;padding:0 32px;font-weight:500}
-.scanner-cancel{margin-top:20px;padding:13px 40px;background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.18);border-radius:var(--r);font-size:.9375rem;font-weight:600;cursor:pointer;transition:background .15s}
+.scanner-hint{color:rgba(255,255,255,.65);font-size:.875rem;margin-top:28px;text-align:center;padding:0 32px;font-weight:500;min-height:1.2em}
+.scanner-manual{display:flex;gap:8px;margin-top:18px;width:100%;max-width:340px;padding:0 24px}
+.scanner-manual input{flex:1;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#fff;border-radius:var(--r-s);padding:12px 14px;font-size:1rem;font-weight:500;outline:none;font-family:inherit}
+.scanner-manual input::placeholder{color:rgba(255,255,255,.45)}
+.scanner-manual input:focus{border-color:var(--em);background:rgba(255,255,255,.12)}
+.scanner-manual-go{background:var(--em);color:#fff;border:none;border-radius:var(--r-s);padding:0 22px;font-size:.9375rem;font-weight:700;cursor:pointer;transition:background .15s}
+.scanner-manual-go:active{background:var(--em-d)}
+.scanner-cancel{margin-top:18px;padding:13px 40px;background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.18);border-radius:var(--r);font-size:.9375rem;font-weight:600;cursor:pointer;transition:background .15s}
 .scanner-cancel:active{background:rgba(255,255,255,.2)}
 
 /* ─── TOAST ──────────────────────────────────────────── */
@@ -706,6 +712,10 @@ input,select{font-family:inherit}
     </div>
   </div>
   <div class="scanner-hint" id="scanner-hint">Aponte para o código de barras</div>
+  <div class="scanner-manual">
+    <input type="text" inputmode="numeric" pattern="\d*" id="scanner-manual-ean" placeholder="ou digite o EAN" autocomplete="off" onkeydown="if(event.key==='Enter')submitManualEAN()">
+    <button class="scanner-manual-go" onclick="submitManualEAN()" aria-label="OK">OK</button>
+  </div>
   <button class="scanner-cancel" onclick="closeScanner()">Cancelar</button>
 </div>
 
@@ -780,7 +790,8 @@ input,select{font-family:inherit}
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2/dist/quagga.min.js"></script>
+<!-- ZXing-Browser: leitor multi-formato (EAN-13, Code-128/GS1, Data Matrix, QR) com FNC1 correto em iOS -->
+<script src="https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/zxing-browser.min.js"></script>
 <script>
 // ═══════════════════════════════════════════════════
 //  LAGERBLICK v4.0  —  minimal · professional · fast
@@ -833,6 +844,8 @@ let basket   = [];
 let selSupplier = 'Transgourmet';
 let scanMode = 'recv';
 let scannerOn = false;
+let bdRunning = false; // BarcodeDetector nativo loop
+let bdStream  = null;  // MediaStream do BarcodeDetector
 let pendingEAN = null;
 let activeFilter = 'all';
 let activeHACCPKey = null;
@@ -1234,6 +1247,7 @@ function saveNewProduct(){
   if(!name||isNaN(qty)||isNaN(min)){ toast('Preencha nome, quantidade e mínimo','warn'); return; }
   products.push({ id:Date.now(), name, qty, min, unit, price, exp, ean:pendingEAN, lot, supplier });
   log.unshift({ id:Date.now(), time:ts(), type:'in', name, qty, unit, reason:'Cadastro' });
+  if(pendingEAN && exp) _shelfAdd(pendingEAN, exp);
   save();
   ['f-name','f-qty','f-min','f-price','f-exp','f-lot','f-supplier'].forEach(id=>document.getElementById(id).value='');
   pendingEAN=null; document.getElementById('f-ean-hint').textContent='';
@@ -1262,6 +1276,7 @@ function saveCardEdit(id){
   const diff=r2(p.qty-qty);
   p.name=name; p.qty=r2(qty); p.min=r2(min); p.unit=unit; p.price=price; p.exp=exp; p.lot=lot; p.supplier=supplier;
   if(diff!==0) log.unshift({ id:Date.now(), time:ts(), type:diff>0?'out':'in', name:p.name, qty:Math.abs(diff), unit:p.unit, reason:lang==='de'?'Manuelle Anpassung':'Ajuste manual' });
+  if(p.ean && exp) _shelfAdd(p.ean, exp);
   save(); renderAll(); updateRecvSel(); toast(t('toastSaved'),'success');
 }
 function quickAdj(id,delta){
@@ -1454,53 +1469,335 @@ function renderHACCPLog(){
 }
 
 // ── SCANNER ──
+// Dispatcher comum: decide entre GS1 e EAN, dedupa, encerra overlay
+function _scanDispatch(code,fmt){
+  if(!code) return;
+  closeScanner();
+  // GS1-128: detectado apenas se contém FNC1 OU começa com padrão AI conhecido
+  if(fmt==='code_128'||(/^\d{16,}$/.test(code)&&/^01\d{14}/.test(code))){
+    const looksGS1 = code.includes('\x1d')
+                  || /^01\d{14}/.test(code)
+                  || /^00\d{18}/.test(code)
+                  || /^(11|15|16|17)\d{6}/.test(code)
+                  || /^10[A-Z0-9]/i.test(code)
+                  || /^37\d/.test(code);
+    if(looksGS1){
+      const gs1=parseGS1(code);
+      const hasUseful = gs1['01']||gs1['02']||gs1['17']||gs1['15']||gs1['16']||gs1['10']
+                     || Object.keys(gs1).some(k=>/^31[0-9]\d$/.test(k)||k==='37');
+      if(hasUseful){ handleGS1(gs1); return; }
+    }
+  }
+  handleEAN(code);
+}
+
 function openScanner(mode){
   scanMode=mode;
   document.getElementById('scanner-ov').classList.add('open');
   document.getElementById('scanner-hint').textContent=lang==='de'?'Kamera auf Barcode richten':'Aponte para o código de barras';
-  if(typeof Quagga==='undefined'){
-    document.getElementById('scanner-hint').textContent=lang==='de'?'Kamera benötigt HTTPS':'Câmera requer HTTPS'; return;
+  const mi=document.getElementById('scanner-manual-ean'); if(mi) mi.value='';
+
+  // 1ª tentativa: BarcodeDetector nativo (Android Chrome) — não existe no iOS Safari
+  if('BarcodeDetector' in window && navigator.mediaDevices?.getUserMedia){
+    _startBarcodeDetector().catch(e=>{
+      _logErr('BD-init',null,e);
+      _startZXing(); // fallback ZXing
+    });
+    return;
   }
+  // iPhone / iPad / outros: usa ZXing (suporta Data Matrix + GS1-128 com FNC1)
+  _startZXing();
+}
+
+async function _startBarcodeDetector(){
+  const supported=await BarcodeDetector.getSupportedFormats().catch(()=>[]);
+  const formats=['ean_13','ean_8','code_128','upc_a','upc_e'].filter(f=>supported.includes(f));
+  if(formats.length===0) throw new Error('no formats');
+  const detector=new BarcodeDetector({formats});
+  const stream=await navigator.mediaDevices.getUserMedia({
+    video:{ facingMode:{ideal:'environment'}, width:{ideal:1280}, height:{ideal:720} },
+    audio:false
+  });
+  bdStream=stream;
+  const video=document.createElement('video');
+  video.setAttribute('playsinline','');
+  video.muted=true; video.autoplay=true;
+  video.style.width='100%'; video.style.display='block';
+  video.srcObject=stream;
+  const vp=document.getElementById('scanner-vp');
+  vp.innerHTML=''; vp.appendChild(video);
+  await video.play().catch(()=>{});
+  bdRunning=true;
   let lastCode='',lastTime=0;
-  Quagga.init({
-    inputStream:{ type:'LiveStream', target:document.querySelector('#scanner-vp'), constraints:{ facingMode:'environment', width:{ideal:1280}, height:{ideal:720} } },
-    decoder:{ readers:['ean_reader','ean_8_reader','code_128_reader','upc_reader'] },
-    locate:true,
-  },err=>{
-    if(err){ document.getElementById('scanner-hint').textContent='× '+err; return; }
-    Quagga.start(); scannerOn=true;
-  });
-  Quagga.onDetected(result=>{
-    const code=result.codeResult.code;
-    const fmt=result.codeResult.format;
-    const dedupeKey=fmt+':'+code; // inclui formato para evitar double-fire EAN+Code128 do mesmo barcode
-    const now2=Date.now();
-    if(dedupeKey===lastCode&&now2-lastTime<2500) return;
-    lastCode=dedupeKey; lastTime=now2;
-    closeScanner();
-    // GS1-128: detectado apenas se contém FNC1 OU começa com padrão AI conhecido (01+14d, 00+18d, etc.)
-    if(fmt==='code_128'){
-      const looksGS1 = code.includes('\x1d')
-                    || /^01\d{14}/.test(code)          // GTIN-14
-                    || /^00\d{18}/.test(code)          // SSCC
-                    || /^(11|15|16|17)\d{6}/.test(code)// data-only
-                    || /^10[A-Z0-9]/i.test(code)       // lote como 1º AI
-                    || /^37\d/.test(code);              // contagem como 1º AI
-      if(looksGS1){
-        const gs1=parseGS1(code);
-        const hasUseful = gs1['01']||gs1['02']||gs1['17']||gs1['15']||gs1['16']||gs1['10']
-                       || Object.keys(gs1).some(k=>/^31[0-9]\d$/.test(k)||k==='37');
-        if(hasUseful){ handleGS1(gs1); return; }
+  const tick=async ()=>{
+    if(!bdRunning) return;
+    try{
+      const codes=await detector.detect(video);
+      if(codes&&codes[0]){
+        const c=codes[0]; const code=c.rawValue||''; const fmt=c.format==='code_128'?'code_128':'ean_13';
+        const dedupeKey=fmt+':'+code; const now2=Date.now();
+        if(!(dedupeKey===lastCode&&now2-lastTime<2500)){
+          lastCode=dedupeKey; lastTime=now2;
+          _scanDispatch(code,fmt);
+          return;
+        }
       }
+    }catch(e){ /* frames intermitentes */ }
+    if(bdRunning) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+// ZXing-Browser: EAN-13/8, UPC-A/E, Code-128 (com FNC1 quando GS1), Data Matrix, QR
+let zxingControls=null;
+async function _startZXing(){
+  if(typeof ZXingBrowser==='undefined'){
+    document.getElementById('scanner-hint').textContent=lang==='de'?'Scanner nicht geladen':'Scanner não carregado';
+    _logErr('ZX-undef',null,'ZXingBrowser not loaded');
+    return;
+  }
+  try{
+    // Hints: ASSUME_GS1=7 faz Code-128 retornar FNC1 () — crítico pra lote
+    const hints=new Map();
+    const BF=ZXingBrowser.BarcodeFormat;
+    if(BF){
+      hints.set(2/*POSSIBLE_FORMATS*/,[
+        BF.EAN_13, BF.EAN_8, BF.UPC_A, BF.UPC_E,
+        BF.CODE_128, BF.DATA_MATRIX, BF.QR_CODE
+      ]);
     }
-    handleEAN(code);
-  });
+    hints.set(3/*TRY_HARDER*/,true);
+    hints.set(7/*ASSUME_GS1*/,true);
+
+    // Cria o <video> dentro do viewport
+    const vp=document.getElementById('scanner-vp');
+    vp.innerHTML='';
+    const video=document.createElement('video');
+    video.setAttribute('playsinline','');
+    video.setAttribute('autoplay','');
+    video.muted=true;
+    video.style.width='100%'; video.style.display='block';
+    vp.appendChild(video);
+
+    const reader=new ZXingBrowser.BrowserMultiFormatReader(hints,{delayBetweenScanAttempts:120,delayBetweenScanSuccess:1500});
+
+    // Escolhe câmera traseira quando possível
+    let deviceId;
+    try{
+      const devices=await ZXingBrowser.BrowserMultiFormatReader.listVideoInputDevices();
+      const back=devices.find(d=>/back|rear|environment|trás|traseira|rück/i.test(d.label));
+      deviceId=back?back.deviceId:(devices[devices.length-1]?.deviceId);
+    }catch(_){}
+
+    let lastCode='',lastTime=0;
+    zxingControls=await reader.decodeFromVideoDevice(deviceId,video,(result)=>{
+      if(!result) return;
+      const code=result.getText();
+      const fmtN=typeof result.getBarcodeFormat==='function'?result.getBarcodeFormat():null;
+      // 4=CODE_128, 5=DATA_MATRIX, 11=QR_CODE — Data Matrix e QR de caixa fornecedor são GS1
+      let fmt='ean_13';
+      if(fmtN===4||fmtN===5||fmtN===11) fmt='code_128';
+      const dedupeKey=fmt+':'+code;
+      const now2=Date.now();
+      if(dedupeKey===lastCode&&now2-lastTime<2500) return;
+      lastCode=dedupeKey; lastTime=now2;
+      _scanDispatch(code,fmt);
+    });
+    scannerOn=true;
+  }catch(e){
+    _logErr('ZX-start',null,e);
+    document.getElementById('scanner-hint').textContent='× '+(e.message||e);
+  }
 }
 function closeScanner(){
-  if(scannerOn&&typeof Quagga!=='undefined'){ try{Quagga.stop();}catch(e){} scannerOn=false; }
+  if(zxingControls){ try{zxingControls.stop();}catch(e){} zxingControls=null; }
+  if(bdRunning){ bdRunning=false; }
+  if(bdStream){ try{bdStream.getTracks().forEach(t=>t.stop());}catch(e){} bdStream=null; }
+  scannerOn=false;
   document.getElementById('scanner-ov').classList.remove('open');
   document.getElementById('scanner-vp').innerHTML='';
+  const mi=document.getElementById('scanner-manual-ean'); if(mi) mi.value='';
 }
+
+// Submissão manual do EAN pelo input do overlay (fallback quando câmera falha)
+function submitManualEAN(){
+  const el=document.getElementById('scanner-manual-ean'); if(!el) return;
+  const raw=(el.value||'').trim().replace(/\D/g,'');
+  if(raw.length<8||raw.length>14){
+    document.getElementById('scanner-hint').textContent=lang==='de'?'Ungültiger Code (8-14 Ziffern)':'Código inválido (8-14 dígitos)';
+    return;
+  }
+  closeScanner();
+  // Trata como EAN simples; GS1 pode ser colado também e será detectado por padrão
+  if(/^01\d{14}/.test(raw)){ const gs1=parseGS1(raw); handleGS1(gs1); }
+  else handleEAN(raw);
+}
+
+// ── PRODUCT LOOKUP: cache + timeout + retry + endpoints em paralelo ──
+// Cache local: key = ean → { name, exp, qty, unit, ts }
+const LOOKUP_CACHE_TTL = 90*24*60*60*1000; // 90 dias
+function _cacheGet(ean){
+  try{
+    const all=JSON.parse(localStorage.getItem('lb4_cache')||'{}');
+    const e=all[ean]; if(!e) return null;
+    if(Date.now()-e.ts>LOOKUP_CACHE_TTL){ delete all[ean]; localStorage.setItem('lb4_cache',JSON.stringify(all)); return null; }
+    return e;
+  }catch(_){ return null; }
+}
+function _cacheSet(ean,data){
+  try{
+    const all=JSON.parse(localStorage.getItem('lb4_cache')||'{}');
+    all[ean]={...data, ts:Date.now()};
+    // limita a ~500 entradas (LRU simples: descarta as mais antigas)
+    const keys=Object.keys(all);
+    if(keys.length>500){
+      keys.sort((a,b)=>all[a].ts-all[b].ts).slice(0,keys.length-500).forEach(k=>delete all[k]);
+    }
+    localStorage.setItem('lb4_cache',JSON.stringify(all));
+  }catch(_){}
+}
+
+// Log de erros para diagnóstico remoto
+function _logErr(where,ean,err){
+  try{
+    const arr=JSON.parse(localStorage.getItem('lb4_err')||'[]');
+    arr.unshift({t:new Date().toISOString(),where,ean:ean||null,err:String(err&&err.message||err).slice(0,200)});
+    localStorage.setItem('lb4_err',JSON.stringify(arr.slice(0,50)));
+  }catch(_){}
+}
+
+// fetch com timeout (AbortController) — falha rápida em rede ruim
+function _fetchTO(url,ms=8000){
+  const ctl=new AbortController();
+  const id=setTimeout(()=>ctl.abort(),ms);
+  return fetch(url,{signal:ctl.signal,headers:{'Accept':'application/json'}})
+    .then(r=>{ clearTimeout(id); if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .catch(e=>{ clearTimeout(id); throw e; });
+}
+
+// Tenta OFF (DE + mundial em paralelo, fica com o primeiro com nome)
+async function _lookupOFF(ean){
+  const fields='product_name,product_name_de,product_name_en,generic_name_de,generic_name,expiration_date,best_before_date,quantity,product_quantity,product_quantity_unit,serving_quantity';
+  const urls=[
+    'https://de.openfoodfacts.org/api/v2/product/'+ean+'.json?fields='+fields,
+    'https://world.openfoodfacts.org/api/v2/product/'+ean+'.json?fields='+fields,
+  ];
+  const tries=urls.map(u=>_fetchTO(u,8000).then(d=>{
+    if(d.status!==1||!d.product) throw new Error('not found');
+    const p=d.product;
+    const name=(p.product_name_de||p.product_name||p.product_name_en||p.generic_name_de||p.generic_name||'').trim();
+    if(!name) throw new Error('no name');
+    return {
+      name,
+      exp: parseAnyDate(p.expiration_date||p.best_before_date||''),
+      qtyInfo: _parseQtyStr(p.product_quantity||p.quantity)
+              || (p.product_quantity_unit&&!isNaN(parseFloat(p.serving_quantity))?{qty:parseFloat(p.serving_quantity),unit:p.product_quantity_unit}:null),
+      src:'off'
+    };
+  }));
+  return Promise.any(tries);
+}
+
+// Fallback: UPC Item DB (cota trial limitada — só tenta se OFF falhar)
+async function _lookupUPC(ean){
+  const d=await _fetchTO('https://api.upcitemdb.com/prod/trial/lookup?upc='+ean,8000);
+  if(d.code!=='OK'||!d.items||!d.items[0]) throw new Error(d.code||'no item');
+  const it=d.items[0];
+  const name=(it.title||'').trim();
+  if(!name) throw new Error('no name');
+  return { name, exp:null, qtyInfo:_parseQtyStr(it.size), src:'upc' };
+}
+
+// Lookup principal: cache → OFF (retry 1×) → UPC → falha
+// Retorna {name, exp, qtyInfo, src, fromCache} ou null
+async function _lookupProduct(ean){
+  if(!ean) return null;
+  const cached=_cacheGet(ean);
+  if(cached&&cached.name) return {...cached, fromCache:true};
+
+  // 1ª tentativa OFF
+  try{
+    const r=await _lookupOFF(ean);
+    _cacheSet(ean,r); return r;
+  }catch(e1){
+    _logErr('OFF#1',ean,e1.errors?e1.errors[0]:e1);
+    // Se foi abort/rede, faz 1 retry após 600ms; se foi "not found", pula direto pro UPC
+    const msg=String(e1.errors?e1.errors[0]:e1.message||e1);
+    const isNotFound=/not found|no name|404/i.test(msg);
+    if(!isNotFound){
+      await new Promise(r=>setTimeout(r,600));
+      try{
+        const r=await _lookupOFF(ean);
+        _cacheSet(ean,r); return r;
+      }catch(e2){ _logErr('OFF#2',ean,e2.errors?e2.errors[0]:e2); }
+    }
+  }
+  // Fallback UPC
+  try{
+    const r=await _lookupUPC(ean);
+    _cacheSet(ean,r); return r;
+  }catch(e){ _logErr('UPC',ean,e); }
+  return null;
+}
+
+// Diagnóstico: mostra últimos erros (chame no console: lbDiag())
+window.lbDiag=function(){
+  const errs=JSON.parse(localStorage.getItem('lb4_err')||'[]');
+  const cache=JSON.parse(localStorage.getItem('lb4_cache')||'{}');
+  const shelf=JSON.parse(localStorage.getItem('lb4_shelf')||'{}');
+  console.table(errs);
+  console.log('Cache:',Object.keys(cache).length,'EANs · Shelf:',Object.keys(shelf).length,'EANs');
+  return {errs,cacheCount:Object.keys(cache).length,shelfCount:Object.keys(shelf).length};
+};
+
+// ── SHELF-LIFE MEMORY ──
+// Aprende o tempo típico de validade (em dias a partir do recebimento) por EAN.
+// Estrutura: { [ean]: { samples:[{ts, days}], avg:number, n:number } }
+// Estratégia: guarda até 8 amostras recentes; descarta outliers fora de ±60% da mediana antes de tirar média.
+function _shelfGet(ean){
+  if(!ean) return null;
+  try{
+    const all=JSON.parse(localStorage.getItem('lb4_shelf')||'{}');
+    const e=all[ean]; if(!e||!e.avg||e.avg<=0) return null;
+    return e;
+  }catch(_){ return null; }
+}
+function _shelfAdd(ean, expDateStr){
+  if(!ean||!expDateStr) return;
+  try{
+    const today=new Date(); today.setHours(0,0,0,0);
+    const exp=new Date(expDateStr+'T00:00:00'); if(isNaN(exp)) return;
+    const days=Math.round((exp-today)/86400000);
+    if(days<1||days>3650) return; // descarta valores absurdos
+    const all=JSON.parse(localStorage.getItem('lb4_shelf')||'{}');
+    const e=all[ean]||{samples:[]};
+    e.samples=(e.samples||[]).concat([{ts:Date.now(),days}]).slice(-8);
+    // mediana → descarta outliers ±60%
+    const sorted=e.samples.map(s=>s.days).sort((a,b)=>a-b);
+    const med=sorted[Math.floor(sorted.length/2)];
+    const keep=sorted.filter(d=>d>=med*0.4&&d<=med*1.6);
+    e.avg=Math.round(keep.reduce((a,b)=>a+b,0)/keep.length);
+    e.n=e.samples.length;
+    all[ean]=e;
+    // LRU se ficar grande
+    const keys=Object.keys(all);
+    if(keys.length>1000){
+      keys.sort((a,b)=>{
+        const ta=(all[a].samples||[]).slice(-1)[0]?.ts||0;
+        const tb=(all[b].samples||[]).slice(-1)[0]?.ts||0;
+        return ta-tb;
+      }).slice(0,keys.length-1000).forEach(k=>delete all[k]);
+    }
+    localStorage.setItem('lb4_shelf',JSON.stringify(all));
+  }catch(_){}
+}
+// Gera string YYYY-MM-DD = hoje + days
+function _shelfSuggestDate(days){
+  if(!days||days<=0) return null;
+  const d=new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate()+days);
+  return d.toISOString().slice(0,10);
+}
+
 // Limpa o form de cadastro antes de um novo scan
 function _clearForm(){
   ['f-name','f-qty','f-min','f-price','f-exp','f-lot','f-supplier'].forEach(id=>{
@@ -1542,63 +1839,57 @@ async function handleEAN(ean){
   // Limpa tudo e mostra estado de carregamento
   _clearForm();
   pendingEAN=ean;
-  document.getElementById('f-name').value=lang==='de'?'Buscando…':'Buscando…';
+  const nameEl=document.getElementById('f-name');
+  const hintEl=document.getElementById('f-ean-hint');
+  nameEl.value=lang==='de'?'Suche…':'Buscando…';
+  hintEl.style.color='var(--t2)';
+  hintEl.textContent=(lang==='de'?'EAN ':'EAN ')+ean+' · '+(lang==='de'?'verbinde…':'consultando…');
 
-  // ── Fetch Open Food Facts ──
-  let name='', expDate=null, qtyInfo=null;
-  try{
-    const r1=await fetch('https://world.openfoodfacts.org/api/v0/product/'+ean+'.json');
-    const d1=await r1.json();
-    if(d1.status===1){
-      const p=d1.product;
-      name=p.product_name_de||p.product_name_en||p.product_name||'';
-      expDate=parseAnyDate(p.expiration_date||p.best_before_date||'');
-      qtyInfo=_parseQtyStr(p.product_quantity);
-      // fallback: quantity_unit separado
-      if(!qtyInfo && p.product_quantity_unit){
-        const n=parseFloat(p.serving_quantity||'');
-        if(!isNaN(n)) qtyInfo={qty:n, unit:p.product_quantity_unit};
-      }
-    }
-  }catch(_){}
-
-  // ── Fallback UPC Item DB ──
-  if(!name){
-    try{
-      const r2=await fetch('https://api.upcitemdb.com/prod/trial/lookup?upc='+ean);
-      const d2=await r2.json();
-      if(d2.code==='OK'&&d2.items?.[0]){
-        const it=d2.items[0];
-        name=it.title||'';
-        if(!qtyInfo) qtyInfo=_parseQtyStr(it.size);
-      }
-    }catch(_){}
-  }
+  // ── Lookup robusto (cache + OFF DE+World em paralelo + UPC fallback + retry) ──
+  const r=await _lookupProduct(ean);
 
   if(mySession!==scanSession) return; // outro scan começou
 
-  // ── Preenche campos ──
-  document.getElementById('f-name').value=name;
-  if(expDate)  document.getElementById('f-exp').value=expDate;
-  if(qtyInfo){ document.getElementById('f-qty').value=qtyInfo.qty; document.getElementById('f-unit').value=qtyInfo.unit; }
+  const name    = r?.name || '';
+  let   expDate = r?.exp  || null;
+  const qtyInfo = r?.qtyInfo || null;
+  const online  = navigator.onLine!==false;
 
-  // ── Hint informativo ──
-  const got=[];
-  if(name)    got.push(lang==='de'?'Name ✓':'Nome ✓');
-  if(expDate) got.push('Val: '+new Date(expDate+'T00:00:00').toLocaleDateString(lang==='de'?'de-DE':'pt-BR'));
-  if(qtyInfo) got.push(qtyInfo.qty+' '+qtyInfo.unit);
-
-  if(name){
-    document.getElementById('f-ean-hint').style.color='var(--em)';
-    document.getElementById('f-ean-hint').textContent=got.join(' · ');
-    document.getElementById('f-qty').focus();
-  } else {
-    document.getElementById('f-ean-hint').style.color='var(--t2)';
-    document.getElementById('f-ean-hint').textContent='EAN '+ean+' — '+(lang==='de'?'Name eingeben':'Digite o nome');
-    document.getElementById('f-name').focus();
+  // ── Shelf-life: se API não devolveu validade, sugere baseado no histórico ──
+  let expFromShelf=null;
+  if(!expDate){
+    const shelf=_shelfGet(ean);
+    if(shelf&&shelf.avg) expFromShelf={days:shelf.avg, n:shelf.n, date:_shelfSuggestDate(shelf.avg)};
   }
 
-  if(scanMode==='recv') toast(lang==='de'?'Neues Produkt':'Produto novo','warn');
+  // ── Preenche campos ──
+  nameEl.value=name;
+  if(expDate)            document.getElementById('f-exp').value=expDate;
+  else if(expFromShelf)  document.getElementById('f-exp').value=expFromShelf.date;
+  if(qtyInfo){ document.getElementById('f-qty').value=qtyInfo.qty; document.getElementById('f-unit').value=qtyInfo.unit; }
+
+  // ── Hint + toast ──
+  if(name){
+    const got=[];
+    got.push(lang==='de'?'Name ✓':'Nome ✓');
+    if(expDate)           got.push('Val: '+new Date(expDate+'T00:00:00').toLocaleDateString(lang==='de'?'de-DE':'pt-BR'));
+    else if(expFromShelf) got.push((lang==='de'?'Val ≈ +':'Val ≈ +')+expFromShelf.days+(lang==='de'?'T (Verlauf)':'d (histórico)'));
+    if(qtyInfo) got.push(qtyInfo.qty+' '+qtyInfo.unit);
+    if(r.fromCache) got.push(lang==='de'?'(Cache)':'(cache)');
+    hintEl.style.color='var(--em)';
+    hintEl.textContent=got.join(' · ');
+    document.getElementById('f-qty').focus();
+    if(scanMode==='recv') toast(lang==='de'?'Neues Produkt':'Produto novo','warn');
+  } else {
+    nameEl.value=''; // tira o "Buscando…"
+    hintEl.style.color=online?'var(--amb-t)':'var(--red-t)';
+    hintEl.textContent='EAN '+ean+' — '+(online
+      ? (lang==='de'?'nicht in DB · Name eingeben':'não encontrado · digite o nome')
+      : (lang==='de'?'offline · Name eingeben':'offline · digite o nome'));
+    if(!online) toast(lang==='de'?'Offline':'Sem internet','warn');
+    else if(scanMode==='recv') toast(lang==='de'?'Neues Produkt':'Produto novo','warn');
+    nameEl.focus();
+  }
 }
 
 // ── GS1-128 PARSER ──
@@ -1738,6 +2029,9 @@ async function handleGS1(gs1){
   _clearForm(); // limpa campos antes de preencher com dados GS1
   if(ean13) pendingEAN=ean13;
 
+  // Aprende shelf-life imediatamente quando o GS1 traz validade (caso mais confiável)
+  if(ean13 && exp) _shelfAdd(ean13, exp);
+
   // Pré-preenche todos os campos disponíveis
   if(lot)       document.getElementById('f-lot').value=lot;
   if(exp)       document.getElementById('f-exp').value=exp;
@@ -1755,24 +2049,37 @@ async function handleGS1(gs1){
 
   // Busca nome online pelo GTIN (async — guarda mySession)
   if(gtin&&ean13){
-    document.getElementById('f-name').value=lang==='de'?'Buscando…':'Buscando…';
-    let name='';
-    try{
-      const r1=await fetch('https://world.openfoodfacts.org/api/v0/product/'+ean13+'.json');
-      const d1=await r1.json();
-      if(d1.status===1) name=d1.product.product_name_de||d1.product.product_name_en||d1.product.product_name||'';
-    }catch(_){}
-    if(!name){
-      try{
-        const r2=await fetch('https://api.upcitemdb.com/prod/trial/lookup?upc='+ean13);
-        const d2=await r2.json();
-        if(d2.code==='OK'&&d2.items&&d2.items[0]) name=d2.items[0].title||'';
-      }catch(_){}
-    }
-    if(mySession!==scanSession) return; // outro scan começou, descarta este resultado
+    document.getElementById('f-name').value=lang==='de'?'Suche…':'Buscando…';
+    const r=await _lookupProduct(ean13);
+    if(mySession!==scanSession) return;
+    const name=r?.name||'';
     document.getElementById('f-name').value=name;
-    if(name) document.getElementById('f-qty').focus();
-    else     document.getElementById('f-name').focus();
+    // Preserva valores que vieram do GS1 (mais confiáveis), só completa o que faltar
+    if(!exp && r?.exp){ document.getElementById('f-exp').value=r.exp; }
+    else if(!exp){
+      // Fallback shelf-life para casos onde o GS1 não traz validade (AI 17 ausente)
+      const shelf=_shelfGet(ean13);
+      if(shelf&&shelf.avg){
+        document.getElementById('f-exp').value=_shelfSuggestDate(shelf.avg);
+        hintParts.push((lang==='de'?'Val ≈ +':'Val ≈ +')+shelf.avg+(lang==='de'?'T (Verlauf)':'d (histórico)'));
+        document.getElementById('f-ean-hint').textContent=hintParts.join(' · ');
+      }
+    }
+    if((qty==null) && r?.qtyInfo){
+      document.getElementById('f-qty').value=r.qtyInfo.qty;
+      document.getElementById('f-unit').value=r.qtyInfo.unit;
+    }
+    if(name){
+      document.getElementById('f-qty').focus();
+    } else {
+      const online=navigator.onLine!==false;
+      document.getElementById('f-ean-hint').style.color=online?'var(--amb-t)':'var(--red-t)';
+      const baseHint=hintParts.join(' · ')||'GS1-128';
+      document.getElementById('f-ean-hint').textContent=baseHint+' · '+(online
+        ? (lang==='de'?'Name eingeben':'digite o nome')
+        : (lang==='de'?'offline':'offline'));
+      document.getElementById('f-name').focus();
+    }
   } else {
     document.getElementById('f-name').value='';
     document.getElementById('f-name').focus();
