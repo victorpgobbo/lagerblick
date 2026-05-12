@@ -966,15 +966,51 @@ function boot(){
   applyLang(); renderAll();
   renderHACCPGrid(); renderHACCPLog(); renderHACCPProg();
   renderRecvHist(); updateRecvSel();
-  requestNotifPerm();
+  // Notificações: NÃO pedimos no boot (iOS Safari nega por reflexo).
+  // Pedimos quando o usuário executa ação relevante — ver confirmHACCP e saveNewProduct.
 }
 function renderAll(){ renderHome(); renderEst(); }
 
+// ── ID único garantido (resolve colisão de Date.now() em loops) ──
+let _uidCounter=0;
+function _uid(){ _uidCounter=(_uidCounter+1)%1000; return Date.now()*1000+_uidCounter; }
+
+// ── SAVE defensivo: trunca log se exceder limite, captura QuotaExceededError ──
+const LOG_HARD_CAP   = 5000; // mantém últimos 5k antes de tentar gravar
+const LOG_PANIC_CAP  = 1500; // se quota estourar mesmo assim, trunca pra 1500
+const HACCP_HARD_CAP = 5000;
+function _trySetItem(key,value){
+  try{ localStorage.setItem(key,value); return true; }
+  catch(e){ _logErr('quota',key,e); return false; }
+}
 function save(){
-  localStorage.setItem('lb4_p',JSON.stringify(products));
-  localStorage.setItem('lb4_l',JSON.stringify(log));
-  localStorage.setItem('lb4_r',JSON.stringify(receipts));
-  localStorage.setItem('lb4_h',JSON.stringify(haccpLog));
+  // Cap preventivo — log e haccpLog crescem sem teto
+  if(log.length>LOG_HARD_CAP)         log=log.slice(0,LOG_HARD_CAP);
+  if(haccpLog.length>HACCP_HARD_CAP)  haccpLog=haccpLog.slice(0,HACCP_HARD_CAP);
+
+  const okP=_trySetItem('lb4_p',JSON.stringify(products));
+  let   okL=_trySetItem('lb4_l',JSON.stringify(log));
+  const okR=_trySetItem('lb4_r',JSON.stringify(receipts));
+  let   okH=_trySetItem('lb4_h',JSON.stringify(haccpLog));
+
+  // Se algo falhou (quota), trunca agressivo e tenta de novo
+  if(!okL){
+    log=log.slice(0,LOG_PANIC_CAP);
+    okL=_trySetItem('lb4_l',JSON.stringify(log));
+  }
+  if(!okH){
+    haccpLog=haccpLog.slice(0,LOG_PANIC_CAP);
+    okH=_trySetItem('lb4_h',JSON.stringify(haccpLog));
+  }
+  // Liberar cache de lookup se ainda assim falhou
+  if(!okP||!okL||!okR||!okH){
+    try{ localStorage.removeItem('lb4_cache'); }catch(_){}
+    _trySetItem('lb4_p',JSON.stringify(products));
+    _trySetItem('lb4_l',JSON.stringify(log));
+    _trySetItem('lb4_r',JSON.stringify(receipts));
+    _trySetItem('lb4_h',JSON.stringify(haccpLog));
+    toast(lang==='de'?'⚠ Speicher fast voll — Daten gekürzt':'⚠ Memória quase cheia — dados antigos removidos','warn');
+  }
 }
 
 // ── NAV ──
@@ -1179,13 +1215,22 @@ function renderBriefingCards(){
 }
 function renderHome(){
   const crit = products.filter(p=>getStatus(p)==='critical').length;
-  const venc = products.filter(p=>{ const d=daysUntil(p.exp); return d!==null&&d<=3; }).length;
-  const problems = crit + products.filter(p=>getStatus(p)==='low').length;
+  const low  = products.filter(p=>getStatus(p)==='low').length;
+  // Vencendo: d>=0 (não vencido ainda) e d<=3
+  const venc = products.filter(p=>{ const d=daysUntil(p.exp); return d!==null&&d>=0&&d<=3; }).length;
+  // Vencidos: d<0
+  const expd = products.filter(p=>{ const d=daysUntil(p.exp); return d!==null&&d<0; }).length;
+  const problems = crit + low + venc + expd;
   const weekAgo = Date.now()-7*86400000;
   let wasteCost=0;
   log.filter(l=>l.type==='waste'&&new Date(l.time).getTime()>weekAgo).forEach(l=>{
-    const p=products.find(x=>x.name===l.name);
-    if(p&&p.price) wasteCost+=l.qty*p.price;
+    // 1ª escolha: preço gravado no próprio log (sobrevive a rename do produto)
+    if(typeof l.price==='number') wasteCost+=l.qty*l.price;
+    else{
+      // Fallback: tenta pelo productId (novo) e por nome (compat com logs antigos)
+      const p=products.find(x=>x.id===l.productId)||products.find(x=>x.name===l.name);
+      if(p&&p.price) wasteCost+=l.qty*p.price;
+    }
   });
   document.getElementById('h-total').textContent = products.length;
   document.getElementById('h-crit').textContent  = crit;
@@ -1200,7 +1245,11 @@ function renderHome(){
   if(problems>0){ bar.classList.add('show'); document.getElementById('alert-bar-count').textContent=problems; }
   else bar.classList.remove('show');
 
-  const urgents=products.filter(p=>getStatus(p)!=='ok'||(daysUntil(p.exp)!==null&&daysUntil(p.exp)<=3));
+  const urgents=products.filter(p=>{
+    if(getStatus(p)!=='ok') return true;
+    const d=daysUntil(p.exp);
+    return d!==null && d<=3; // inclui vencidos (d<0) — eles também são urgentes
+  });
   const list=document.getElementById('home-list');
   if(!urgents.length){
     list.innerHTML=`<div class="empty-box">${ico('empty',40)}<strong>${t('homeOkTitle')}</strong><span>${t('homeOkSub')}</span></div>`;
@@ -1215,7 +1264,8 @@ function renderEst(){
   let list=products.filter(p=>p.name.toLowerCase().includes(q));
   if(activeFilter==='crit')    list=list.filter(p=>getStatus(p)==='critical');
   if(activeFilter==='low')     list=list.filter(p=>getStatus(p)==='low');
-  if(activeFilter==='expiring')list=list.filter(p=>{ const d=daysUntil(p.exp); return d!==null&&d<=7; });
+  if(activeFilter==='expiring')list=list.filter(p=>{ const d=daysUntil(p.exp); return d!==null&&d>=0&&d<=7; });
+  if(activeFilter==='expired') list=list.filter(p=>{ const d=daysUntil(p.exp); return d!==null&&d<0; });
   list.sort((a,b)=>{ const o={critical:0,low:1,ok:2}; return o[getStatus(a)]-o[getStatus(b)]||a.name.localeCompare(b.name); });
   const el=document.getElementById('est-list');
   if(!list.length){
@@ -1245,8 +1295,8 @@ function saveNewProduct(){
   const lot=document.getElementById('f-lot').value.trim();
   const supplier=document.getElementById('f-supplier').value.trim();
   if(!name||isNaN(qty)||isNaN(min)){ toast('Preencha nome, quantidade e mínimo','warn'); return; }
-  products.push({ id:Date.now(), name, qty, min, unit, price, exp, ean:pendingEAN, lot, supplier });
-  log.unshift({ id:Date.now(), time:ts(), type:'in', name, qty, unit, reason:'Cadastro' });
+  products.push({ id:_uid(), name, qty, min, unit, price, exp, ean:pendingEAN, lot, supplier });
+  log.unshift({ id:_uid(), time:ts(), type:'in', name, qty, unit, reason:'Cadastro' });
   if(pendingEAN && exp) _shelfAdd(pendingEAN, exp);
   save();
   ['f-name','f-qty','f-min','f-price','f-exp','f-lot','f-supplier'].forEach(id=>document.getElementById(id).value='');
@@ -1275,7 +1325,7 @@ function saveCardEdit(id){
   if(!name||isNaN(qty)||isNaN(min)||qty<0||min<0){ toast(lang==='de'?'Felder prüfen':'Verifique os campos','warn'); return; }
   const diff=r2(p.qty-qty);
   p.name=name; p.qty=r2(qty); p.min=r2(min); p.unit=unit; p.price=price; p.exp=exp; p.lot=lot; p.supplier=supplier;
-  if(diff!==0) log.unshift({ id:Date.now(), time:ts(), type:diff>0?'out':'in', name:p.name, qty:Math.abs(diff), unit:p.unit, reason:lang==='de'?'Manuelle Anpassung':'Ajuste manual' });
+  if(diff!==0) log.unshift({ id:_uid(), time:ts(), type:diff>0?'out':'in', name:p.name, qty:Math.abs(diff), unit:p.unit, reason:lang==='de'?'Manuelle Anpassung':'Ajuste manual' });
   if(p.ean && exp) _shelfAdd(p.ean, exp);
   save(); renderAll(); updateRecvSel(); toast(t('toastSaved'),'success');
 }
@@ -1283,8 +1333,8 @@ function quickAdj(id,delta){
   const p=products.find(x=>x.id===id); if(!p) return;
   const nq=r2(p.qty+delta); if(nq<0) return;
   p.qty=nq;
-  if(delta<0) log.unshift({ id:Date.now(), time:ts(), type:'out', name:p.name, qty:Math.abs(delta), unit:p.unit, reason:'Consumo' });
-  else         log.unshift({ id:Date.now(), time:ts(), type:'in',  name:p.name, qty:delta, unit:p.unit, reason:'Ajuste +1' });
+  if(delta<0) log.unshift({ id:_uid(), time:ts(), type:'out', name:p.name, qty:Math.abs(delta), unit:p.unit, reason:'Consumo' });
+  else         log.unshift({ id:_uid(), time:ts(), type:'in',  name:p.name, qty:delta, unit:p.unit, reason:'Ajuste +1' });
   save(); renderAll(); if(delta<0) checkLow(p);
 }
 function quickRecv(id){
@@ -1314,7 +1364,7 @@ function confirmWasteQty(){
   if(isNaN(qty)||qty<=0){ toast(lang==='de'?'Menge eingeben':'Informe a quantidade','warn'); return; }
   if(qty>p.qty){ toast(lang==='de'?'Nicht genug Bestand':'Estoque insuficiente','warn'); return; }
   p.qty=r2(p.qty-qty);
-  log.unshift({ id:Date.now(), time:ts(), type:'waste', name:p.name, qty, unit:p.unit, reason:lang==='de'?'Abfall':'Desperdício' });
+  log.unshift({ id:_uid(), time:ts(), type:'waste', productId:p.id, name:p.name, qty, unit:p.unit, price:p.price||0, reason:lang==='de'?'Abfall':'Desperdício' });
   save(); renderAll();
   document.getElementById('waste-ov').classList.remove('open');
   toast(t('toastWaste'),'warn');
@@ -1367,9 +1417,9 @@ function confirmBasket(){
   if(!basket.length) return;
   basket.forEach(item=>{
     const p=products.find(x=>x.id===item.productId);
-    if(p){ p.qty=r2(p.qty+item.qty); log.unshift({ id:Date.now()+Math.random(), time:ts(), type:'in', name:item.name, qty:item.qty, unit:item.unit, reason:'Recebimento — '+item.supplier }); }
+    if(p){ p.qty=r2(p.qty+item.qty); log.unshift({ id:_uid(), time:ts(), type:'in', name:item.name, qty:item.qty, unit:item.unit, reason:'Recebimento — '+item.supplier }); }
   });
-  receipts.unshift({ id:Date.now(), time:ts(), items:[...basket], supplier:basket[0]?.supplier||'' });
+  receipts.unshift({ id:_uid(), time:ts(), items:[...basket], supplier:basket[0]?.supplier||'' });
   save(); basket=[]; document.getElementById('basket-wrap').style.display='none';
   document.getElementById('recv-qty').value='';
   renderAll(); renderRecvHist(); updateRecvSel();
@@ -1446,12 +1496,14 @@ function confirmHACCP(){
   if(isNaN(temp)){ toast('°C?','warn'); return; }
   const cfg=HACCP_CFG.find(l=>l.key===activeHACCPKey);
   const ok=cfg.cold?(temp>=cfg.min&&temp<=cfg.max):(temp>=cfg.min);
-  haccpLog.unshift({ id:Date.now(), key:activeHACCPKey, name:cfg.name, temp, ok, time:ts() });
+  haccpLog.unshift({ id:_uid(), key:activeHACCPKey, name:cfg.name, temp, ok, time:ts() });
   save(); document.getElementById('haccp-ov').classList.remove('open');
   renderHACCPGrid(); renderHACCPLog(); renderHACCPProg();
   if(ok) toast(t('toastHACCP'),'success');
   else   toast(t('toastHACCPBad'),'error');
   if(!ok) checkNotif('HACCP — '+cfg.name, temp+'°C');
+  // Primeira interação operacional do dia — bom momento pra pedir permissão de notificações
+  requestNotifPerm();
 }
 function renderHACCPLog(){
   const el=document.getElementById('haccp-log');
@@ -1491,11 +1543,21 @@ function _scanDispatch(code,fmt){
   handleEAN(code);
 }
 
+let scannerTimeout=null;
 function openScanner(mode){
   scanMode=mode;
   document.getElementById('scanner-ov').classList.add('open');
   document.getElementById('scanner-hint').textContent=lang==='de'?'Kamera auf Barcode richten':'Aponte para o código de barras';
   const mi=document.getElementById('scanner-manual-ean'); if(mi) mi.value='';
+
+  // Auto-close em 90s pra não drenar bateria se operador esquece overlay aberto
+  if(scannerTimeout) clearTimeout(scannerTimeout);
+  scannerTimeout=setTimeout(()=>{
+    if(document.getElementById('scanner-ov').classList.contains('open')){
+      closeScanner();
+      toast(lang==='de'?'Scanner — Timeout':'Scanner — tempo esgotado','warn');
+    }
+  },90000);
 
   // 1ª tentativa: BarcodeDetector nativo (Android Chrome) — não existe no iOS Safari
   if('BarcodeDetector' in window && navigator.mediaDevices?.getUserMedia){
@@ -1610,6 +1672,7 @@ async function _startZXing(){
   }
 }
 function closeScanner(){
+  if(scannerTimeout){ clearTimeout(scannerTimeout); scannerTimeout=null; }
   if(zxingControls){ try{zxingControls.stop();}catch(e){} zxingControls=null; }
   if(bdRunning){ bdRunning=false; }
   if(bdStream){ try{bdStream.getTracks().forEach(t=>t.stop());}catch(e){} bdStream=null; }
