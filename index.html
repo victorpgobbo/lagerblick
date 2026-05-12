@@ -838,6 +838,7 @@ let activeFilter = 'all';
 let activeHACCPKey = null;
 let pinBuffer = '';
 let toastTimer;
+let scanSession=0; // incrementado a cada scan; cancela fetches obsoletos
 
 // ── I18N ──
 const T = {
@@ -1472,14 +1473,25 @@ function openScanner(mode){
   Quagga.onDetected(result=>{
     const code=result.codeResult.code;
     const fmt=result.codeResult.format;
+    const dedupeKey=fmt+':'+code; // inclui formato para evitar double-fire EAN+Code128 do mesmo barcode
     const now2=Date.now();
-    if(code===lastCode&&now2-lastTime<2000) return;
-    lastCode=code; lastTime=now2;
+    if(dedupeKey===lastCode&&now2-lastTime<2500) return;
+    lastCode=dedupeKey; lastTime=now2;
     closeScanner();
-    // GS1-128: Code128 que contém FNC1 (0x1d) ou começa com AI numérico
-    if(fmt==='code_128'&&(code.includes('\x1d')||/^\d{2}/.test(code))){
-      const gs1=parseGS1(code);
-      if(Object.keys(gs1).length>=1){ handleGS1(gs1); return; }
+    // GS1-128: detectado apenas se contém FNC1 OU começa com padrão AI conhecido (01+14d, 00+18d, etc.)
+    if(fmt==='code_128'){
+      const looksGS1 = code.includes('\x1d')
+                    || /^01\d{14}/.test(code)          // GTIN-14
+                    || /^00\d{18}/.test(code)          // SSCC
+                    || /^(11|15|16|17)\d{6}/.test(code)// data-only
+                    || /^10[A-Z0-9]/i.test(code)       // lote como 1º AI
+                    || /^37\d/.test(code);              // contagem como 1º AI
+      if(looksGS1){
+        const gs1=parseGS1(code);
+        const hasUseful = gs1['01']||gs1['02']||gs1['17']||gs1['15']||gs1['16']||gs1['10']
+                       || Object.keys(gs1).some(k=>/^31[0-9]\d$/.test(k)||k==='37');
+        if(hasUseful){ handleGS1(gs1); return; }
+      }
     }
     handleEAN(code);
   });
@@ -1489,8 +1501,31 @@ function closeScanner(){
   document.getElementById('scanner-ov').classList.remove('open');
   document.getElementById('scanner-vp').innerHTML='';
 }
+// Limpa o form de cadastro antes de um novo scan
+function _clearForm(){
+  ['f-name','f-qty','f-min','f-price','f-exp','f-lot','f-supplier'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('f-unit').value='un';
+  document.getElementById('f-ean-hint').textContent='';
+  document.getElementById('f-ean-hint').style.color='var(--t2)';
+  pendingEAN=null;
+}
+
+// Extrai qty + unit de strings como "500 g", "1.5 L", "250ml"
+function _parseQtyStr(s){
+  if(!s) return null;
+  const m=String(s).match(/([\d.,]+)\s*(g|kg|mg|ml|cl|dl|l|L|oz|lb|lbs|pcs|un)\b/i);
+  if(!m) return null;
+  const n=parseFloat(m[1].replace(',','.'));
+  const unitMap={g:'g',kg:'kg',mg:'g',ml:'ml',cl:'ml',dl:'ml',l:'L',L:'L',oz:'g',lb:'kg',lbs:'kg',pcs:'un',un:'un'};
+  return { qty:n, unit:unitMap[m[2].toLowerCase()]||m[2] };
+}
+
 async function handleEAN(ean){
-  // Modo RECEBER: produto já cadastrado → seleciona direto no carrinho
+  const mySession=++scanSession;
+
+  // ── Recv: produto já cadastrado → seleciona no carrinho ──
   if(scanMode==='recv'){
     const p=products.find(x=>x.ean===ean);
     if(p){
@@ -1498,99 +1533,147 @@ async function handleEAN(ean){
       setTimeout(()=>{ document.getElementById('recv-prod-sel').value=p.id; document.getElementById('recv-qty').focus(); toast(p.name,'success'); },150);
       return;
     }
-    // Produto não cadastrado → abre form de cadastro automaticamente
-    toast(lang==='de'?'Neues Produkt — bitte ausfüllen':'Produto novo — preencha e cadastre','warn');
   }
 
-  // Abre aba Estoque + form de cadastro
+  // ── Abre aba Estoque + form (síncrono) ──
   goPage('estoque',document.getElementById('nav-estoque'));
-  setTimeout(()=>{ if(!document.getElementById('add-form').classList.contains('open')) toggleAddForm(); },100);
+  if(!document.getElementById('add-form').classList.contains('open')) toggleAddForm();
 
+  // Limpa tudo e mostra estado de carregamento
+  _clearForm();
   pendingEAN=ean;
   document.getElementById('f-name').value=lang==='de'?'Buscando…':'Buscando…';
-  document.getElementById('f-ean-hint').textContent='';
 
+  // ── Fetch Open Food Facts ──
+  let name='', expDate=null, qtyInfo=null;
   try{
-    let name='';
-    // 1ª tentativa: Open Food Facts
+    const r1=await fetch('https://world.openfoodfacts.org/api/v0/product/'+ean+'.json');
+    const d1=await r1.json();
+    if(d1.status===1){
+      const p=d1.product;
+      name=p.product_name_de||p.product_name_en||p.product_name||'';
+      expDate=parseAnyDate(p.expiration_date||p.best_before_date||'');
+      qtyInfo=_parseQtyStr(p.product_quantity);
+      // fallback: quantity_unit separado
+      if(!qtyInfo && p.product_quantity_unit){
+        const n=parseFloat(p.serving_quantity||'');
+        if(!isNaN(n)) qtyInfo={qty:n, unit:p.product_quantity_unit};
+      }
+    }
+  }catch(_){}
+
+  // ── Fallback UPC Item DB ──
+  if(!name){
     try{
-      const r1=await fetch('https://world.openfoodfacts.org/api/v0/product/'+ean+'.json');
-      const d1=await r1.json();
-      if(d1.status===1) name=d1.product.product_name_de||d1.product.product_name_en||d1.product.product_name||'';
+      const r2=await fetch('https://api.upcitemdb.com/prod/trial/lookup?upc='+ean);
+      const d2=await r2.json();
+      if(d2.code==='OK'&&d2.items?.[0]){
+        const it=d2.items[0];
+        name=it.title||'';
+        if(!qtyInfo) qtyInfo=_parseQtyStr(it.size);
+      }
     }catch(_){}
-    // 2ª tentativa: UPC Item DB (global — Oreo, Pringles, etc.)
-    if(!name){
-      try{
-        const r2=await fetch('https://api.upcitemdb.com/prod/trial/lookup?upc='+ean);
-        const d2=await r2.json();
-        if(d2.code==='OK'&&d2.items&&d2.items[0]) name=d2.items[0].title||'';
-      }catch(_){}
-    }
-    if(name){
-      document.getElementById('f-name').value=name;
-      document.getElementById('f-ean-hint').textContent='EAN '+ean+' ✓';
-      document.getElementById('f-ean-hint').style.color='var(--em)';
-      document.getElementById('f-qty').focus();
-    } else {
-      document.getElementById('f-name').value='';
-      document.getElementById('f-name').focus();
-      document.getElementById('f-ean-hint').textContent='EAN '+ean+' — '+(lang==='de'?'Name manuell eingeben':'Digite o nome manualmente');
-      document.getElementById('f-ean-hint').style.color='var(--t2)';
-    }
-  }catch{
-    document.getElementById('f-name').value='';
-    document.getElementById('f-name').focus();
-    document.getElementById('f-ean-hint').textContent='EAN: '+ean;
-    document.getElementById('f-ean-hint').style.color='var(--t2)';
   }
+
+  if(mySession!==scanSession) return; // outro scan começou
+
+  // ── Preenche campos ──
+  document.getElementById('f-name').value=name;
+  if(expDate)  document.getElementById('f-exp').value=expDate;
+  if(qtyInfo){ document.getElementById('f-qty').value=qtyInfo.qty; document.getElementById('f-unit').value=qtyInfo.unit; }
+
+  // ── Hint informativo ──
+  const got=[];
+  if(name)    got.push(lang==='de'?'Name ✓':'Nome ✓');
+  if(expDate) got.push('Val: '+new Date(expDate+'T00:00:00').toLocaleDateString(lang==='de'?'de-DE':'pt-BR'));
+  if(qtyInfo) got.push(qtyInfo.qty+' '+qtyInfo.unit);
+
+  if(name){
+    document.getElementById('f-ean-hint').style.color='var(--em)';
+    document.getElementById('f-ean-hint').textContent=got.join(' · ');
+    document.getElementById('f-qty').focus();
+  } else {
+    document.getElementById('f-ean-hint').style.color='var(--t2)';
+    document.getElementById('f-ean-hint').textContent='EAN '+ean+' — '+(lang==='de'?'Name eingeben':'Digite o nome');
+    document.getElementById('f-name').focus();
+  }
+
+  if(scanMode==='recv') toast(lang==='de'?'Neues Produkt':'Produto novo','warn');
 }
 
 // ── GS1-128 PARSER ──
 function parseGS1(raw){
+  const FNC1='\x1d';
   // Formato com parênteses: (01)12345(17)260630...
   if(raw.includes('(')){
     const res={}, re=/\((\d{2,4})\)([^(]*)/g; let m;
     while((m=re.exec(raw))!==null) res[m[1]]=m[2].replace(/\x1d/g,'').trim();
     return res;
   }
-  // Formato raw: separador FNC1 = 0x1d; strip leading FNC1
-  const FNC1='\x1d';
-  const s=raw.replace(/^\x1d/,'');
+  const hasFNC1=raw.includes(FNC1);
+  const s=raw.replace(/^\x1d/,''); // strip leading FNC1
   const res={};
-  // AIs de comprimento FIXO {ai: n_chars_dos_dados}
+
+  // Comprimentos FIXOS por AI (dados, sem contar o AI)
   function fixedLen(ai){
     if(ai==='00') return 18;
-    if(['01','02','03'].includes(ai)) return 14;
-    if(['11','12','13','14','15','16','17','18','19'].includes(ai)) return 6;
+    if(ai==='01'||ai==='02'||ai==='03') return 14;
+    if(ai==='11'||ai==='12'||ai==='13'||ai==='14'||
+       ai==='15'||ai==='16'||ai==='17'||ai==='18'||ai==='19') return 6;
     if(ai==='20') return 2;
     if(ai==='8001') return 14; if(ai==='8005') return 6; if(ai==='8006') return 18;
-    // Medidas (31xx 32xx ... 36xx) → sempre 6 dígitos
-    if(/^3[1-6]\d\d$/.test(ai)) return 6;
+    if(/^3[1-6]\d\d$/.test(ai)) return 6; // medidas (peso, volume, etc.)
     return null; // comprimento variável
   }
+
   let i=0;
   while(i<s.length){
     if(s[i]===FNC1){ i++; continue; }
     let matched=false;
+
+    // 1ª passagem: tenta APENAS AIs de tamanho fixo (2, 3 ou 4 dígitos)
+    // Ordem: primeiro os mais longos (evita "01" matchar antes de "310x")
     for(const alen of [4,3,2]){
       const ai=s.substring(i,i+alen);
       if(!/^\d+$/.test(ai)) continue;
       const fl=fixedLen(ai);
-      if(fl!==null){
-        const val=s.substring(i+alen,i+alen+fl);
-        if(val.length===fl){ res[ai]=val; i+=alen+fl; matched=true; break; }
-      } else if(alen<=3){
-        // Variável: lê até FNC1 ou fim
+      if(fl===null) continue; // não é fixo neste tamanho, tenta próximo
+      const val=s.substring(i+alen,i+alen+fl);
+      if(val.length===fl && /^[\dA-Z\-/]/i.test(val[0])){
+        res[ai]=val; i+=alen+fl; matched=true; break;
+      }
+    }
+
+    // 2ª passagem: AIs variáveis — SOMENTE se temos FNC1 como delimitador
+    if(!matched && hasFNC1){
+      for(const alen of [4,3,2]){
+        const ai=s.substring(i,i+alen);
+        if(!/^\d+$/.test(ai)) continue;
+        if(fixedLen(ai)!==null) continue; // já tentado acima
         const dstart=i+alen;
         const si=s.indexOf(FNC1,dstart);
         const dend=si===-1?s.length:si;
-        res[ai]=s.substring(dstart,dend);
-        i=dend; matched=true; break;
+        if(dstart<dend){ res[ai]=s.substring(dstart,dend); i=dend; matched=true; break; }
       }
     }
+
     if(!matched) i++;
   }
   return res;
+}
+function parseAnyDate(s){
+  if(!s) return null;
+  s=s.trim().replace(/\s+/g,'');
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;                    // YYYY-MM-DD ✓
+  if(/^\d{4}-\d{2}$/.test(s)){ const[y,m]=s.split('-'); return y+'-'+m+'-01'; } // YYYY-MM
+  let m2;
+  if((m2=s.match(/^(\d{1,2})[\/\.](\d{1,2})[\/\.](\d{4})$/)))   // DD/MM/YYYY ou DD.MM.YYYY
+    return m2[3]+'-'+m2[2].padStart(2,'0')+'-'+m2[1].padStart(2,'0');
+  if((m2=s.match(/^(\d{1,2})\/(\d{4})$/)))                       // MM/YYYY
+    return m2[2]+'-'+m2[1].padStart(2,'0')+'-01';
+  if((m2=s.match(/^(\d{1,2})\.(\d{4})$/)))                       // MM.YYYY
+    return m2[2]+'-'+m2[1].padStart(2,'0')+'-01';
+  return null;
 }
 function gs1Date(yymmdd){
   if(!yymmdd||yymmdd.length!==6) return null;
@@ -1608,13 +1691,14 @@ function gs1Measure(ai, val){
 }
 
 async function handleGS1(gs1){
+  const mySession=++scanSession; // session ID para cancelar fetches obsoletos
+
   // ── Extrair campos ──────────────────────────────────
-  const gtin  = gs1['01']||gs1['02']||null;
-  const lot   = gs1['10']||gs1['21']||null;      // lote ou serial
-  const expRaw= gs1['17']||gs1['15']||gs1['16']||null; // validade
-  const exp   = gs1Date(expRaw);
-  const prodRaw=gs1['11']||null;
-  const prodDate=gs1Date(prodRaw);
+  const gtin   = gs1['01']||gs1['02']||null;
+  const lot    = gs1['10']||gs1['21']||null;             // lote ou serial
+  const expRaw = gs1['17']||gs1['15']||gs1['16']||null; // vencimento
+  const exp    = gs1Date(expRaw);
+  const prodDate= gs1Date(gs1['11']||null);
 
   // Quantidade: peso (kg) > volume (L) > contagem
   let qty=null, unit=null;
@@ -1626,8 +1710,8 @@ async function handleGS1(gs1){
   }
   if(qty===null&&gs1['37']){ qty=parseInt(gs1['37'])||null; unit='un'; }
 
-  // EAN-13 derivado do GTIN-14 (strip leading zero)
-  const ean13=gtin?gtin.replace(/^0/,''):null;
+  // GTIN-14 → EAN-13: últimos 13 dígitos (preserva check digit)
+  const ean13=gtin?gtin.slice(-13):null;
 
   // ── Modo RECEBER com produto já cadastrado ──────────
   if(scanMode==='recv'){
@@ -1636,7 +1720,7 @@ async function handleGS1(gs1){
       goPage('receber',document.getElementById('nav-receber'));
       setTimeout(()=>{
         document.getElementById('recv-prod-sel').value=existing.id;
-        if(qty) document.getElementById('recv-qty').value=qty;
+        if(qty!=null) document.getElementById('recv-qty').value=qty;
         document.getElementById('recv-qty').focus();
         const parts=[existing.name];
         if(lot)  parts.push((lang==='de'?'Charge':'Lote')+': '+lot);
@@ -1648,28 +1732,29 @@ async function handleGS1(gs1){
     toast(lang==='de'?'Neues Produkt — bitte ausfüllen':'Produto novo — preencha e cadastre','warn');
   }
 
-  // ── Abre form de cadastro ───────────────────────────
+  // ── Abre form de cadastro (síncrono) ──
   goPage('estoque',document.getElementById('nav-estoque'));
-  setTimeout(()=>{ if(!document.getElementById('add-form').classList.contains('open')) toggleAddForm(); },100);
+  if(!document.getElementById('add-form').classList.contains('open')) toggleAddForm();
+  _clearForm(); // limpa campos antes de preencher com dados GS1
   if(ean13) pendingEAN=ean13;
 
-  // Pré-preenche campos disponíveis imediatamente
-  if(lot)  document.getElementById('f-lot').value=lot;
-  if(exp)  document.getElementById('f-exp').value=exp;
-  if(qty!=null){ document.getElementById('f-qty').value=qty; }
-  if(unit) document.getElementById('f-unit').value=unit;
+  // Pré-preenche todos os campos disponíveis
+  if(lot)       document.getElementById('f-lot').value=lot;
+  if(exp)       document.getElementById('f-exp').value=exp;
+  if(qty!=null) document.getElementById('f-qty').value=qty;
+  if(unit)      document.getElementById('f-unit').value=unit;
 
-  // Hint com dados lidos
+  // Hint com todos os dados lidos do código
   const hintParts=[];
   if(lot)      hintParts.push((lang==='de'?'Charge':'Lote')+': '+lot);
   if(exp)      hintParts.push('Val: '+new Date(exp+'T00:00:00').toLocaleDateString(lang==='de'?'de-DE':'pt-BR'));
-  if(prodDate) hintParts.push((lang==='de'?'Prod':'Fabricado')+': '+new Date(prodDate+'T00:00:00').toLocaleDateString(lang==='de'?'de-DE':'pt-BR'));
+  if(prodDate) hintParts.push((lang==='de'?'Prod.':'Fab.')+': '+new Date(prodDate+'T00:00:00').toLocaleDateString(lang==='de'?'de-DE':'pt-BR'));
   if(qty!=null&&unit) hintParts.push(qty+' '+unit);
   document.getElementById('f-ean-hint').style.color='var(--em)';
-  document.getElementById('f-ean-hint').textContent=hintParts.length?hintParts.join(' · '):'GS1-128 ✓';
+  document.getElementById('f-ean-hint').textContent=hintParts.join(' · ')||'GS1-128 ✓';
 
-  // Busca nome pelo GTIN online
-  if(gtin){
+  // Busca nome online pelo GTIN (async — guarda mySession)
+  if(gtin&&ean13){
     document.getElementById('f-name').value=lang==='de'?'Buscando…':'Buscando…';
     let name='';
     try{
@@ -1684,6 +1769,7 @@ async function handleGS1(gs1){
         if(d2.code==='OK'&&d2.items&&d2.items[0]) name=d2.items[0].title||'';
       }catch(_){}
     }
+    if(mySession!==scanSession) return; // outro scan começou, descarta este resultado
     document.getElementById('f-name').value=name;
     if(name) document.getElementById('f-qty').focus();
     else     document.getElementById('f-name').focus();
