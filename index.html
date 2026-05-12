@@ -1309,26 +1309,35 @@ function closeScanner(){
   document.getElementById('scanner-vp').innerHTML='';
 }
 async function handleEAN(ean){
+  // Modo RECEBER: produto já cadastrado → seleciona direto no carrinho
   if(scanMode==='recv'){
     const p=products.find(x=>x.ean===ean);
-    goPage('receber',document.getElementById('nav-receber'));
-    if(p){ setTimeout(()=>{ document.getElementById('recv-prod-sel').value=p.id; document.getElementById('recv-qty').focus(); toast(p.name,'success'); },150); }
-    else toast(lang==='de'?'EAN nicht gefunden':'EAN não cadastrado','warn');
-    return;
+    if(p){
+      goPage('receber',document.getElementById('nav-receber'));
+      setTimeout(()=>{ document.getElementById('recv-prod-sel').value=p.id; document.getElementById('recv-qty').focus(); toast(p.name,'success'); },150);
+      return;
+    }
+    // Produto não cadastrado → abre form de cadastro automaticamente
+    toast(lang==='de'?'Neues Produkt — bitte ausfüllen':'Produto novo — preencha e cadastre','warn');
   }
+
+  // Abre aba Estoque + form de cadastro
   goPage('estoque',document.getElementById('nav-estoque'));
   setTimeout(()=>{ if(!document.getElementById('add-form').classList.contains('open')) toggleAddForm(); },100);
+
   pendingEAN=ean;
-  document.getElementById('f-name').value=lang==='de'?'Suche…':'Buscando…';
+  document.getElementById('f-name').value=lang==='de'?'Buscando…':'Buscando…';
+  document.getElementById('f-ean-hint').textContent='';
+
   try{
-    // 1ª tentativa: Open Food Facts (melhor pra alimentos)
     let name='';
-    const r1=await fetch('https://world.openfoodfacts.org/api/v0/product/'+ean+'.json');
-    const d1=await r1.json();
-    if(d1.status===1){
-      name=d1.product.product_name_de||d1.product.product_name_en||d1.product.product_name||'';
-    }
-    // 2ª tentativa: UPC Item DB (banco global, cobre o que OFF não tem)
+    // 1ª tentativa: Open Food Facts
+    try{
+      const r1=await fetch('https://world.openfoodfacts.org/api/v0/product/'+ean+'.json');
+      const d1=await r1.json();
+      if(d1.status===1) name=d1.product.product_name_de||d1.product.product_name_en||d1.product.product_name||'';
+    }catch(_){}
+    // 2ª tentativa: UPC Item DB (global — Oreo, Pringles, etc.)
     if(!name){
       try{
         const r2=await fetch('https://api.upcitemdb.com/prod/trial/lookup?upc='+ean);
@@ -1342,12 +1351,14 @@ async function handleEAN(ean){
       document.getElementById('f-ean-hint').style.color='var(--em)';
       document.getElementById('f-qty').focus();
     } else {
-      document.getElementById('f-name').value=''; document.getElementById('f-name').focus();
-      document.getElementById('f-ean-hint').textContent='EAN '+ean+' — '+(lang==='de'?'Name eingeben':'Digite o nome manualmente');
+      document.getElementById('f-name').value='';
+      document.getElementById('f-name').focus();
+      document.getElementById('f-ean-hint').textContent='EAN '+ean+' — '+(lang==='de'?'Name manuell eingeben':'Digite o nome manualmente');
       document.getElementById('f-ean-hint').style.color='var(--t2)';
     }
-  } catch {
-    document.getElementById('f-name').value=''; document.getElementById('f-name').focus();
+  }catch{
+    document.getElementById('f-name').value='';
+    document.getElementById('f-name').focus();
     document.getElementById('f-ean-hint').textContent='EAN: '+ean;
     document.getElementById('f-ean-hint').style.color='var(--t2)';
   }
