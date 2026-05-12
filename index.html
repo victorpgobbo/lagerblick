@@ -365,6 +365,20 @@ input,select{font-family:inherit}
 .cont-done:active{background:var(--em-d)}
 .cont-undo{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:0 14px;font-size:.8125rem;font-weight:600;cursor:pointer}
 
+.haccp-pdf-btn{margin-top:20px;width:100%;background:var(--surface);color:var(--t1);border:1.5px solid var(--border);border-radius:var(--r);padding:14px;font-size:.875rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.haccp-pdf-btn:active{background:var(--em-l);border-color:var(--em);color:var(--em-t)}
+
+.exp-row{display:flex;gap:8px;align-items:stretch}
+.exp-row input[type=date]{flex:1}
+.ocr-btn{background:var(--surface2);border:1.5px solid var(--border);color:var(--t2);border-radius:var(--r-s);padding:0 14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;flex-shrink:0}
+.ocr-btn:active{background:var(--em-l);border-color:var(--em);color:var(--em-t)}
+.ocr-loading{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:400;display:none;align-items:center;justify-content:center;flex-direction:column;color:#fff;gap:14px}
+.ocr-loading.open{display:flex}
+.ocr-spinner{width:42px;height:42px;border:3px solid rgba(255,255,255,.18);border-top-color:var(--em);border-radius:50%;animation:ocr-spin 1s linear infinite}
+@keyframes ocr-spin{to{transform:rotate(360deg)}}
+.ocr-loading-txt{font-size:.875rem;font-weight:600}
+.ocr-loading-sub{font-size:.75rem;color:rgba(255,255,255,.6)}
+
 .div-row{display:flex;align-items:center;gap:12px;margin-bottom:16px}
 .div-line{flex:1;height:1px;background:var(--border)}
 .div-txt{font-size:.6875rem;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.06em}
@@ -692,7 +706,13 @@ input,select{font-family:inherit}
           </div>
           <div class="field">
             <label data-i="formExp">Vencimento</label>
-            <input type="date" id="f-exp">
+            <div class="exp-row">
+              <input type="date" id="f-exp">
+              <button type="button" class="ocr-btn" onclick="openOCRForExp()" aria-label="OCR validade" title="Foto da validade">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              </button>
+              <input type="file" id="ocr-file" accept="image/*" capture="environment" style="display:none" onchange="handleOCRFile(event)">
+            </div>
           </div>
           <div class="field">
             <label data-i="formLot">Lote / Batch</label>
@@ -796,6 +816,11 @@ input,select{font-family:inherit}
 
         <div class="sec-hdr" data-i="haccpRecent">Registros recentes</div>
         <div class="haccp-log" id="haccp-log"></div>
+
+        <button class="haccp-pdf-btn" onclick="openHACCPReport()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          <span data-i="haccpPdfBtn">Relatório mensal (PDF)</span>
+        </button>
 
       </div>
     </div>
@@ -1019,9 +1044,9 @@ input,select{font-family:inherit}
       </div>
       <div class="order-sub" id="order-sub"></div>
       <div class="order-btns">
-        <button class="btn-order-copy" onclick="copyOrderList()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-          <span id="order-copy-lbl">Copiar para WhatsApp</span>
+        <button class="btn-order-wa" onclick="sendOrderWhatsApp()" style="background:#25D366;color:#fff;border:none;border-radius:var(--r-s);padding:11px 14px;font-size:.8125rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;flex:1;justify-content:center">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/></svg>
+          <span id="order-copy-lbl">WhatsApp</span>
         </button>
         <button class="btn-order-csv" onclick="exportCSV('order')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -1062,6 +1087,13 @@ input,select{font-family:inherit}
       <button class="btn-sh-ok" onclick="confirmProduce()">Produzir</button>
     </div>
   </div>
+</div>
+
+<!-- OCR LOADING -->
+<div class="ocr-loading" id="ocr-loading">
+  <div class="ocr-spinner"></div>
+  <div class="ocr-loading-txt" id="ocr-loading-txt">Analisando foto…</div>
+  <div class="ocr-loading-sub" id="ocr-loading-sub">Aguarde alguns segundos</div>
 </div>
 
 <!-- TOAST -->
@@ -1933,6 +1965,253 @@ function confirmHACCP(){
   // Primeira interação operacional do dia — bom momento pra pedir permissão de notificações
   requestNotifPerm();
 }
+
+// ── HACCP REPORT (PDF via print) ─────────────────────────
+// Gera relatório mensal carimbável para o Gesundheitsamt em DIN A4.
+// Sem dependência externa: HTML + CSS print + window.print().
+function openHACCPReport(){
+  // Pergunta o mês a exportar (padrão = mês atual)
+  const today=new Date();
+  const defaultMonth=today.toISOString().slice(0,7); // YYYY-MM
+  const m=prompt(lang==='de'?'Monat (YYYY-MM):':'Mês (AAAA-MM):',defaultMonth);
+  if(!m||!/^\d{4}-\d{2}$/.test(m)){ if(m!==null) toast(lang==='de'?'Format ungültig':'Formato inválido','warn'); return; }
+  _renderHACCPReport(m);
+}
+
+function _renderHACCPReport(monthStr){
+  const settings=getSettings();
+  const [y,mo]=monthStr.split('-');
+  const monthNum=parseInt(mo)-1;
+  const monthsDe=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+  const monthsPt=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const monthName=lang==='de'?monthsDe[monthNum]:monthsPt[monthNum];
+
+  // Filtra entries do mês — pega `time` que é localeString. Como pode estar em vários formatos,
+  // usamos o id (timestamp) que sempre é numérico.
+  const startTs=new Date(parseInt(y), monthNum, 1).getTime();
+  const endTs  =new Date(parseInt(y), monthNum+1, 1).getTime();
+  // id foi gerado com _uid() = ts*1000 + counter → recupera ts dividindo
+  const recordsRaw=haccpLog.filter(h=>{
+    const ts=Math.floor((h.id||0)/1000);
+    return ts>=startTs && ts<endTs;
+  });
+  // Ordenar cronológico
+  records=recordsRaw.slice().sort((a,b)=>a.id-b.id);
+
+  // Agrupa por dia
+  const byDay={};
+  records.forEach(r=>{
+    const ts=Math.floor((r.id||0)/1000);
+    const dayKey=new Date(ts).toISOString().slice(0,10);
+    if(!byDay[dayKey]) byDay[dayKey]=[];
+    byDay[dayKey].push({...r, _ts:ts});
+  });
+
+  const totalDays=Object.keys(byDay).length;
+  const alertCount=records.filter(r=>!r.ok).length;
+  const totalReadings=records.length;
+
+  const rows = Object.keys(byDay).sort().map(day=>{
+    const items=byDay[day].sort((a,b)=>a._ts-b._ts);
+    const dDate=new Date(day+'T00:00:00').toLocaleDateString(lang==='de'?'de-DE':'pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});
+    return items.map((r,i)=>{
+      const time=new Date(r._ts).toLocaleTimeString(lang==='de'?'de-DE':'pt-BR',{hour:'2-digit',minute:'2-digit'});
+      const dayCell = i===0 ? `<td rowspan="${items.length}" class="day-cell">${dDate}</td>` : '';
+      const status = r.ok ? '<span class="ok">✓ OK</span>' : '<span class="alert">⚠ ALARM</span>';
+      return `<tr><td>${time}</td>${dayCell}<td>${r.name}</td><td class="t-cell">${r.temp.toFixed(1)} °C</td><td>${status}</td></tr>`;
+    }).join('');
+  }).join('');
+
+  const html=`<!doctype html><html><head><meta charset="utf-8">
+<title>HACCP — ${monthName} ${y}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#111;font-size:11pt;line-height:1.4;padding:20mm}
+.head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #111;padding-bottom:12px;margin-bottom:18px}
+.head h1{font-size:18pt;font-weight:800;letter-spacing:-.01em}
+.head .sub{font-size:9pt;color:#666;margin-top:4px}
+.head .rest{text-align:right;font-size:10pt}
+.head .rest strong{display:block;font-size:11pt;font-weight:700}
+.head .rest .konz{color:#666;font-size:9pt;margin-top:2px}
+.summary{display:flex;gap:14px;margin-bottom:18px}
+.summary .box{flex:1;border:1px solid #ccc;border-radius:4px;padding:10px 14px}
+.summary .lbl{font-size:8pt;color:#666;text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+.summary .val{font-size:16pt;font-weight:700;margin-top:2px}
+.summary .alert .val{color:#b91c1c}
+.summary .ok .val{color:#047857}
+table{width:100%;border-collapse:collapse;font-size:9.5pt;margin-bottom:24px}
+th{background:#f3f4f6;text-align:left;padding:8px 10px;font-weight:700;border:1px solid #d1d5db;font-size:8.5pt;text-transform:uppercase;letter-spacing:.04em}
+td{padding:6px 10px;border:1px solid #e5e7eb;vertical-align:middle}
+.day-cell{background:#f9fafb;font-weight:600;white-space:nowrap}
+.t-cell{font-variant-numeric:tabular-nums;font-weight:600;text-align:right}
+.ok{color:#047857;font-weight:600;white-space:nowrap}
+.alert{color:#b91c1c;font-weight:700;white-space:nowrap}
+.sign{display:flex;gap:30px;margin-top:40px}
+.sign-box{flex:1;text-align:center}
+.sign-line{border-top:1px solid #333;margin-bottom:6px;padding-top:30px}
+.sign-lbl{font-size:8.5pt;color:#666}
+.foot{margin-top:30px;font-size:7.5pt;color:#999;text-align:center;border-top:1px solid #e5e7eb;padding-top:10px}
+.no-data{text-align:center;padding:40px;color:#666;border:1px dashed #d1d5db;border-radius:4px}
+@media print{ body{padding:14mm} .no-print{display:none} }
+@page{ size:A4; margin:14mm }
+</style></head><body>
+<div class="head">
+  <div>
+    <h1>HACCP — ${monthName} ${y}</h1>
+    <div class="sub">${lang==='de'?'Temperaturkontrolle · Monatsbericht':'Controle de temperatura · Relatório mensal'}</div>
+  </div>
+  <div class="rest">
+    <strong>${(settings.restName||'Lagerblick')}</strong>
+    <div>${settings.restAddr||''}</div>
+    ${settings.restKonz?`<div class="konz">Konz.: ${settings.restKonz}</div>`:''}
+    ${settings.restResp?`<div class="konz">${lang==='de'?'Verantw.: ':'Resp.: '}${settings.restResp}</div>`:''}
+  </div>
+</div>
+
+<div class="summary">
+  <div class="box"><div class="lbl">${lang==='de'?'Tage mit Eintragung':'Dias com registro'}</div><div class="val">${totalDays}</div></div>
+  <div class="box ok"><div class="lbl">${lang==='de'?'Messungen total':'Medições total'}</div><div class="val">${totalReadings}</div></div>
+  <div class="box ${alertCount>0?'alert':'ok'}"><div class="lbl">${lang==='de'?'Abweichungen':'Não conformidades'}</div><div class="val">${alertCount}</div></div>
+</div>
+
+${records.length===0
+  ? `<div class="no-data">${lang==='de'?'Keine Einträge in diesem Monat.':'Nenhum registro neste mês.'}</div>`
+  : `<table>
+      <thead>
+        <tr>
+          <th style="width:14%">${lang==='de'?'Uhrzeit':'Hora'}</th>
+          <th style="width:14%">${lang==='de'?'Datum':'Data'}</th>
+          <th>${lang==='de'?'Standort':'Local'}</th>
+          <th style="width:14%;text-align:right">${lang==='de'?'Temp.':'Temp.'}</th>
+          <th style="width:16%">${lang==='de'?'Status':'Status'}</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>`
+}
+
+<div class="sign">
+  <div class="sign-box">
+    <div class="sign-line"></div>
+    <div class="sign-lbl">${lang==='de'?'Verantwortlicher Mitarbeiter':'Responsável pela operação'}</div>
+  </div>
+  <div class="sign-box">
+    <div class="sign-line"></div>
+    <div class="sign-lbl">${lang==='de'?'Datum / Unterschrift':'Data / Assinatura'}</div>
+  </div>
+</div>
+
+<div class="foot">
+  ${lang==='de'?'Generiert mit Lagerblick · ':'Gerado por Lagerblick · '}${new Date().toLocaleString(lang==='de'?'de-DE':'pt-BR')}
+</div>
+
+<scr`+`ipt>
+  // Tenta print automatico apos carregar; user pode imprimir/salvar PDF
+  window.addEventListener('load', function(){ setTimeout(function(){ window.print(); }, 400); });
+<\/scr`+`ipt>
+</body></html>`;
+
+  // Abre em nova aba (no iOS Safari abre num overlay)
+  const w=window.open('', '_blank');
+  if(!w){
+    toast(lang==='de'?'Pop-up blockiert':'Pop-up bloqueado','error');
+    return;
+  }
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+}
+
+// ── OCR DE VALIDADE (Tesseract.js lazy-load) ─────────────
+let _tesseractPromise=null;
+function _loadTesseract(){
+  if(_tesseractPromise) return _tesseractPromise;
+  _tesseractPromise=new Promise((resolve,reject)=>{
+    if(window.Tesseract){ resolve(window.Tesseract); return; }
+    const s=document.createElement('script');
+    s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+    s.onload=()=>resolve(window.Tesseract);
+    s.onerror=()=>reject(new Error('Tesseract load fail'));
+    document.head.appendChild(s);
+  });
+  return _tesseractPromise;
+}
+function openOCRForExp(){
+  document.getElementById('ocr-file').click();
+}
+async function handleOCRFile(ev){
+  const file=ev.target.files[0]; if(!file) return;
+  ev.target.value=''; // permite re-uso
+  const loading=document.getElementById('ocr-loading');
+  document.getElementById('ocr-loading-txt').textContent=lang==='de'?'Lade OCR…':'Carregando OCR…';
+  document.getElementById('ocr-loading-sub').textContent=lang==='de'?'~2 MB beim ersten Mal':'~2 MB na primeira vez';
+  loading.classList.add('open');
+  try{
+    const Tesseract=await _loadTesseract();
+    document.getElementById('ocr-loading-txt').textContent=lang==='de'?'Analysiere Foto…':'Analisando foto…';
+    document.getElementById('ocr-loading-sub').textContent=lang==='de'?'Bitte warten':'Aguarde';
+    const result=await Tesseract.recognize(file, 'eng+deu', {
+      // Whitelist: dígitos + separadores comuns de data
+      tessedit_char_whitelist:'0123456789./- MHDLBhdmonatJahr',
+    });
+    const text=(result?.data?.text||'').trim();
+    _logErr('ocr-text',null,text.substring(0,120)); // grava raw pra diagnostico
+    const dates=_extractDatesFromText(text);
+    if(dates.length===0){
+      toast(lang==='de'?'Kein Datum erkannt':'Nenhuma data detectada','warn');
+    } else {
+      // Pega a data mais futura (validade > fabricação)
+      const best=dates.sort((a,b)=>b.localeCompare(a))[0];
+      document.getElementById('f-exp').value=best;
+      const hint=document.getElementById('f-ean-hint');
+      if(hint){
+        hint.style.color='var(--em)';
+        hint.textContent=(lang==='de'?'OCR ✓ ':'OCR ✓ ')+new Date(best+'T00:00:00').toLocaleDateString(lang==='de'?'de-DE':'pt-BR')+(dates.length>1?' ('+dates.length+' '+(lang==='de'?'Datümer':'datas')+')':'');
+      }
+      toast(lang==='de'?'Datum erkannt':'Data detectada','success');
+    }
+  }catch(e){
+    _logErr('ocr',null,e);
+    toast(lang==='de'?'OCR fehlgeschlagen':'Falha no OCR','error');
+  } finally {
+    loading.classList.remove('open');
+  }
+}
+// Extrai datas plausíveis do OCR. Aceita DD.MM.YYYY, DD/MM/YYYY, DD.MM.YY,
+// MM.YYYY, MHD DD.MM.YY, etc. Retorna array YYYY-MM-DD ordenado por confiança.
+function _extractDatesFromText(text){
+  const today=new Date(); today.setHours(0,0,0,0);
+  const out=[];
+  const norm=text.replace(/[OoIl]/g,m=>({O:'0',o:'0',I:'1',l:'1'}[m])); // erros comuns OCR
+  // DD.MM.YYYY ou DD/MM/YYYY ou DD-MM-YYYY
+  const re1=/(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{2,4})/g;
+  let m;
+  while((m=re1.exec(norm))!==null){
+    let d=parseInt(m[1]), mo=parseInt(m[2]), y=parseInt(m[3]);
+    if(y<100) y=2000+y;
+    if(d>=1 && d<=31 && mo>=1 && mo<=12 && y>=2020 && y<=2100){
+      const iso=y+'-'+String(mo).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+      // Plausibilidade: até 10 anos no futuro
+      const dt=new Date(iso+'T00:00:00');
+      if(!isNaN(dt) && dt.getTime() < today.getTime()+10*365*86400000){
+        out.push(iso);
+      }
+    }
+  }
+  // MM.YYYY (sem dia — assume dia 1) — só se não achou nada acima
+  if(out.length===0){
+    const re2=/(\d{1,2})[.\/-](\d{4})/g;
+    while((m=re2.exec(norm))!==null){
+      const mo=parseInt(m[1]), y=parseInt(m[2]);
+      if(mo>=1 && mo<=12 && y>=2020 && y<=2100){
+        out.push(y+'-'+String(mo).padStart(2,'0')+'-01');
+      }
+    }
+  }
+  // Dedup
+  return [...new Set(out)];
+}
+
 function renderHACCPLog(){
   const el=document.getElementById('haccp-log');
   if(!haccpLog.length){
@@ -3382,19 +3661,35 @@ function closeOrderList(e){
   if(e&&e.target!==document.getElementById('order-ov')) return;
   document.getElementById('order-ov').classList.remove('open');
 }
-function copyOrderList(){
+function _buildOrderText(){
   const { items, bySupplier }=_orderGroups();
-  if(!items.length){ toast(lang==='de'?'Keine Bestellungen':'Nada a pedir','warn'); return; }
+  if(!items.length) return null;
   const today=new Date().toLocaleDateString(lang==='de'?'de-DE':'pt-BR');
-  let text=(lang==='de'?'Einkaufsliste':'Lista de Pedido')+' — '+today+'\n\n';
+  const restName=getSettings().restName||'Lagerblick';
+  let text=(lang==='de'?'*Bestellung*':'*Pedido*')+' — '+restName+' — '+today+'\n\n';
   Object.entries(bySupplier).forEach(([sup,ps])=>{
-    text+=sup+':\n';
+    text+='*'+sup+'*:\n';
     ps.forEach(p=>{ const n=Math.ceil(r2(p.min-p.qty+(p.min*0.2))); text+='• '+p.name+': '+n+' '+p.unit+'\n'; });
     text+='\n';
   });
-  navigator.clipboard.writeText(text.trim())
+  return text.trim();
+}
+function copyOrderList(){
+  const text=_buildOrderText();
+  if(!text){ toast(lang==='de'?'Keine Bestellungen':'Nada a pedir','warn'); return; }
+  navigator.clipboard.writeText(text)
     .then(()=>toast(lang==='de'?'Kopiert!':'Copiado!','success'))
     .catch(()=>toast('×','error'));
+}
+// Abre WhatsApp com a lista pre-preenchida — operador escolhe o contato do fornecedor
+function sendOrderWhatsApp(){
+  const text=_buildOrderText();
+  if(!text){ toast(lang==='de'?'Keine Bestellungen':'Nada a pedir','warn'); return; }
+  // wa.me sem número → o WhatsApp pede pra escolher contato
+  const url='https://wa.me/?text='+encodeURIComponent(text);
+  // window.open garante abertura no app em iOS; se falhar, fallback pra clipboard
+  const w=window.open(url,'_blank');
+  if(!w){ copyOrderList(); toast(lang==='de'?'Kopiert — in WhatsApp einfügen':'Copiado — cole no WhatsApp','warn'); }
 }
 
 // ── EXPORT CSV ──
