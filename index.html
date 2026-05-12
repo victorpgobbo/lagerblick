@@ -1,1117 +1,1587 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="de">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#111111">
+<meta name="theme-color" content="#0d0d0d">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <title>Lagerblick</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --bg: #111; --surface: #1e1e1e; --border: #333;
-    --accent: #c8f000; --accent2: #ff6b35;
-    --text: #f0f0f0; --muted: #888;
-    --danger: #ff4444; --ok: #44dd88; --warn: #ffaa33; --venc: #cc44ff;
-  }
-  html, body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; min-height: 100vh; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  --bg: #0d0d0d;
+  --card: #1c1c1e;
+  --card2: #2c2c2e;
+  --border: #3a3a3c;
+  --accent: #c8f000;
+  --text: #f2f2f7;
+  --muted: #8e8e93;
+  --red: #ff3b30;
+  --orange: #ff9f0a;
+  --green: #30d158;
+  --purple: #bf5af2;
+  --blue: #0a84ff;
+  --nav-h: 72px;
+}
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
 
-  /* LOGIN */
-  .login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
-  .login-box { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 32px; width: 100%; max-width: 320px; text-align: center; }
-  .login-box h1 { font-family: 'Syne', sans-serif; font-size: 1.8rem; font-weight: 800; margin-bottom: 4px; }
-  .login-box h1 span { color: var(--accent); }
-  .login-box p { font-size: 0.8rem; color: var(--muted); margin-bottom: 24px; }
-  .login-box input { width: 100%; background: #0a0a0a; border: 1px solid var(--border); color: #fff; padding: 12px; font-size: 1rem; border-radius: 8px; outline: none; margin-bottom: 12px; text-align: center; letter-spacing: 0.1em; }
-  .login-box input:focus { border-color: var(--accent); }
-  .login-error { color: var(--danger); font-size: 0.8rem; margin-bottom: 10px; min-height: 18px; }
+/* ===================== LOGIN ===================== */
+.login-screen {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh; padding: 24px; background: var(--bg);
+}
+.login-box { width: 100%; max-width: 300px; text-align: center; }
+.login-logo { font-family: 'Syne', sans-serif; font-size: 2.4rem; font-weight: 800; margin-bottom: 4px; }
+.login-logo span { color: var(--accent); }
+.login-sub { color: var(--muted); font-size: 0.85rem; margin-bottom: 40px; }
+.pin-dots { display: flex; justify-content: center; gap: 16px; margin-bottom: 32px; }
+.pin-dot { width: 16px; height: 16px; border-radius: 50%; background: var(--card2); border: 2px solid var(--border); transition: all 0.15s; }
+.pin-dot.filled { background: var(--accent); border-color: var(--accent); }
+.numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.num-btn {
+  background: var(--card); color: var(--text);
+  font-size: 1.6rem; font-weight: 600;
+  border: none; border-radius: 50%; cursor: pointer;
+  aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+  transition: background 0.1s; user-select: none;
+}
+.num-btn:active { background: var(--card2); }
+.num-btn.del { font-size: 1.2rem; }
+.num-btn.empty { background: none; cursor: default; }
+.login-error { color: var(--red); font-size: 0.8rem; margin-top: 16px; min-height: 20px; }
 
-  /* APP */
-  .app-screen { display: none; }
-  header { background: #000; border-bottom: 1px solid var(--border); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; gap: 10px; }
-  header h1 { font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 800; color: #fff; flex-shrink: 0; }
-  header h1 span { color: var(--accent); }
-  .header-right { display: flex; align-items: center; gap: 8px; }
-  .badge { background: var(--surface); border: 1px solid var(--border); padding: 4px 10px; font-size: 0.65rem; border-radius: 4px; color: var(--muted); }
-  .lang-toggle { background: var(--surface); border: 1px solid var(--accent); padding: 5px 10px; font-size: 0.65rem; font-weight: 700; border-radius: 4px; color: var(--accent); cursor: pointer; letter-spacing: 0.05em; }
+/* ===================== APP ===================== */
+.app-screen { display: none; }
 
-  main { max-width: 900px; margin: 0 auto; padding: 16px; }
+/* HEADER */
+.app-header {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(13,13,13,0.92); backdrop-filter: blur(12px);
+  padding: 14px 20px 10px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+.app-logo { font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 800; }
+.app-logo span { color: var(--accent); }
+.header-right { display: flex; align-items: center; gap: 10px; }
+.lang-pill {
+  background: var(--card); border: 1px solid var(--border);
+  color: var(--muted); font-size: 0.7rem; font-weight: 700;
+  padding: 5px 10px; border-radius: 20px; cursor: pointer; letter-spacing: 0.05em;
+}
 
-  /* TABS */
-  .tabs-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 18px; scrollbar-width: none; }
-  .tabs-wrapper::-webkit-scrollbar { display: none; }
-  .tabs { display: flex; background: var(--surface); border-radius: 10px; padding: 4px; gap: 3px; min-width: max-content; }
-  .tab { padding: 9px 12px; font-size: 0.6rem; font-weight: 700; background: none; border: none; color: var(--muted); cursor: pointer; border-radius: 7px; transition: all 0.15s; text-transform: uppercase; white-space: nowrap; }
-  .tab.active { background: var(--accent); color: #111; }
+/* PAGES */
+.pages { padding-bottom: calc(var(--nav-h) + 16px); }
+.page { display: none; }
+.page.active { display: block; }
 
-  .panel { display: none; }
-  .panel.active { display: block; }
+/* BOTTOM NAV */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  height: var(--nav-h);
+  background: rgba(28,28,30,0.96); backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border);
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  z-index: 100; padding-bottom: env(safe-area-inset-bottom, 0);
+}
+.nav-btn {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; background: none; border: none; cursor: pointer;
+  color: var(--muted); font-size: 0.6rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.05em; padding: 8px 4px;
+  transition: color 0.15s;
+}
+.nav-btn .nav-icon { font-size: 1.5rem; line-height: 1; transition: transform 0.15s; }
+.nav-btn.active { color: var(--accent); }
+.nav-btn.active .nav-icon { transform: scale(1.15); }
 
-  .section-title { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 14px; }
+/* ===================== HOME ===================== */
+.home-content { padding: 16px; }
 
-  /* STATS */
-  .status-bar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 18px; }
-  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 8px; }
-  .stat-label { font-size: 0.48rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; line-height: 1.3; }
-  .stat-value { font-size: 1.4rem; font-weight: 800; line-height: 1; color: #fff; }
-  .stat-value.warn { color: var(--warn); }
-  .stat-value.danger { color: var(--danger); }
-  .stat-value.venc { color: var(--venc); }
-  .stat-value.waste { color: var(--accent2); }
+.alert-banner {
+  background: var(--red); color: #fff;
+  border-radius: 14px; padding: 16px 18px;
+  margin-bottom: 16px; display: none;
+}
+.alert-banner.show { display: flex; align-items: center; gap: 12px; }
+.alert-banner-icon { font-size: 1.6rem; flex-shrink: 0; }
+.alert-banner-text { font-size: 0.9rem; font-weight: 600; line-height: 1.4; }
+.alert-banner-count { font-family: 'Syne', sans-serif; font-size: 1.6rem; font-weight: 800; margin-left: auto; flex-shrink: 0; }
 
-  /* FORMS */
-  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-  .form-group.full { grid-column: 1 / -1; }
-  .form-group label { display: block; font-size: 0.6rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
-  .form-group input, .form-group select { width: 100%; background: #0a0a0a; border: 1px solid var(--border); color: #fff; padding: 10px 12px; font-size: 0.9rem; border-radius: 6px; outline: none; -webkit-appearance: none; appearance: none; }
-  .form-group input:focus, .form-group select:focus { border-color: var(--accent); }
+.stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+.stat-card {
+  background: var(--card); border-radius: 14px; padding: 16px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.stat-card-icon { font-size: 1.4rem; }
+.stat-card-value { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; line-height: 1; }
+.stat-card-label { font-size: 0.7rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+.stat-card.danger .stat-card-value { color: var(--red); }
+.stat-card.warn .stat-card-value { color: var(--orange); }
+.stat-card.venc .stat-card-value { color: var(--purple); }
+.stat-card.waste .stat-card-value { color: var(--orange); }
 
-  .input-scan-wrap { display: flex; gap: 8px; align-items: stretch; }
-  .input-scan-wrap input, .input-scan-wrap select { flex: 1; }
-  .btn-scan { background: var(--accent); color: #111; border: none; border-radius: 6px; padding: 0 14px; font-size: 1.1rem; cursor: pointer; flex-shrink: 0; font-weight: 700; }
+.section-label {
+  font-size: 0.65rem; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; padding: 0 2px;
+}
 
-  .btn-add { display: block; width: 100%; padding: 12px; background: var(--accent); color: #111; font-family: 'Syne', sans-serif; font-size: 0.9rem; font-weight: 800; border: none; border-radius: 8px; cursor: pointer; }
-  .btn-ok { background: var(--ok) !important; color: #111 !important; }
-  .btn-secondary { display: block; width: 100%; padding: 10px; background: transparent; color: var(--muted); font-size: 0.85rem; font-weight: 700; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; margin-top: 8px; }
+.scan-fab {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; padding: 18px;
+  background: var(--accent); color: #111;
+  font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 800;
+  border: none; border-radius: 16px; cursor: pointer; margin-bottom: 20px;
+  transition: opacity 0.15s;
+}
+.scan-fab:active { opacity: 0.85; }
+.scan-fab-icon { font-size: 1.4rem; }
 
-  /* PRODUCT LIST */
-  .product-list { display: flex; flex-direction: column; gap: 8px; }
-  .product-item { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid #333; border-radius: 8px; padding: 13px 12px; }
-  .product-item.low { border-left-color: var(--warn); }
-  .product-item.critical { border-left-color: var(--danger); }
-  .product-item.expiring { border-left-color: var(--venc); }
-  .product-item.expired { border-left-color: var(--danger); background: #1a1020; }
-  .product-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-  .product-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.88rem; color: #fff; }
-  .product-meta { font-size: 0.65rem; color: var(--muted); margin-top: 3px; line-height: 1.6; }
-  .tag-venc { color: var(--venc); }
-  .tag-expired { color: var(--danger); }
-  .product-right { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
-  .product-qty { font-size: 1.3rem; font-weight: 800; min-width: 32px; text-align: right; }
-  .product-qty.ok { color: var(--ok); }
-  .product-qty.low { color: var(--warn); }
-  .product-qty.critical { color: var(--danger); }
-  .edit-row { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); align-items: center; gap: 8px; }
-  .edit-row.open { display: flex; }
-  .edit-row input { flex: 1; background: #0a0a0a; border: 1px solid var(--border); color: #fff; padding: 8px 10px; font-size: 0.9rem; border-radius: 6px; outline: none; }
-  .edit-row input:focus { border-color: var(--accent); }
-  .btn-confirm { padding: 8px 14px; background: var(--accent); color: #111; font-weight: 700; font-size: 0.8rem; border: none; border-radius: 6px; cursor: pointer; }
-  .btn-cancel-edit { padding: 8px 10px; background: #2a2a2a; color: var(--muted); font-size: 0.8rem; border: none; border-radius: 6px; cursor: pointer; }
-  .btn-sm { padding: 6px 8px; font-size: 0.7rem; font-weight: 700; border: none; border-radius: 5px; cursor: pointer; }
-  .btn-out { background: var(--warn); color: #111; }
-  .btn-edit { background: #2a2a2a; color: #aaa; border: 1px solid #444; }
-  .btn-del { background: #2a2a2a; color: #ff6666; border: 1px solid #444; }
-  .ean-tag { font-size: 0.58rem; color: #555; font-family: monospace; }
+/* ===================== PRODUCT CARD ===================== */
+.product-cards { display: flex; flex-direction: column; gap: 10px; }
 
-  /* RECEIPT */
-  .receipt-items-list { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 12px; }
-  .receipt-item-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
-  .receipt-item-row:last-child { border-bottom: none; }
-  .receipt-item-name { font-weight: 600; }
-  .receipt-item-qty { color: var(--ok); font-weight: 700; }
-  .btn-remove-receipt { background: none; border: none; color: #ff6666; cursor: pointer; font-size: 1rem; padding: 0 4px; }
-  .photo-label { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #0a0a0a; border: 1px dashed var(--border); border-radius: 6px; cursor: pointer; font-size: 0.8rem; color: var(--muted); }
-  .photo-label:hover { border-color: var(--accent); color: var(--accent); }
-  .photo-input { display: none; }
-  .photo-preview { width: 100%; height: 110px; object-fit: cover; border-radius: 6px; margin-top: 8px; display: none; }
+.pcard {
+  background: var(--card); border-radius: 16px;
+  border: 1px solid var(--border);
+  border-left: 5px solid var(--green);
+  overflow: hidden; transition: border-color 0.2s;
+}
+.pcard.low     { border-left-color: var(--orange); }
+.pcard.critical { border-left-color: var(--red); background: #1f1209; }
+.pcard.expiring { border-left-color: var(--purple); }
+.pcard.expired  { border-left-color: var(--red); background: #1a0a1a; }
 
-  /* BUY LIST */
-  .buy-item { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--accent2); border-radius: 8px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-  .buy-item.venc-item { border-left-color: var(--venc); }
-  .buy-item.anomaly-item { border-left-color: var(--danger); }
-  .buy-name { font-weight: 700; font-size: 0.88rem; color: #fff; }
-  .buy-info { font-size: 0.65rem; color: var(--muted); margin-top: 2px; }
-  .buy-qty { font-weight: 700; color: var(--accent2); font-size: 0.82rem; flex-shrink: 0; text-align: right; }
-  .buy-qty.venc { color: var(--venc); }
-  .buy-qty.anomaly { color: var(--danger); }
+.pcard-top {
+  display: flex; align-items: center;
+  padding: 14px 14px 10px; gap: 12px;
+  cursor: pointer;
+}
+.pcard-status-icon { font-size: 1.3rem; flex-shrink: 0; }
+.pcard-info { flex: 1; min-width: 0; }
+.pcard-name {
+  font-family: 'Syne', sans-serif; font-weight: 700;
+  font-size: 1rem; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.pcard-meta { font-size: 0.72rem; color: var(--muted); margin-top: 2px; line-height: 1.5; }
+.pcard-qty-wrap { text-align: right; flex-shrink: 0; }
+.pcard-qty { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; line-height: 1; }
+.pcard-qty.ok       { color: var(--green); }
+.pcard-qty.low      { color: var(--orange); }
+.pcard-qty.critical { color: var(--red); }
+.pcard-unit { font-size: 0.7rem; color: var(--muted); font-weight: 600; }
 
-  /* LOG */
-  .log-item { padding: 10px 0; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-start; font-size: 0.8rem; gap: 10px; }
-  .log-item:last-child { border-bottom: none; }
-  .log-icon { font-size: 0.95rem; flex-shrink: 0; margin-top: 1px; }
-  .log-time { color: var(--muted); font-size: 0.62rem; white-space: nowrap; }
-  .log-out { color: var(--danger); font-weight: 700; }
-  .log-in { color: var(--ok); font-weight: 700; }
-  .log-waste { color: var(--accent2); font-weight: 700; }
-  .filter-bar { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
-  .filter-btn { padding: 5px 10px; font-size: 0.6rem; font-weight: 700; background: var(--surface); border: 1px solid var(--border); color: var(--muted); border-radius: 5px; cursor: pointer; }
-  .filter-btn.active { background: var(--accent); color: #111; border-color: var(--accent); }
+.pcard-actions {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid var(--border);
+}
+.pcard-btn {
+  padding: 14px 4px; background: none; border: none;
+  border-right: 1px solid var(--border); cursor: pointer;
+  font-size: 0.85rem; font-weight: 700; color: var(--text);
+  transition: background 0.1s; display: flex; flex-direction: column;
+  align-items: center; gap: 3px;
+}
+.pcard-btn:last-child { border-right: none; }
+.pcard-btn:active { background: var(--card2); }
+.pcard-btn .btn-icon { font-size: 1.1rem; }
+.pcard-btn .btn-label { font-size: 0.6rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
+.pcard-btn.btn-minus { color: var(--orange); }
+.pcard-btn.btn-plus  { color: var(--green); }
+.pcard-btn.btn-recv  { color: var(--blue); }
+.pcard-btn.btn-waste { color: var(--red); }
 
-  /* HACCP */
-  .haccp-log { display: flex; flex-direction: column; gap: 6px; }
-  .haccp-row { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--border); border-radius: 8px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; }
-  .haccp-row.ok { border-left-color: var(--ok); }
-  .haccp-row.bad { border-left-color: var(--danger); }
-  .haccp-location { font-weight: 700; font-size: 0.85rem; }
-  .haccp-meta { font-size: 0.63rem; color: var(--muted); margin-top: 2px; line-height: 1.5; }
-  .haccp-temp { font-size: 1.4rem; font-weight: 800; flex-shrink: 0; }
-  .haccp-temp.ok { color: var(--ok); }
-  .haccp-temp.bad { color: var(--danger); }
-  .haccp-badge { font-size: 0.58rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
-  .haccp-badge.ok { background: rgba(68,221,136,0.15); color: var(--ok); }
-  .haccp-badge.bad { background: rgba(255,68,68,0.15); color: var(--danger); }
-  .haccp-info-bar { font-size: 0.63rem; color: var(--muted); margin-bottom: 12px; line-height: 1.7; background: #0a0a0a; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border); }
+/* INLINE EDIT */
+.pcard-edit {
+  display: none; padding: 12px 14px;
+  border-top: 1px solid var(--border);
+  background: var(--card2);
+}
+.pcard-edit.open { display: block; }
+.edit-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.edit-row label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; white-space: nowrap; min-width: 80px; }
+.edit-row input {
+  flex: 1; background: var(--bg); border: 1px solid var(--border);
+  color: var(--text); padding: 10px 12px; font-size: 1rem;
+  border-radius: 10px; outline: none; min-width: 0;
+}
+.edit-row input:focus { border-color: var(--accent); }
+.edit-actions { display: flex; gap: 8px; }
+.btn-save {
+  flex: 1; background: var(--accent); color: #111;
+  font-family: 'Syne', sans-serif; font-weight: 800; font-size: 0.9rem;
+  padding: 12px; border: none; border-radius: 10px; cursor: pointer;
+}
+.btn-cancel-sm {
+  background: var(--card); color: var(--muted);
+  font-size: 0.9rem; font-weight: 700;
+  padding: 12px 16px; border: 1px solid var(--border); border-radius: 10px; cursor: pointer;
+}
 
-  /* EMPTY */
-  .empty-state { text-align: center; padding: 36px 20px; color: var(--muted); font-size: 0.8rem; border: 1px dashed var(--border); border-radius: 10px; }
-  .empty-state strong { display: block; font-family: 'Syne', sans-serif; font-size: 0.9rem; color: var(--text); margin-bottom: 4px; }
+/* ===================== ESTOQUE PAGE ===================== */
+.estoque-content { padding: 16px; }
+.estoque-search-bar {
+  display: flex; gap: 10px; margin-bottom: 14px;
+}
+.search-input {
+  flex: 1; background: var(--card); border: 1px solid var(--border);
+  color: var(--text); padding: 12px 16px; font-size: 0.95rem;
+  border-radius: 12px; outline: none;
+}
+.search-input:focus { border-color: var(--accent); }
+.btn-scan-sm {
+  background: var(--accent); color: #111; border: none;
+  border-radius: 12px; padding: 0 18px; font-size: 1.3rem;
+  cursor: pointer; flex-shrink: 0;
+}
+.filter-pills { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 14px; padding-bottom: 2px; scrollbar-width: none; }
+.filter-pills::-webkit-scrollbar { display: none; }
+.pill {
+  flex-shrink: 0; padding: 7px 14px; border-radius: 20px;
+  font-size: 0.72rem; font-weight: 700; cursor: pointer;
+  background: var(--card); border: 1px solid var(--border); color: var(--muted);
+  transition: all 0.15s; white-space: nowrap;
+}
+.pill.active { background: var(--accent); color: #111; border-color: var(--accent); }
 
-  /* MODAL */
-  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 200; align-items: center; justify-content: center; padding: 24px; }
-  .modal-overlay.open { display: flex; }
-  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; width: 100%; max-width: 340px; }
-  .modal h2 { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 800; margin-bottom: 8px; color: #fff; }
-  .modal p { font-size: 0.85rem; color: var(--muted); margin-bottom: 18px; }
-  .modal-btns { display: flex; gap: 8px; }
-  .modal-btn { flex: 1; padding: 12px; background: var(--accent); color: #111; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 0.9rem; border: none; border-radius: 8px; cursor: pointer; }
-  .modal-btn.cancel { background: #2a2a2a; color: var(--muted); border: 1px solid #444; }
+.btn-add-product {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 15px;
+  background: var(--card); color: var(--muted);
+  font-size: 0.9rem; font-weight: 700;
+  border: 2px dashed var(--border); border-radius: 16px;
+  cursor: pointer; margin-bottom: 14px; transition: all 0.15s;
+}
+.btn-add-product:hover { border-color: var(--accent); color: var(--accent); }
 
-  /* SCANNER */
-  .scanner-modal { display: none; position: fixed; inset: 0; background: #000; z-index: 300; flex-direction: column; align-items: center; justify-content: center; }
-  .scanner-modal.open { display: flex; }
-  .scanner-wrap { position: relative; width: 100%; max-width: 420px; }
-  #scanner-viewport { width: 100%; }
-  #scanner-viewport video { width: 100%; display: block; }
-  #scanner-viewport canvas { display: none !important; }
-  .scanner-frame { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 220px; height: 110px; border: 2px solid var(--accent); border-radius: 10px; pointer-events: none; }
-  .scanner-line { position: absolute; left: 10px; right: 10px; height: 2px; background: var(--accent); opacity: 0.8; top: 30%; animation: scanline 1.8s ease-in-out infinite; }
-  @keyframes scanline { 0%,100% { top: 20%; } 50% { top: 75%; } }
-  .scanner-status { color: #fff; font-size: 0.88rem; margin-top: 20px; text-align: center; opacity: 0.75; padding: 0 24px; }
-  .scanner-close { margin-top: 18px; padding: 12px 36px; background: var(--surface); color: #fff; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9rem; font-weight: 700; cursor: pointer; }
+/* ADD PRODUCT FORM */
+.add-product-form {
+  display: none; background: var(--card); border-radius: 16px;
+  padding: 18px; margin-bottom: 14px;
+  border: 1px solid var(--border);
+}
+.add-product-form.open { display: block; }
+.form-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; margin-bottom: 16px; }
+.form-row { margin-bottom: 12px; }
+.form-row label { display: block; font-size: 0.62rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+.form-row input, .form-row select {
+  width: 100%; background: var(--bg); border: 1px solid var(--border);
+  color: var(--text); padding: 12px 14px; font-size: 0.95rem;
+  border-radius: 10px; outline: none; -webkit-appearance: none; appearance: none;
+}
+.form-row input:focus, .form-row select:focus { border-color: var(--accent); }
+.form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.ean-hint { font-size: 0.65rem; color: var(--muted); margin-top: 5px; min-height: 16px; }
+.scan-name-row { display: flex; gap: 8px; }
+.scan-name-row input { flex: 1; }
+.form-actions { display: flex; gap: 10px; margin-top: 16px; }
+.btn-form-save {
+  flex: 1; background: var(--accent); color: #111;
+  font-family: 'Syne', sans-serif; font-weight: 800; font-size: 0.95rem;
+  padding: 14px; border: none; border-radius: 12px; cursor: pointer;
+}
+.btn-form-cancel {
+  background: var(--card2); color: var(--muted);
+  font-size: 0.9rem; font-weight: 700;
+  padding: 14px 18px; border: 1px solid var(--border); border-radius: 12px; cursor: pointer;
+}
 
-  /* BANNER */
-  .notif-banner { position: fixed; top: 62px; left: 50%; transform: translateX(-50%); background: var(--danger); color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; z-index: 150; display: none; box-shadow: 0 4px 16px rgba(0,0,0,0.5); max-width: 90%; text-align: center; }
-  .notif-banner.show { display: block; animation: slideDown 0.25s ease; }
-  .notif-banner.ok-banner { background: var(--ok); color: #111; }
-  @keyframes slideDown { from { transform: translateX(-50%) translateY(-16px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
+/* ===================== RECEBER ===================== */
+.recv-content { padding: 16px; }
 
-  @media (max-width: 380px) {
-    .status-bar { grid-template-columns: repeat(3, 1fr); }
-  }
+.recv-hero {
+  background: var(--blue); border-radius: 20px;
+  padding: 28px 20px; text-align: center; margin-bottom: 20px;
+  cursor: pointer; transition: opacity 0.15s;
+}
+.recv-hero:active { opacity: 0.85; }
+.recv-hero-icon { font-size: 3rem; margin-bottom: 10px; }
+.recv-hero-title { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800; color: #fff; margin-bottom: 4px; }
+.recv-hero-sub { font-size: 0.82rem; color: rgba(255,255,255,0.7); }
+
+.recv-divider { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.recv-divider-line { flex: 1; height: 1px; background: var(--border); }
+.recv-divider-text { font-size: 0.7rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+
+.recv-manual {
+  background: var(--card); border-radius: 16px;
+  padding: 18px; border: 1px solid var(--border); margin-bottom: 20px;
+}
+.recv-manual-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 14px; }
+.recv-row { display: flex; gap: 10px; align-items: flex-end; margin-bottom: 10px; }
+.recv-row .form-row { flex: 1; margin-bottom: 0; }
+.recv-row select {
+  width: 100%; background: var(--bg); border: 1px solid var(--border);
+  color: var(--text); padding: 12px 14px; font-size: 0.95rem;
+  border-radius: 10px; outline: none; -webkit-appearance: none;
+}
+.recv-row input {
+  width: 100%; background: var(--bg); border: 1px solid var(--border);
+  color: var(--text); padding: 12px 14px; font-size: 1rem;
+  border-radius: 10px; outline: none;
+}
+.recv-row input:focus, .recv-row select:focus { border-color: var(--accent); }
+.btn-recv-add {
+  background: var(--green); color: #111;
+  font-weight: 800; font-size: 1.2rem;
+  padding: 12px 16px; border: none; border-radius: 10px; cursor: pointer; flex-shrink: 0;
+}
+
+.recv-supplier-btns { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.supplier-btn {
+  padding: 8px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 700;
+  background: var(--card); border: 1px solid var(--border); color: var(--muted);
+  cursor: pointer; transition: all 0.15s;
+}
+.supplier-btn.sel { background: var(--blue); border-color: var(--blue); color: #fff; }
+
+.recv-basket {
+  background: var(--card); border-radius: 16px;
+  border: 1px solid var(--border); overflow: hidden; margin-bottom: 14px;
+}
+.recv-basket-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px; border-bottom: 1px solid var(--border);
+}
+.recv-basket-title { font-weight: 700; font-size: 0.9rem; }
+.recv-basket-count { background: var(--accent); color: #111; font-size: 0.7rem; font-weight: 800; padding: 3px 9px; border-radius: 20px; }
+.recv-basket-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px; border-bottom: 1px solid var(--border);
+  font-size: 0.88rem;
+}
+.recv-basket-item:last-child { border-bottom: none; }
+.recv-basket-item-name { font-weight: 600; }
+.recv-basket-item-qty { color: var(--green); font-weight: 700; }
+.btn-remove-basket { background: none; border: none; color: var(--red); font-size: 1rem; cursor: pointer; padding: 0 4px; }
+
+.btn-confirm-recv {
+  width: 100%; padding: 16px; background: var(--green); color: #111;
+  font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1rem;
+  border: none; border-radius: 14px; cursor: pointer; margin-bottom: 8px;
+  transition: opacity 0.15s;
+}
+.btn-confirm-recv:active { opacity: 0.85; }
+.btn-cancel-recv {
+  width: 100%; padding: 12px; background: none; color: var(--muted);
+  font-size: 0.85rem; font-weight: 700; border: 1px solid var(--border);
+  border-radius: 14px; cursor: pointer; margin-bottom: 20px;
+}
+
+.recv-history-card {
+  background: var(--card); border-radius: 14px;
+  border: 1px solid var(--border); padding: 14px 16px; margin-bottom: 10px;
+}
+.recv-history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.recv-history-supplier { font-weight: 700; font-size: 0.9rem; }
+.recv-history-time { font-size: 0.65rem; color: var(--muted); }
+.recv-history-items { font-size: 0.75rem; color: var(--muted); line-height: 1.7; }
+
+/* ===================== HACCP ===================== */
+.haccp-content { padding: 16px; }
+.haccp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+.loc-card {
+  background: var(--card); border-radius: 16px;
+  border: 1px solid var(--border); border-top: 4px solid var(--border);
+  padding: 16px 14px; cursor: pointer; transition: all 0.15s;
+  text-align: left; display: flex; flex-direction: column; gap: 6px;
+}
+.loc-card:active { opacity: 0.8; }
+.loc-card.ok-loc   { border-top-color: var(--green); }
+.loc-card.bad-loc  { border-top-color: var(--red); background: #1f0d0d; }
+.loc-card.warn-loc { border-top-color: var(--orange); }
+.loc-icon { font-size: 1.6rem; line-height: 1; }
+.loc-name { font-weight: 700; font-size: 0.82rem; color: var(--text); line-height: 1.3; }
+.loc-sub  { font-size: 0.65rem; color: var(--muted); }
+.loc-last-temp {
+  display: flex; align-items: center; gap: 6px; margin-top: 4px;
+}
+.loc-temp-value { font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 800; }
+.loc-temp-value.ok   { color: var(--green); }
+.loc-temp-value.bad  { color: var(--red); }
+.loc-temp-tag {
+  font-size: 0.55rem; font-weight: 700; padding: 2px 6px; border-radius: 10px; letter-spacing: 0.03em;
+}
+.loc-temp-tag.ok  { background: rgba(48,209,88,0.15); color: var(--green); }
+.loc-temp-tag.bad { background: rgba(255,59,48,0.15); color: var(--red); }
+.loc-no-reading { font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
+
+.haccp-recent-log { display: flex; flex-direction: column; gap: 8px; }
+.haccp-log-row {
+  background: var(--card); border-radius: 12px;
+  border: 1px solid var(--border); border-left: 4px solid var(--border);
+  padding: 12px 14px; display: flex; align-items: center; justify-content: space-between;
+}
+.haccp-log-row.ok  { border-left-color: var(--green); }
+.haccp-log-row.bad { border-left-color: var(--red); }
+.haccp-log-loc { font-weight: 700; font-size: 0.85rem; }
+.haccp-log-meta { font-size: 0.65rem; color: var(--muted); margin-top: 2px; }
+.haccp-log-temp { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800; }
+.haccp-log-temp.ok  { color: var(--green); }
+.haccp-log-temp.bad { color: var(--red); }
+
+/* ===================== HACCP INPUT MODAL ===================== */
+.haccp-modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.75); z-index: 200;
+  align-items: flex-end; justify-content: center;
+}
+.haccp-modal-overlay.open { display: flex; }
+.haccp-modal {
+  background: var(--card); border-radius: 24px 24px 0 0;
+  width: 100%; max-width: 480px;
+  padding: 24px 24px calc(24px + env(safe-area-inset-bottom, 0));
+}
+.haccp-modal-title { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 800; margin-bottom: 4px; }
+.haccp-modal-sub { font-size: 0.8rem; color: var(--muted); margin-bottom: 20px; }
+.temp-input-big {
+  width: 100%; background: var(--bg); border: 2px solid var(--border);
+  color: var(--text); padding: 18px; font-size: 2.2rem; font-weight: 700;
+  border-radius: 16px; outline: none; text-align: center; margin-bottom: 16px;
+  font-family: 'Syne', sans-serif;
+}
+.temp-input-big:focus { border-color: var(--accent); }
+.temp-limit-info { font-size: 0.72rem; color: var(--muted); text-align: center; margin-bottom: 20px; }
+.haccp-modal-btns { display: flex; gap: 10px; }
+.btn-haccp-confirm {
+  flex: 1; background: var(--accent); color: #111;
+  font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1rem;
+  padding: 16px; border: none; border-radius: 14px; cursor: pointer;
+}
+.btn-haccp-cancel {
+  background: var(--card2); color: var(--muted);
+  font-size: 0.95rem; font-weight: 700;
+  padding: 16px 20px; border: 1px solid var(--border); border-radius: 14px; cursor: pointer;
+}
+
+/* ===================== SCANNER ===================== */
+.scanner-overlay {
+  display: none; position: fixed; inset: 0;
+  background: #000; z-index: 300;
+  flex-direction: column; align-items: center; justify-content: center;
+}
+.scanner-overlay.open { display: flex; }
+.scanner-viewport-wrap { position: relative; width: 100%; max-width: 420px; }
+#scanner-vp { width: 100%; }
+#scanner-vp video { width: 100%; display: block; }
+#scanner-vp canvas { display: none !important; }
+.scanner-aim {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 240px; height: 120px;
+}
+.scanner-aim::before, .scanner-aim::after,
+.scanner-aim-tl::before, .scanner-aim-tl::after {
+  content: ''; position: absolute; width: 24px; height: 24px;
+  border-color: var(--accent); border-style: solid;
+}
+.scanner-aim::before  { top: 0; left: 0; border-width: 3px 0 0 3px; border-radius: 4px 0 0 0; }
+.scanner-aim::after   { top: 0; right: 0; border-width: 3px 3px 0 0; border-radius: 0 4px 0 0; }
+.scanner-aim-tl::before { bottom: 0; left: 0; border-width: 0 0 3px 3px; border-radius: 0 0 0 4px; }
+.scanner-aim-tl::after  { bottom: 0; right: 0; border-width: 0 3px 3px 0; border-radius: 0 0 4px 0; }
+.scanner-line {
+  position: absolute; left: 8px; right: 8px; height: 2px;
+  background: var(--accent); opacity: 0.8;
+  animation: scanline 1.6s ease-in-out infinite;
+}
+@keyframes scanline { 0%,100% { top: 15%; } 50% { top: 80%; } }
+.scanner-hint { color: #fff; font-size: 0.9rem; margin-top: 24px; opacity: 0.6; text-align: center; padding: 0 32px; }
+.scanner-cancel {
+  margin-top: 20px; padding: 14px 40px;
+  background: var(--card); color: var(--text);
+  border: 1px solid var(--border); border-radius: 14px;
+  font-size: 0.95rem; font-weight: 700; cursor: pointer;
+}
+
+/* ===================== TOAST ===================== */
+.toast {
+  position: fixed; top: 70px; left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  background: var(--card2); color: var(--text);
+  padding: 12px 20px; border-radius: 50px;
+  font-size: 0.85rem; font-weight: 600;
+  z-index: 400; opacity: 0; pointer-events: none;
+  transition: all 0.25s; white-space: nowrap;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  display: flex; align-items: center; gap: 8px;
+  border: 1px solid var(--border);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.success { background: var(--green); color: #111; border-color: var(--green); }
+.toast.error   { background: var(--red); color: #fff; border-color: var(--red); }
+.toast.warn    { background: var(--orange); color: #111; border-color: var(--orange); }
+
+/* ===================== CONFIRM MODAL ===================== */
+.confirm-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.75); z-index: 250;
+  align-items: flex-end; justify-content: center;
+}
+.confirm-overlay.open { display: flex; }
+.confirm-modal {
+  background: var(--card); border-radius: 24px 24px 0 0;
+  width: 100%; max-width: 480px;
+  padding: 24px 24px calc(24px + env(safe-area-inset-bottom, 0));
+}
+.confirm-modal h2 { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.1rem; margin-bottom: 6px; }
+.confirm-modal p { font-size: 0.85rem; color: var(--muted); margin-bottom: 22px; line-height: 1.5; }
+.confirm-btns { display: flex; gap: 10px; }
+.btn-confirm-yes { flex: 1; background: var(--red); color: #fff; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 0.95rem; padding: 15px; border: none; border-radius: 14px; cursor: pointer; }
+.btn-confirm-no  { background: var(--card2); color: var(--muted); font-size: 0.95rem; font-weight: 700; padding: 15px 20px; border: 1px solid var(--border); border-radius: 14px; cursor: pointer; }
+
+/* EMPTY */
+.empty-box { text-align: center; padding: 40px 20px; color: var(--muted); }
+.empty-box .empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
+.empty-box strong { display: block; color: var(--text); font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; margin-bottom: 4px; }
+.empty-box span { font-size: 0.82rem; }
+
+/* MISC */
+.divider { height: 1px; background: var(--border); margin: 16px 0; }
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
+<!-- ==================== LOGIN ==================== -->
 <div class="login-screen" id="login-screen">
   <div class="login-box">
-    <h1>lager<span>blick</span></h1>
-    <p>Controle de estoque inteligente</p>
-    <input type="password" id="login-input" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    <div class="login-logo">lager<span>blick</span></div>
+    <div class="login-sub">Controle de estoque</div>
+    <div class="pin-dots" id="pin-dots">
+      <div class="pin-dot" id="dot-0"></div>
+      <div class="pin-dot" id="dot-1"></div>
+      <div class="pin-dot" id="dot-2"></div>
+      <div class="pin-dot" id="dot-3"></div>
+    </div>
+    <div class="numpad" id="numpad">
+      <button class="num-btn" onclick="pinKey('1')">1</button>
+      <button class="num-btn" onclick="pinKey('2')">2</button>
+      <button class="num-btn" onclick="pinKey('3')">3</button>
+      <button class="num-btn" onclick="pinKey('4')">4</button>
+      <button class="num-btn" onclick="pinKey('5')">5</button>
+      <button class="num-btn" onclick="pinKey('6')">6</button>
+      <button class="num-btn" onclick="pinKey('7')">7</button>
+      <button class="num-btn" onclick="pinKey('8')">8</button>
+      <button class="num-btn" onclick="pinKey('9')">9</button>
+      <button class="num-btn empty"></button>
+      <button class="num-btn" onclick="pinKey('0')">0</button>
+      <button class="num-btn del" onclick="pinDel()">⌫</button>
+    </div>
     <div class="login-error" id="login-error"></div>
-    <button class="btn-add" onclick="doLogin()">Entrar</button>
   </div>
 </div>
 
-<!-- BANNER -->
-<div class="notif-banner" id="notif-banner"></div>
-
-<!-- APP -->
+<!-- ==================== APP ==================== -->
 <div class="app-screen" id="app-screen">
-  <header>
-    <h1>lager<span>blick</span></h1>
+
+  <header class="app-header">
+    <div class="app-logo">lager<span>blick</span></div>
     <div class="header-right">
-      <span class="badge" id="total-badge">0 itens</span>
-      <button class="lang-toggle" id="lang-btn" onclick="toggleLang()">DE</button>
+      <button class="lang-pill" id="lang-btn" onclick="toggleLang()">DE</button>
     </div>
   </header>
 
-  <main>
-    <div class="tabs-wrapper">
-      <div class="tabs">
-        <button class="tab active" id="tab-estoque"     onclick="switchTab('estoque',this)">📦 Estoque</button>
-        <button class="tab"        id="tab-recebimento" onclick="switchTab('recebimento',this)">🚚 Recebimento</button>
-        <button class="tab"        id="tab-saidas"      onclick="switchTab('saidas',this)">📤 Saídas</button>
-        <button class="tab"        id="tab-haccp"       onclick="switchTab('haccp',this)">🌡 HACCP</button>
-        <button class="tab"        id="tab-compras"     onclick="switchTab('compras',this)">🛒 Compras</button>
-        <button class="tab"        id="tab-log"         onclick="switchTab('log',this)">📋 Histórico</button>
+  <div class="pages">
+
+    <!-- ====== HOME ====== -->
+    <div class="page active" id="page-home">
+      <div class="home-content">
+
+        <div class="alert-banner" id="alert-banner">
+          <div class="alert-banner-icon">⛔</div>
+          <div class="alert-banner-text" id="alert-banner-text">Produtos precisam de atenção</div>
+          <div class="alert-banner-count" id="alert-banner-count">0</div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-card-icon">📦</div>
+            <div class="stat-card-value" id="h-stat-total">0</div>
+            <div class="stat-card-label" id="h-stat-total-label">Produtos</div>
+          </div>
+          <div class="stat-card danger">
+            <div class="stat-card-icon">⛔</div>
+            <div class="stat-card-value" id="h-stat-crit">0</div>
+            <div class="stat-card-label" id="h-stat-crit-label">Críticos</div>
+          </div>
+          <div class="stat-card venc">
+            <div class="stat-card-icon">📅</div>
+            <div class="stat-card-value" id="h-stat-venc">0</div>
+            <div class="stat-card-label" id="h-stat-venc-label">Vencendo</div>
+          </div>
+          <div class="stat-card waste">
+            <div class="stat-card-icon">🗑</div>
+            <div class="stat-card-value" id="h-stat-waste">€0</div>
+            <div class="stat-card-label" id="h-stat-waste-label">Desperdício/sem</div>
+          </div>
+        </div>
+
+        <button class="scan-fab" onclick="openScanner('recv')">
+          <span class="scan-fab-icon">📷</span>
+          <span id="scan-fab-label">Escanear produto</span>
+        </button>
+
+        <div class="section-label" id="home-problems-label">Requer atenção</div>
+        <div class="product-cards" id="home-problems-list">
+          <div class="empty-box">
+            <div class="empty-icon">✅</div>
+            <strong id="home-ok-title">Tudo em ordem!</strong>
+            <span id="home-ok-sub">Nenhum produto crítico</span>
+          </div>
+        </div>
+
       </div>
     </div>
 
-    <!-- ===== ESTOQUE ===== -->
-    <div class="panel active" id="panel-estoque">
-      <div class="status-bar">
-        <div class="stat"><div class="stat-label" data-i18n="statTotal">Total</div><div class="stat-value" id="stat-total">0</div></div>
-        <div class="stat"><div class="stat-label" data-i18n="statLow">Atenção</div><div class="stat-value warn" id="stat-low">0</div></div>
-        <div class="stat"><div class="stat-label" data-i18n="statCrit">Crítico</div><div class="stat-value danger" id="stat-critical">0</div></div>
-        <div class="stat"><div class="stat-label" data-i18n="statVenc">Vencendo</div><div class="stat-value venc" id="stat-venc">0</div></div>
-        <div class="stat"><div class="stat-label" data-i18n="statWaste">Desperdício/sem</div><div class="stat-value waste" id="stat-waste">€0</div></div>
-      </div>
+    <!-- ====== ESTOQUE ====== -->
+    <div class="page" id="page-estoque">
+      <div class="estoque-content">
 
-      <div class="card">
-        <div class="section-title" style="margin-bottom:14px" data-i18n="addProduct">Adicionar produto</div>
-        <div class="form-grid">
-          <div class="form-group full">
-            <label data-i18n="labelName">Nome</label>
-            <div class="input-scan-wrap">
-              <input type="text" id="new-name" placeholder="Nome ou escaneie o código...">
-              <button class="btn-scan" onclick="openScanner('add')" title="Escanear código de barras">📷</button>
+        <div class="estoque-search-bar">
+          <input class="search-input" type="text" id="search-input" placeholder="Buscar produto..." oninput="filterProducts()">
+          <button class="btn-scan-sm" onclick="openScanner('add')" title="Escanear">📷</button>
+        </div>
+
+        <div class="filter-pills">
+          <button class="pill active" id="pill-all"     onclick="setPill('all',this)"     data-i18n-pill="pillAll">Todos</button>
+          <button class="pill"        id="pill-crit"    onclick="setPill('crit',this)"    data-i18n-pill="pillCrit">⛔ Crítico</button>
+          <button class="pill"        id="pill-low"     onclick="setPill('low',this)"     data-i18n-pill="pillLow">⚠ Atenção</button>
+          <button class="pill"        id="pill-expiring" onclick="setPill('expiring',this)" data-i18n-pill="pillVenc">📅 Vencendo</button>
+        </div>
+
+        <button class="btn-add-product" id="btn-add-product" onclick="toggleAddForm()">
+          ＋ <span data-i18n="btnAddProduct">Adicionar produto</span>
+        </button>
+
+        <div class="add-product-form" id="add-product-form">
+          <div class="form-title" data-i18n="formTitle">Novo produto</div>
+          <div class="form-row">
+            <label data-i18n="formName">Nome</label>
+            <div class="scan-name-row">
+              <input type="text" id="f-name" placeholder="Nome do produto...">
+              <button class="btn-scan-sm" onclick="openScanner('form')" title="Escanear EAN">📷</button>
             </div>
-            <div style="font-size:0.6rem;color:var(--muted);margin-top:5px;min-height:14px" id="ean-status"></div>
+            <div class="ean-hint" id="f-ean-hint"></div>
           </div>
-          <div class="form-group">
-            <label data-i18n="labelQty">Qtd atual</label>
-            <input type="number" id="new-qty" placeholder="0" min="0" step="0.1">
-          </div>
-          <div class="form-group">
-            <label data-i18n="labelMin">Qtd mínima</label>
-            <input type="number" id="new-min" placeholder="0" min="0" step="0.1">
-          </div>
-          <div class="form-group">
-            <label data-i18n="labelUnit">Unidade</label>
-            <select id="new-unit">
-              <option value="un">un (unidade)</option>
-              <option value="kg">kg</option>
-              <option value="g">g</option>
-              <option value="L">L (litros)</option>
-              <option value="ml">ml</option>
-              <option value="cx">cx (caixa)</option>
-              <option value="pct">pct (pacote)</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label data-i18n="labelExp">Vencimento (opcional)</label>
-            <input type="date" id="new-exp">
-          </div>
-          <div class="form-group">
-            <label data-i18n="labelPrice">Preço unit. € (opcional)</label>
-            <input type="number" id="new-price" placeholder="0.00" min="0" step="0.01">
-          </div>
-        </div>
-        <button class="btn-add" onclick="addProduct()">+ <span data-i18n="btnAdd">Adicionar</span></button>
-      </div>
-
-      <div class="section-title" data-i18n="sectionProducts">Produtos</div>
-      <div class="product-list" id="product-list">
-        <div class="empty-state"><strong data-i18n="emptyTitle">Nenhum produto</strong><span data-i18n="emptySub">Adicione acima ou escaneie um código 📷</span></div>
-      </div>
-    </div>
-
-    <!-- ===== RECEBIMENTO ===== -->
-    <div class="panel" id="panel-recebimento">
-      <div class="card">
-        <div class="section-title" style="margin-bottom:14px" data-i18n="recvTitle">Registrar recebimento</div>
-        <div class="form-grid">
-          <div class="form-group full">
-            <label data-i18n="recvProduct">Produto</label>
-            <div class="input-scan-wrap">
-              <select id="recv-product"><option value="">Selecione...</option></select>
-              <button class="btn-scan" onclick="openScanner('recv')" title="Escanear">📷</button>
+          <div class="form-row-2">
+            <div class="form-row" style="margin-bottom:0">
+              <label data-i18n="formQty">Quantidade atual</label>
+              <input type="number" id="f-qty" placeholder="0" min="0" step="0.1">
+            </div>
+            <div class="form-row" style="margin-bottom:0">
+              <label data-i18n="formMin">Mínimo</label>
+              <input type="number" id="f-min" placeholder="0" min="0" step="0.1">
             </div>
           </div>
-          <div class="form-group">
-            <label data-i18n="recvQty">Quantidade recebida</label>
-            <input type="number" id="recv-qty" placeholder="0" min="0" step="0.1">
+          <div class="form-row-2">
+            <div class="form-row" style="margin-bottom:0">
+              <label data-i18n="formUnit">Unidade</label>
+              <select id="f-unit">
+                <option value="un">un</option>
+                <option value="kg">kg</option>
+                <option value="g">g</option>
+                <option value="L">L</option>
+                <option value="ml">ml</option>
+                <option value="cx">cx</option>
+                <option value="pct">pct</option>
+              </select>
+            </div>
+            <div class="form-row" style="margin-bottom:0">
+              <label data-i18n="formPrice">Preço € (opcional)</label>
+              <input type="number" id="f-price" placeholder="0.00" min="0" step="0.01">
+            </div>
           </div>
-          <div class="form-group">
-            <label data-i18n="recvSupplier">Fornecedor</label>
-            <select id="recv-supplier">
-              <option value="Transgourmet">Transgourmet</option>
-              <option value="Metro">Metro</option>
-              <option value="Selgros">Selgros</option>
-              <option value="Outro">Outro</option>
-            </select>
+          <div class="form-row">
+            <label data-i18n="formExp">Vencimento (opcional)</label>
+            <input type="date" id="f-exp">
+          </div>
+          <div class="form-actions">
+            <button class="btn-form-save" onclick="saveNewProduct()" data-i18n="formSave">Salvar</button>
+            <button class="btn-form-cancel" onclick="toggleAddForm()">✕</button>
           </div>
         </div>
-        <div class="form-group" style="margin-bottom:12px">
-          <label data-i18n="recvPhoto">Foto da entrega (opcional)</label>
-          <label class="photo-label" for="recv-photo">
-            📷 <span id="recv-photo-label" data-i18n="recvPhotoBtn">Tirar foto ou selecionar arquivo</span>
-          </label>
-          <input type="file" accept="image/*" capture="environment" id="recv-photo" class="photo-input"
-            onchange="previewPhoto(this,'recv-preview','recv-photo-label')">
-          <img id="recv-preview" class="photo-preview" alt="Foto">
-        </div>
-        <button class="btn-add" onclick="addToReceipt()">+ <span data-i18n="recvAddItem">Adicionar ao recebimento</span></button>
-      </div>
 
-      <div id="receipt-items-wrapper" style="display:none">
-        <div class="section-title" data-i18n="recvItems">Itens do recebimento</div>
-        <div class="receipt-items-list" id="receipt-items-list"></div>
-        <button class="btn-add btn-ok" onclick="confirmReceipt()">✓ <span data-i18n="recvConfirm">Confirmar recebimento</span></button>
-        <button class="btn-secondary" onclick="clearReceipt()" data-i18n="recvCancel">Cancelar</button>
-      </div>
-
-      <div style="margin-top:20px">
-        <div class="section-title" data-i18n="recvHistory">Últimos recebimentos</div>
-        <div id="receipt-history">
-          <div class="empty-state"><strong data-i18n="recvEmpty">Sem recebimentos</strong></div>
-        </div>
+        <div class="product-cards" id="estoque-list"></div>
       </div>
     </div>
 
-    <!-- ===== SAIDAS ===== -->
-    <div class="panel" id="panel-saidas">
-      <div class="card">
-        <div class="section-title" style="margin-bottom:14px" data-i18n="outTitle">Registrar saída</div>
-        <div class="form-grid">
-          <div class="form-group full">
-            <label data-i18n="outProduct">Produto</label>
-            <select id="out-product"><option value="">Selecione...</option></select>
-          </div>
-          <div class="form-group">
-            <label data-i18n="outQty">Quantidade</label>
-            <input type="number" id="out-qty" placeholder="1" min="0.1" step="0.1">
-          </div>
-          <div class="form-group">
-            <label data-i18n="outReason">Motivo</label>
-            <select id="out-reason">
-              <option value="Consumo">Consumo</option>
-              <option value="Desperdício">🗑 Desperdício</option>
-              <option value="Vencimento">⚠ Vencimento</option>
-              <option value="Quebra">Quebra</option>
-              <option value="Outro">Outro</option>
-            </select>
-          </div>
-        </div>
-        <button class="btn-add" onclick="registerOut()" data-i18n="outConfirm">Confirmar saída</button>
-      </div>
-      <div id="out-alert"></div>
-    </div>
+    <!-- ====== RECEBER ====== -->
+    <div class="page" id="page-receber">
+      <div class="recv-content">
 
-    <!-- ===== HACCP ===== -->
-    <div class="panel" id="panel-haccp">
-      <div class="card">
-        <div class="section-title" style="margin-bottom:10px">🌡 <span data-i18n="haccpTitle">Registrar temperatura</span></div>
-        <div class="haccp-info-bar" data-i18n="haccpInfo">
-          ℹ Padrões DE: Kühlschrank ≤ 7°C &nbsp;·&nbsp; Tiefkühler ≤ -18°C &nbsp;·&nbsp; Kühltheke ≤ 7°C &nbsp;·&nbsp; Warmhalte ≥ 65°C
+        <div class="recv-hero" onclick="openScanner('recv')">
+          <div class="recv-hero-icon">📷</div>
+          <div class="recv-hero-title" data-i18n="recvHeroTitle">Escanear entrega</div>
+          <div class="recv-hero-sub" data-i18n="recvHeroSub">Aponte a câmera para o código de barras</div>
         </div>
-        <div class="form-grid">
-          <div class="form-group full">
-            <label data-i18n="haccpLocation">Local</label>
-            <select id="haccp-location">
-              <option value="Kühlschrank 1">Kühlschrank 1 (Geladeira 1)</option>
-              <option value="Kühlschrank 2">Kühlschrank 2 (Geladeira 2)</option>
-              <option value="Tiefkühler 1">Tiefkühler 1 (Freezer 1)</option>
-              <option value="Tiefkühler 2">Tiefkühler 2 (Freezer 2)</option>
-              <option value="Kühltheke">Kühltheke (Balcão frio)</option>
-              <option value="Warmhalte">Warmhalte (Banho-maria)</option>
-              <option value="Lager">Lager (Depósito)</option>
-              <option value="Küche">Küche (Cozinha)</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label data-i18n="haccpTemp">Temperatura (°C)</label>
-            <input type="number" id="haccp-temp" placeholder="ex: 4" step="0.1" onkeydown="if(event.key==='Enter')addHACCP()">
-          </div>
-          <div class="form-group">
-            <label data-i18n="haccpNote">Observação (opcional)</label>
-            <input type="text" id="haccp-note" placeholder="...">
-          </div>
-        </div>
-        <button class="btn-add" onclick="addHACCP()">✓ <span data-i18n="haccpSave">Registrar</span></button>
-      </div>
-      <div class="section-title" data-i18n="haccpRecent">Registros recentes</div>
-      <div class="haccp-log" id="haccp-log">
-        <div class="empty-state"><strong data-i18n="haccpEmpty">Sem registros</strong></div>
-      </div>
-    </div>
 
-    <!-- ===== COMPRAS ===== -->
-    <div class="panel" id="panel-compras">
-      <div id="buy-list-container">
-        <div class="empty-state"><strong>✓ <span data-i18n="buyOk">Tudo em ordem</span></strong><span data-i18n="buySub">Alertas de reposição aparecem aqui</span></div>
+        <div class="recv-divider">
+          <div class="recv-divider-line"></div>
+          <div class="recv-divider-text" data-i18n="recvOr">ou selecione manualmente</div>
+          <div class="recv-divider-line"></div>
+        </div>
+
+        <div class="recv-manual">
+          <div class="recv-manual-title" data-i18n="recvManualTitle">Adicionar item</div>
+
+          <div style="margin-bottom:10px">
+            <div class="section-label" style="margin-bottom:6px" data-i18n="recvSupplierLabel">Fornecedor</div>
+            <div class="recv-supplier-btns" id="supplier-btns">
+              <button class="supplier-btn sel" onclick="selectSupplier('Transgourmet',this)">Transgourmet</button>
+              <button class="supplier-btn" onclick="selectSupplier('Metro',this)">Metro</button>
+              <button class="supplier-btn" onclick="selectSupplier('Selgros',this)">Selgros</button>
+              <button class="supplier-btn" onclick="selectSupplier('Outro',this)" data-i18n="recvOther">Outro</button>
+            </div>
+          </div>
+
+          <div class="recv-row">
+            <div class="form-row" style="flex:2;margin-bottom:0">
+              <label data-i18n="recvProduct">Produto</label>
+              <select id="recv-product-sel">
+                <option value="">Selecionar...</option>
+              </select>
+            </div>
+            <div class="form-row" style="flex:1;margin-bottom:0">
+              <label data-i18n="recvQty">Qtd</label>
+              <input type="number" id="recv-qty-input" placeholder="0" min="0" step="0.1" style="text-align:center;font-size:1.1rem;font-weight:700">
+            </div>
+            <button class="btn-recv-add" onclick="addToBasket()">+</button>
+          </div>
+        </div>
+
+        <div id="recv-basket-wrap" style="display:none">
+          <div class="recv-basket">
+            <div class="recv-basket-header">
+              <span class="recv-basket-title" data-i18n="recvBasket">Carrinho</span>
+              <span class="recv-basket-count" id="basket-count">0</span>
+            </div>
+            <div id="basket-items"></div>
+          </div>
+          <button class="btn-confirm-recv" onclick="confirmBasket()">✓ <span data-i18n="recvConfirm">Confirmar recebimento</span></button>
+          <button class="btn-cancel-recv" onclick="clearBasket()" data-i18n="recvClear">Limpar carrinho</button>
+        </div>
+
+        <div class="section-label" data-i18n="recvHistoryLabel">Últimos recebimentos</div>
+        <div id="recv-history-list">
+          <div class="empty-box" style="padding:24px 0">
+            <div class="empty-icon">🚚</div>
+            <strong data-i18n="recvEmpty">Nenhum recebimento ainda</strong>
+          </div>
+        </div>
+
       </div>
     </div>
 
-    <!-- ===== HISTÓRICO ===== -->
-    <div class="panel" id="panel-log">
-      <div class="filter-bar">
-        <button class="filter-btn active" onclick="filterLog('all',this)" data-i18n="logAll">Todos</button>
-        <button class="filter-btn" onclick="filterLog('entrada',this)" data-i18n="logIn">📥 Entradas</button>
-        <button class="filter-btn" onclick="filterLog('saida',this)" data-i18n="logOut">📤 Saídas</button>
-        <button class="filter-btn" onclick="filterLog('desperdicio',this)" data-i18n="logWaste">🗑 Desperdício</button>
-        <button class="filter-btn" onclick="filterLog('recebimento',this)" data-i18n="logRecv">🚚 Recebimentos</button>
-      </div>
-      <div class="card">
-        <div id="log-container">
-          <div class="empty-state"><strong data-i18n="logEmpty">Sem registros</strong></div>
+    <!-- ====== HACCP ====== -->
+    <div class="page" id="page-haccp">
+      <div class="haccp-content">
+
+        <div class="section-label" data-i18n="haccpLocations">Locais — toque para registrar</div>
+        <div class="haccp-grid" id="haccp-grid"></div>
+
+        <div class="section-label" data-i18n="haccpRecent">Registros recentes</div>
+        <div class="haccp-recent-log" id="haccp-recent-log">
+          <div class="empty-box" style="padding:24px 0">
+            <div class="empty-icon">🌡</div>
+            <strong data-i18n="haccpEmpty">Nenhum registro ainda</strong>
+          </div>
         </div>
+
       </div>
     </div>
-  </main>
-</div>
 
-<!-- SCANNER MODAL -->
-<div class="scanner-modal" id="scanner-modal">
-  <div class="scanner-wrap">
-    <div id="scanner-viewport"></div>
-    <div class="scanner-frame">
+  </div><!-- /pages -->
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" id="nav-home" onclick="goPage('home',this)">
+      <span class="nav-icon">🏠</span>
+      <span data-i18n="navHome">Início</span>
+    </button>
+    <button class="nav-btn" id="nav-estoque" onclick="goPage('estoque',this)">
+      <span class="nav-icon">📦</span>
+      <span data-i18n="navEstoque">Estoque</span>
+    </button>
+    <button class="nav-btn" id="nav-receber" onclick="goPage('receber',this)">
+      <span class="nav-icon">🚚</span>
+      <span data-i18n="navReceber">Receber</span>
+    </button>
+    <button class="nav-btn" id="nav-haccp" onclick="goPage('haccp',this)">
+      <span class="nav-icon">🌡</span>
+      <span>HACCP</span>
+    </button>
+  </nav>
+
+</div><!-- /app-screen -->
+
+<!-- SCANNER -->
+<div class="scanner-overlay" id="scanner-overlay">
+  <div class="scanner-viewport-wrap">
+    <div id="scanner-vp"></div>
+    <div class="scanner-aim">
+      <div class="scanner-aim-tl"></div>
       <div class="scanner-line"></div>
     </div>
   </div>
-  <div class="scanner-status" id="scanner-status">📷 Aponte para o código de barras</div>
-  <button class="scanner-close" onclick="closeScanner()">Cancelar</button>
+  <div class="scanner-hint" id="scanner-hint">Aponte para o código de barras do produto</div>
+  <button class="scanner-cancel" onclick="closeScanner()">Cancelar</button>
 </div>
 
-<!-- MODAL -->
-<div class="modal-overlay" id="modal">
-  <div class="modal">
-    <h2 id="modal-title"></h2>
-    <p id="modal-msg"></p>
-    <div class="modal-btns">
-      <button class="modal-btn cancel" id="modal-cancel" onclick="closeModal()">Cancelar</button>
-      <button class="modal-btn" id="modal-ok" onclick="closeModal()">OK</button>
+<!-- HACCP MODAL -->
+<div class="haccp-modal-overlay" id="haccp-modal-overlay" onclick="closeHACCPModal(event)">
+  <div class="haccp-modal">
+    <div class="haccp-modal-title" id="haccp-modal-title">Kühlschrank 1</div>
+    <div class="haccp-modal-sub" id="haccp-modal-sub">Insira a temperatura atual</div>
+    <input class="temp-input-big" type="number" id="haccp-temp-input" step="0.1" placeholder="°C"
+      onkeydown="if(event.key==='Enter')confirmHACCP()">
+    <div class="temp-limit-info" id="haccp-limit-info"></div>
+    <div class="haccp-modal-btns">
+      <button class="btn-haccp-cancel" onclick="closeHACCPModal(null)">Cancelar</button>
+      <button class="btn-haccp-confirm" onclick="confirmHACCP()" data-i18n="haccpSave">Registrar</button>
     </div>
   </div>
 </div>
+
+<!-- CONFIRM MODAL -->
+<div class="confirm-overlay" id="confirm-overlay" onclick="closeConfirm(event)">
+  <div class="confirm-modal">
+    <h2 id="confirm-title"></h2>
+    <p id="confirm-msg"></p>
+    <div class="confirm-btns">
+      <button class="btn-confirm-no" onclick="closeConfirm(null)">Cancelar</button>
+      <button class="btn-confirm-yes" id="confirm-yes">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2/dist/quagga.min.js"></script>
 <script>
 // ============================================================
-// LAGERBLICK v2.0
+//  LAGERBLICK v3.0  —  intuitive, fast, no-frills
 // ============================================================
 
-const SENHA = 'lager2024';
+const PIN = '1234';
 
-const HACCP_LIMITS = {
-  'Kühlschrank 1': { min: 0, max: 7 },
-  'Kühlschrank 2': { min: 0, max: 7 },
-  'Tiefkühler 1':  { min: -30, max: -18 },
-  'Tiefkühler 2':  { min: -30, max: -18 },
-  'Kühltheke':     { min: 0, max: 7 },
-  'Warmhalte':     { min: 65, max: 100 },
-  'Lager':         { min: 8, max: 25 },
-  'Küche':         { min: 5, max: 35 },
-};
+const HACCP_CFG = [
+  { key: 'kuehl1',   name: 'Kühlschrank 1', icon: '❄️',  min: 0,   max: 7,   cold: true  },
+  { key: 'kuehl2',   name: 'Kühlschrank 2', icon: '❄️',  min: 0,   max: 7,   cold: true  },
+  { key: 'tk1',      name: 'Tiefkühler 1',  icon: '🧊',  min: -30, max: -18, cold: true  },
+  { key: 'tk2',      name: 'Tiefkühler 2',  icon: '🧊',  min: -30, max: -18, cold: true  },
+  { key: 'theke',    name: 'Kühltheke',     icon: '🥗',  min: 0,   max: 7,   cold: true  },
+  { key: 'warm',     name: 'Warmhalte',     icon: '🔥',  min: 65,  max: 100, cold: false },
+  { key: 'lager',    name: 'Lager',         icon: '🏪',  min: 8,   max: 25,  cold: false },
+];
 
 // ---- DATA ----
-let products  = JSON.parse(localStorage.getItem('lb_products')  || '[]');
-let log       = JSON.parse(localStorage.getItem('lb_log')       || '[]');
-let receipts  = JSON.parse(localStorage.getItem('lb_receipts')  || '[]');
-let haccpLog  = JSON.parse(localStorage.getItem('lb_haccp')     || '[]');
-let lang      = localStorage.getItem('lb_lang') || 'pt';
-let receiptItems   = [];
-let scanTarget     = 'add';
-let pendingEAN     = null;
-let activeLogFilter = 'all';
-let scannerRunning = false;
-let bannerTimeout;
+let products  = JSON.parse(localStorage.getItem('lb3_p') || '[]');
+let log       = JSON.parse(localStorage.getItem('lb3_l') || '[]');
+let receipts  = JSON.parse(localStorage.getItem('lb3_r') || '[]');
+let haccpLog  = JSON.parse(localStorage.getItem('lb3_h') || '[]');
+let lang      = localStorage.getItem('lb3_lang') || 'pt';
+let basket    = [];
+let selSupplier = 'Transgourmet';
+let scanMode  = 'recv';
+let scannerOn = false;
+let pendingEAN = null;
+let activeFilter = 'all';
+let activeHACCPKey = null;
+let confirmCallback = null;
+let pinBuffer = '';
+let toastTimer;
 
 // ---- I18N ----
-const i18n = {
+const T = {
   pt: {
-    statTotal:'Total', statLow:'Atenção', statCrit:'Crítico', statVenc:'Vencendo', statWaste:'Desperdício/sem',
-    addProduct:'Adicionar produto', labelName:'Nome', labelQty:'Qtd atual', labelMin:'Qtd mínima',
-    labelUnit:'Unidade', labelExp:'Vencimento (opcional)', labelPrice:'Preço unit. € (opcional)',
-    btnAdd:'Adicionar', sectionProducts:'Produtos', emptyTitle:'Nenhum produto', emptySub:'Adicione acima ou escaneie 📷',
-    recvTitle:'Registrar recebimento', recvProduct:'Produto', recvQty:'Quantidade recebida',
-    recvSupplier:'Fornecedor', recvPhoto:'Foto da entrega (opcional)', recvPhotoBtn:'Tirar foto ou selecionar arquivo',
-    recvAddItem:'Adicionar ao recebimento', recvItems:'Itens do recebimento',
-    recvConfirm:'Confirmar recebimento', recvCancel:'Cancelar', recvHistory:'Últimos recebimentos', recvEmpty:'Sem recebimentos',
-    outTitle:'Registrar saída', outProduct:'Produto', outQty:'Quantidade', outReason:'Motivo', outConfirm:'Confirmar saída',
-    haccpTitle:'Registrar temperatura', haccpLocation:'Local', haccpTemp:'Temperatura (°C)', haccpNote:'Observação (opcional)',
-    haccpSave:'Registrar', haccpRecent:'Registros recentes', haccpEmpty:'Sem registros',
-    haccpInfo:'ℹ Padrões DE: Kühlschrank ≤ 7°C · Tiefkühler ≤ -18°C · Kühltheke ≤ 7°C · Warmhalte ≥ 65°C',
-    buyOk:'Tudo em ordem', buySub:'Alertas de reposição aparecem aqui',
-    logAll:'Todos', logIn:'📥 Entradas', logOut:'📤 Saídas', logWaste:'🗑 Desperdício', logRecv:'🚚 Recebimentos', logEmpty:'Sem registros',
-    tabEstoque:'📦 Estoque', tabRecv:'🚚 Recebimento', tabSaidas:'📤 Saídas',
-    tabHACCP:'🌡 HACCP', tabCompras:'🛒 Compras', tabLog:'📋 Histórico',
+    navHome:'Início', navEstoque:'Estoque', navReceber:'Receber',
+    btnAddProduct:'Adicionar produto', formTitle:'Novo produto',
+    formName:'Nome', formQty:'Quantidade atual', formMin:'Mínimo',
+    formUnit:'Unidade', formPrice:'Preço € (opcional)', formExp:'Vencimento (opcional)', formSave:'Salvar',
+    pillAll:'Todos', pillCrit:'⛔ Crítico', pillLow:'⚠ Atenção', pillVenc:'📅 Vencendo',
+    recvHeroTitle:'Escanear entrega', recvHeroSub:'Aponte a câmera para o código de barras',
+    recvOr:'ou selecione manualmente', recvManualTitle:'Adicionar item',
+    recvSupplierLabel:'Fornecedor', recvOther:'Outro', recvProduct:'Produto', recvQty:'Qtd',
+    recvBasket:'Carrinho', recvConfirm:'Confirmar recebimento', recvClear:'Limpar carrinho',
+    recvHistoryLabel:'Últimos recebimentos', recvEmpty:'Nenhum recebimento ainda',
+    haccpLocations:'Locais — toque para registrar', haccpRecent:'Registros recentes',
+    haccpEmpty:'Nenhum registro ainda', haccpSave:'Registrar',
+    scanFab:'Escanear produto',
+    homeProblems:'Requer atenção', homeOkTitle:'Tudo em ordem!', homeOkSub:'Nenhum produto crítico',
+    alertText:'produtos precisam de atenção',
+    statProducts:'Produtos', statCrit:'Críticos', statVenc:'Vencendo', statWaste:'Desperdício/sem',
+    minLabel:'mín', unitQty:'+1', editLabel:'ajustar', wasteLabel:'desperdício',
+    receivedLabel:'entrada',
+    confirmWaste:'Registrar como desperdício?', confirmWasteMsg:'Isso reduz o estoque e registra como desperdício.',
+    confirmDel:'Remover produto?', confirmDelMsg:'Esta ação não pode ser desfeita.',
+    toastSaved:'Salvo ✓', toastReceived:'Recebimento confirmado ✓', toastHACCP:'Temperatura registrada ✓',
+    toastHACCPBad:'⚠ Temperatura fora do limite!', toastWaste:'Desperdício registrado',
+    limitsLabel:'Limite',
+    haccpModalSub:'Insira a temperatura atual',
   },
   de: {
-    statTotal:'Gesamt', statLow:'Achtung', statCrit:'Kritisch', statVenc:'Ablauf', statWaste:'Abfall/Wo',
-    addProduct:'Produkt hinzufügen', labelName:'Name', labelQty:'Akt. Menge', labelMin:'Mindestmenge',
-    labelUnit:'Einheit', labelExp:'Ablaufdatum (optional)', labelPrice:'Stückpreis € (optional)',
-    btnAdd:'Hinzufügen', sectionProducts:'Produkte', emptyTitle:'Keine Produkte', emptySub:'Oben hinzufügen oder scannen 📷',
-    recvTitle:'Wareneingang erfassen', recvProduct:'Produkt', recvQty:'Eingegangene Menge',
-    recvSupplier:'Lieferant', recvPhoto:'Lieferfoto (optional)', recvPhotoBtn:'Foto aufnehmen oder auswählen',
-    recvAddItem:'Zur Lieferung hinzufügen', recvItems:'Lieferungsartikel',
-    recvConfirm:'Wareneingang bestätigen', recvCancel:'Abbrechen', recvHistory:'Letzte Wareneingänge', recvEmpty:'Keine Eingänge',
-    outTitle:'Ausgabe erfassen', outProduct:'Produkt', outQty:'Menge', outReason:'Grund', outConfirm:'Ausgabe bestätigen',
-    haccpTitle:'Temperatur erfassen', haccpLocation:'Ort', haccpTemp:'Temperatur (°C)', haccpNote:'Bemerkung (optional)',
-    haccpSave:'Erfassen', haccpRecent:'Letzte Einträge', haccpEmpty:'Keine Einträge',
-    haccpInfo:'ℹ Grenzwerte: Kühlschrank ≤ 7°C · Tiefkühler ≤ -18°C · Kühltheke ≤ 7°C · Warmhalte ≥ 65°C',
-    buyOk:'Alles in Ordnung', buySub:'Auffüllwarnungen erscheinen hier',
-    logAll:'Alle', logIn:'📥 Eingänge', logOut:'📤 Ausgaben', logWaste:'🗑 Abfall', logRecv:'🚚 Wareneingänge', logEmpty:'Keine Einträge',
-    tabEstoque:'📦 Lager', tabRecv:'🚚 Wareneingang', tabSaidas:'📤 Ausgabe',
-    tabHACCP:'🌡 HACCP', tabCompras:'🛒 Einkauf', tabLog:'📋 Verlauf',
+    navHome:'Start', navEstoque:'Lager', navReceber:'Eingang',
+    btnAddProduct:'Produkt hinzufügen', formTitle:'Neues Produkt',
+    formName:'Name', formQty:'Aktuelle Menge', formMin:'Mindestmenge',
+    formUnit:'Einheit', formPrice:'Preis € (optional)', formExp:'Ablaufdatum (optional)', formSave:'Speichern',
+    pillAll:'Alle', pillCrit:'⛔ Kritisch', pillLow:'⚠ Achtung', pillVenc:'📅 Ablauf',
+    recvHeroTitle:'Lieferung scannen', recvHeroSub:'Kamera auf den Barcode richten',
+    recvOr:'oder manuell auswählen', recvManualTitle:'Artikel hinzufügen',
+    recvSupplierLabel:'Lieferant', recvOther:'Andere', recvProduct:'Produkt', recvQty:'Menge',
+    recvBasket:'Warenkorb', recvConfirm:'Eingang bestätigen', recvClear:'Warenkorb leeren',
+    recvHistoryLabel:'Letzte Wareneingänge', recvEmpty:'Noch keine Eingänge',
+    haccpLocations:'Standorte — tippen zum Erfassen', haccpRecent:'Letzte Einträge',
+    haccpEmpty:'Noch keine Einträge', haccpSave:'Erfassen',
+    scanFab:'Produkt scannen',
+    homeProblems:'Handlungsbedarf', homeOkTitle:'Alles in Ordnung!', homeOkSub:'Keine kritischen Produkte',
+    alertText:'Produkte brauchen Aufmerksamkeit',
+    statProducts:'Produkte', statCrit:'Kritisch', statVenc:'Ablauf', statWaste:'Abfall/Wo',
+    minLabel:'min', unitQty:'+1', editLabel:'anpassen', wasteLabel:'Abfall',
+    receivedLabel:'Eingang',
+    confirmWaste:'Als Abfall erfassen?', confirmWasteMsg:'Der Bestand wird reduziert und als Abfall erfasst.',
+    confirmDel:'Produkt entfernen?', confirmDelMsg:'Diese Aktion kann nicht rückgängig gemacht werden.',
+    toastSaved:'Gespeichert ✓', toastReceived:'Eingang bestätigt ✓', toastHACCP:'Temperatur erfasst ✓',
+    toastHACCPBad:'⚠ Temperatur außerhalb des Grenzwerts!', toastWaste:'Abfall erfasst',
+    limitsLabel:'Grenzwert',
+    haccpModalSub:'Aktuelle Temperatur eingeben',
   }
 };
 
-function t(key) { return (i18n[lang] && i18n[lang][key]) || (i18n.pt[key]) || key; }
+function t(k) { return (T[lang] && T[lang][k]) || T.pt[k] || k; }
 
 function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => {
-    const key = el.dataset.i18n;
-    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
-      el.placeholder = t(key);
-    } else {
-      el.textContent = t(key);
-    }
+    const k = el.dataset.i18n;
+    el.textContent = t(k);
   });
-  const tabMap = [
-    ['tab-estoque', 'tabEstoque'], ['tab-recebimento', 'tabRecv'],
-    ['tab-saidas', 'tabSaidas'], ['tab-haccp', 'tabHACCP'],
-    ['tab-compras', 'tabCompras'], ['tab-log', 'tabLog'],
-  ];
-  tabMap.forEach(([id, key]) => { const el = document.getElementById(id); if (el) el.textContent = t(key); });
+  document.querySelectorAll('[data-i18n-pill]').forEach(el => {
+    el.textContent = t(el.dataset.i18nPill);
+  });
   document.getElementById('lang-btn').textContent = lang === 'pt' ? 'DE' : 'PT';
-  document.documentElement.lang = lang === 'pt' ? 'pt-BR' : 'de';
+  document.getElementById('scan-fab-label').textContent = t('scanFab');
+  document.getElementById('h-stat-total-label').textContent = t('statProducts');
+  document.getElementById('h-stat-crit-label').textContent = t('statCrit');
+  document.getElementById('h-stat-venc-label').textContent = t('statVenc');
+  document.getElementById('h-stat-waste-label').textContent = t('statWaste');
+  document.getElementById('home-problems-label').textContent = t('homeProblems');
+  document.getElementById('home-ok-title').textContent = t('homeOkTitle');
+  document.getElementById('home-ok-sub').textContent = t('homeOkSub');
+  document.getElementById('alert-banner-text').textContent = t('alertText');
+  document.documentElement.lang = lang === 'de' ? 'de' : 'pt-BR';
 }
 
 function toggleLang() {
   lang = lang === 'pt' ? 'de' : 'pt';
-  localStorage.setItem('lb_lang', lang);
+  localStorage.setItem('lb3_lang', lang);
   applyLang();
+  renderAll();
 }
 
-// ---- LOGIN ----
-function doLogin() {
-  const val = document.getElementById('login-input').value;
-  if (val === SENHA) {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('app-screen').style.display = 'block';
-    sessionStorage.setItem('lb_auth', '1');
-    init();
-  } else {
-    document.getElementById('login-error').textContent = lang === 'de' ? 'Falsches Passwort.' : 'Senha incorreta.';
-    document.getElementById('login-input').value = '';
+// ---- PIN ----
+function pinKey(k) {
+  if (pinBuffer.length >= 4) return;
+  pinBuffer += k;
+  for (let i = 0; i < 4; i++) {
+    document.getElementById('dot-' + i).classList.toggle('filled', i < pinBuffer.length);
+  }
+  if (pinBuffer.length === 4) {
+    setTimeout(() => {
+      if (pinBuffer === PIN) {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app-screen').style.display = 'block';
+        sessionStorage.setItem('lb3_auth', '1');
+        boot();
+      } else {
+        document.getElementById('login-error').textContent = lang === 'de' ? 'Falscher PIN.' : 'PIN incorreto.';
+        pinBuffer = '';
+        for (let i = 0; i < 4; i++) document.getElementById('dot-' + i).classList.remove('filled');
+        setTimeout(() => document.getElementById('login-error').textContent = '', 1500);
+      }
+    }, 120);
   }
 }
+function pinDel() {
+  if (!pinBuffer.length) return;
+  pinBuffer = pinBuffer.slice(0, -1);
+  for (let i = 0; i < 4; i++) document.getElementById('dot-' + i).classList.toggle('filled', i < pinBuffer.length);
+}
 
-function init() {
+// ---- BOOT ----
+function boot() {
   applyLang();
-  renderProducts();
-  renderHACCP();
-  renderReceiptHistory();
+  renderAll();
+  renderHACCPGrid();
+  renderRecvHistory();
+  updateRecvProductSelect();
   requestNotifPermission();
+}
+
+function renderAll() {
+  renderHome();
+  renderEstoque();
 }
 
 // ---- SAVE ----
 function save() {
-  localStorage.setItem('lb_products', JSON.stringify(products));
-  localStorage.setItem('lb_log',      JSON.stringify(log));
-  localStorage.setItem('lb_receipts', JSON.stringify(receipts));
-  localStorage.setItem('lb_haccp',    JSON.stringify(haccpLog));
+  localStorage.setItem('lb3_p', JSON.stringify(products));
+  localStorage.setItem('lb3_l', JSON.stringify(log));
+  localStorage.setItem('lb3_r', JSON.stringify(receipts));
+  localStorage.setItem('lb3_h', JSON.stringify(haccpLog));
 }
 
-// ---- TABS ----
-function switchTab(tab, el) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('panel-' + tab).classList.add('active');
-  if (tab === 'saidas')      updateOutSelect();
-  if (tab === 'recebimento') { updateRecvSelect(); renderReceiptHistory(); }
-  if (tab === 'compras')     renderBuyList();
-  if (tab === 'log')         renderLog();
-  if (tab === 'haccp')       renderHACCP();
+// ---- NAV ----
+function goPage(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  if (el) el.classList.add('active');
+  else document.getElementById('nav-' + page).classList.add('active');
+  if (page === 'receber')  { updateRecvProductSelect(); renderRecvHistory(); }
+  if (page === 'haccp')    { renderHACCPGrid(); renderHACCPLog(); }
+  if (page === 'estoque')  renderEstoque();
+  if (page === 'home')     renderHome();
 }
 
 // ---- HELPERS ----
+function r2(n) { return Math.round(n * 100) / 100; }
+function ts()  { return new Date().toLocaleString(lang === 'de' ? 'de-DE' : 'pt-BR'); }
+
 function getStatus(p) {
-  if (p.qty <= 0) return 'critical';
+  if (p.qty <= 0)     return 'critical';
   if (p.qty <= p.min) return 'low';
   return 'ok';
 }
 
-function getDaysUntilExp(exp) {
+function daysUntil(exp) {
   if (!exp) return null;
   const today = new Date(); today.setHours(0,0,0,0);
-  const d = new Date(exp + 'T00:00:00');
-  return Math.floor((d - today) / 86400000);
+  return Math.floor((new Date(exp + 'T00:00:00') - today) / 86400000);
 }
 
-function expLabel(exp) {
-  const days = getDaysUntilExp(exp);
-  if (days === null) return null;
-  if (days < 0)  return { text: 'VENCIDO', cls: 'tag-expired' };
-  if (days === 0) return { text: lang === 'de' ? 'Läuft heute ab!' : 'Vence hoje!', cls: 'tag-venc' };
-  if (days <= 7) return { text: (lang === 'de' ? 'Läuft in ' : 'Vence em ') + days + 'd', cls: 'tag-venc' };
-  return { text: (lang === 'de' ? 'Ablauf ' : 'Vence ') + new Date(exp + 'T00:00:00').toLocaleDateString('de-DE'), cls: '' };
+function expText(exp) {
+  const d = daysUntil(exp);
+  if (d === null) return null;
+  if (d < 0)  return { text: lang === 'de' ? 'ABGELAUFEN' : 'VENCIDO', bad: true };
+  if (d === 0) return { text: lang === 'de' ? 'Läuft heute ab' : 'Vence hoje', bad: true };
+  if (d <= 7) return { text: (lang === 'de' ? 'Ablauf in ' : 'Vence em ') + d + 'd', bad: false };
+  return { text: (lang === 'de' ? 'Ablauf ' : 'Vence ') + new Date(exp + 'T00:00:00').toLocaleDateString(lang === 'de' ? 'de-DE' : 'pt-BR'), bad: false };
 }
 
-// ---- PRODUCTS ----
-function addProduct() {
-  const name  = document.getElementById('new-name').value.trim();
-  const qty   = parseFloat(document.getElementById('new-qty').value);
-  const min   = parseFloat(document.getElementById('new-min').value);
-  const unit  = document.getElementById('new-unit').value;
-  const exp   = document.getElementById('new-exp').value || null;
-  const price = parseFloat(document.getElementById('new-price').value) || 0;
-  if (!name || isNaN(qty) || isNaN(min)) return showAlert('Atenção', 'Preencha nome, quantidade e mínimo.');
-  const ean = pendingEAN || null;
-  products.push({ id: Date.now(), name, qty, min, unit, exp, price, ean });
-  log.unshift({ id: Date.now(), time: now(), type: 'entrada', name, qty, unit, reason: 'Cadastro inicial' });
-  save();
-  document.getElementById('new-name').value  = '';
-  document.getElementById('new-qty').value   = '';
-  document.getElementById('new-min').value   = '';
-  document.getElementById('new-exp').value   = '';
-  document.getElementById('new-price').value = '';
-  document.getElementById('ean-status').textContent = '';
-  pendingEAN = null;
-  renderProducts();
-  showBanner((lang === 'de' ? 'Produkt hinzugefügt ✓' : 'Produto adicionado! ✓'), 'ok');
+function statusIcon(p) {
+  const s = getStatus(p);
+  const d = daysUntil(p.exp);
+  if (s === 'critical') return '⛔';
+  if (s === 'low')      return '⚠️';
+  if (d !== null && d < 0) return '🚫';
+  if (d !== null && d <= 7) return '📅';
+  return '✅';
 }
 
-function confirmRemove(id) {
-  const p = products.find(x => x.id === id);
-  showConfirm(lang === 'de' ? 'Produkt entfernen?' : 'Remover produto?', '"' + p.name + '"', () => {
-    products = products.filter(x => x.id !== id);
-    save(); renderProducts();
-  });
-}
+// ---- PRODUCT CARD HTML ----
+function cardHTML(p, showActions = true) {
+  const s  = getStatus(p);
+  const d  = daysUntil(p.exp);
+  const et = expText(p.exp);
+  const isExpired  = d !== null && d < 0;
+  const isExpiring = d !== null && d >= 0 && d <= 7;
 
-function quickOut(id) {
-  const p = products.find(x => x.id === id);
-  if (!p) return;
-  if (p.qty <= 0) { showAlert('', p.name + (lang === 'de' ? ' ist leer.' : ' já está zerado.')); return; }
-  p.qty = round2(p.qty - 1);
-  log.unshift({ id: Date.now(), time: now(), type: 'saida', name: p.name, qty: 1, unit: p.unit, reason: 'Consumo' });
-  save(); renderProducts();
-  checkLowStock(p);
-}
+  let cls = s;
+  if (isExpired)              cls = 'expired';
+  else if (isExpiring && s === 'ok') cls = 'expiring';
 
-function toggleEdit(id) {
-  const row = document.getElementById('edit-row-' + id);
-  if (row.classList.contains('open')) {
-    row.classList.remove('open');
-  } else {
-    document.querySelectorAll('.edit-row.open').forEach(r => r.classList.remove('open'));
-    row.classList.add('open');
-    document.getElementById('edit-input-' + id).focus();
-  }
-}
+  let meta = ['min: ' + p.min + ' ' + p.unit];
+  if (p.price) meta.push('€' + p.price.toFixed(2));
+  if (et) meta.push('<span style="color:' + (et.bad ? 'var(--red)' : 'var(--purple)') + '">' + et.text + '</span>');
+  if (p.ean) meta.push('<span style="color:var(--border);font-size:0.6rem;font-family:monospace">' + p.ean + '</span>');
 
-function confirmEdit(id) {
-  const p = products.find(x => x.id === id);
-  const val = parseFloat(document.getElementById('edit-input-' + id).value);
-  if (isNaN(val) || val < 0) return showAlert('', lang === 'de' ? 'Ungültige Menge.' : 'Quantidade inválida.');
-  const diff = round2(p.qty - val);
-  p.qty = round2(val);
-  if (diff !== 0) {
-    const type = diff > 0 ? 'saida' : 'entrada';
-    log.unshift({ id: Date.now(), time: now(), type, name: p.name, qty: Math.abs(diff), unit: p.unit, reason: lang === 'de' ? 'Manuelle Anpassung' : 'Ajuste manual' });
-  }
-  save(); renderProducts();
-  document.getElementById('edit-row-' + id).classList.remove('open');
-}
-
-function renderProducts() {
-  updateStats();
-  const list = document.getElementById('product-list');
-  if (!products.length) {
-    list.innerHTML = '<div class="empty-state"><strong>' + t('emptyTitle') + '</strong>' + t('emptySub') + '</div>';
-    return;
-  }
-  const sorted = [...products].sort((a, b) => {
-    const ord = { critical: 0, low: 1, ok: 2 };
-    const sa = getStatus(a), sb = getStatus(b);
-    return ord[sa] !== ord[sb] ? ord[sa] - ord[sb] : a.name.localeCompare(b.name);
-  });
-
-  list.innerHTML = sorted.map(p => {
-    const s = getStatus(p);
-    const days = getDaysUntilExp(p.exp);
-    const el = expLabel(p.exp);
-    const isExpired  = days !== null && days < 0;
-    const isExpiring = days !== null && days >= 0 && days <= 7;
-    let itemClass = s;
-    if (isExpired) itemClass = 'expired';
-    else if (isExpiring && s === 'ok') itemClass = 'expiring';
-
-    let meta = ['mín: ' + p.min + ' ' + (p.unit||'un')];
-    if (p.ean)   meta.push('<span class="ean-tag">EAN:' + p.ean + '</span>');
-    if (p.price) meta.push('€' + p.price.toFixed(2));
-    if (s === 'low')      meta.push('⚠ ' + (lang === 'de' ? 'Achtung' : 'atenção'));
-    if (s === 'critical') meta.push('⛔ ' + (lang === 'de' ? 'Kritisch' : 'crítico'));
-    if (el) meta.push('<span class="' + el.cls + '">' + el.text + '</span>');
-
-    return `<div class="product-item ${itemClass}">
-      <div class="product-top">
-        <div style="flex:1;min-width:0">
-          <div class="product-name">${p.name}</div>
-          <div class="product-meta">${meta.join(' · ')}</div>
-        </div>
-        <div class="product-right">
-          <div class="product-qty ${s}">${p.qty}<span style="font-size:0.65rem;font-weight:400;color:var(--muted)"> ${p.unit||'un'}</span></div>
-          <button class="btn-sm btn-out" onclick="quickOut(${p.id})">−1</button>
-          <button class="btn-sm btn-edit" onclick="toggleEdit(${p.id})">✏</button>
-          <button class="btn-sm btn-del" onclick="confirmRemove(${p.id})">✕</button>
-        </div>
+  return `<div class="pcard ${cls}" id="pcard-${p.id}">
+    <div class="pcard-top" onclick="toggleCardEdit(${p.id})">
+      <div class="pcard-status-icon">${statusIcon(p)}</div>
+      <div class="pcard-info">
+        <div class="pcard-name">${p.name}</div>
+        <div class="pcard-meta">${meta.join(' · ')}</div>
       </div>
-      <div class="edit-row" id="edit-row-${p.id}">
-        <input type="number" id="edit-input-${p.id}" min="0" step="0.1" value="${p.qty}">
-        <button class="btn-confirm" onclick="confirmEdit(${p.id})">✓</button>
-        <button class="btn-cancel-edit" onclick="toggleEdit(${p.id})">✕</button>
+      <div class="pcard-qty-wrap">
+        <div class="pcard-qty ${s}">${p.qty}</div>
+        <div class="pcard-unit">${p.unit}</div>
       </div>
-    </div>`;
-  }).join('');
+    </div>
+    ${showActions ? `<div class="pcard-actions">
+      <button class="pcard-btn btn-minus" onclick="quickAdj(${p.id},-1)">
+        <span class="btn-icon">−</span>
+        <span class="btn-label">−1</span>
+      </button>
+      <button class="pcard-btn btn-plus" onclick="quickAdj(${p.id},1)">
+        <span class="btn-icon">＋</span>
+        <span class="btn-label">+1</span>
+      </button>
+      <button class="pcard-btn btn-recv" onclick="quickRecv(${p.id})">
+        <span class="btn-icon">📦</span>
+        <span class="btn-label">${t('receivedLabel')}</span>
+      </button>
+      <button class="pcard-btn btn-waste" onclick="confirmWaste(${p.id})">
+        <span class="btn-icon">🗑</span>
+        <span class="btn-label">${t('wasteLabel')}</span>
+      </button>
+    </div>` : ''}
+    <div class="pcard-edit" id="pcard-edit-${p.id}">
+      <div class="edit-row">
+        <label>${t('formQty')}</label>
+        <input type="number" id="pedit-qty-${p.id}" value="${p.qty}" min="0" step="0.1"
+          onkeydown="if(event.key==='Enter')saveCardEdit(${p.id})">
+      </div>
+      <div class="edit-actions">
+        <button class="btn-save" onclick="saveCardEdit(${p.id})">✓ OK</button>
+        <button class="btn-cancel-sm" onclick="toggleCardEdit(${p.id})">✕</button>
+        <button class="btn-cancel-sm" style="color:var(--red);border-color:var(--red)" onclick="confirmDelete(${p.id})">🗑</button>
+      </div>
+    </div>
+  </div>`;
 }
 
-function updateStats() {
-  const low  = products.filter(p => getStatus(p) === 'low').length;
-  const crit = products.filter(p => getStatus(p) === 'critical').length;
-  const venc = products.filter(p => { const d = getDaysUntilExp(p.exp); return d !== null && d <= 3; }).length;
+// ---- HOME ----
+function renderHome() {
+  const crit  = products.filter(p => getStatus(p) === 'critical').length;
+  const low   = products.filter(p => getStatus(p) === 'low').length;
+  const venc  = products.filter(p => { const d = daysUntil(p.exp); return d !== null && d <= 3; }).length;
+  const problems = crit + low;
+
   const weekAgo = Date.now() - 7 * 86400000;
   let wasteCost = 0;
-  log.filter(l => (l.type === 'desperdicio') && new Date(l.time).getTime() > weekAgo).forEach(l => {
+  log.filter(l => l.type === 'waste' && new Date(l.time).getTime() > weekAgo).forEach(l => {
     const p = products.find(x => x.name === l.name);
     if (p && p.price) wasteCost += l.qty * p.price;
   });
-  document.getElementById('stat-total').textContent    = products.length;
-  document.getElementById('stat-low').textContent      = low;
-  document.getElementById('stat-critical').textContent = crit;
-  document.getElementById('stat-venc').textContent     = venc;
-  document.getElementById('stat-waste').textContent    = '€' + wasteCost.toFixed(0);
-  document.getElementById('total-badge').textContent   = products.length + (lang === 'de' ? ' Art.' : ' itens');
+
+  document.getElementById('h-stat-total').textContent  = products.length;
+  document.getElementById('h-stat-crit').textContent   = crit;
+  document.getElementById('h-stat-venc').textContent   = venc;
+  document.getElementById('h-stat-waste').textContent  = '€' + wasteCost.toFixed(0);
+
+  const banner = document.getElementById('alert-banner');
+  if (problems > 0) {
+    banner.classList.add('show');
+    document.getElementById('alert-banner-count').textContent = problems;
+  } else {
+    banner.classList.remove('show');
+  }
+
+  const list = document.getElementById('home-problems-list');
+  const urgents = products.filter(p => getStatus(p) !== 'ok' || (daysUntil(p.exp) !== null && daysUntil(p.exp) <= 3));
+  if (!urgents.length) {
+    list.innerHTML = `<div class="empty-box">
+      <div class="empty-icon">✅</div>
+      <strong id="home-ok-title">${t('homeOkTitle')}</strong>
+      <span id="home-ok-sub">${t('homeOkSub')}</span>
+    </div>`;
+  } else {
+    list.innerHTML = urgents.sort((a,b) => {
+      const o = { critical:0, low:1, ok:2 };
+      return o[getStatus(a)] - o[getStatus(b)];
+    }).map(p => cardHTML(p, true)).join('');
+  }
+}
+
+// ---- ESTOQUE ----
+function renderEstoque() {
+  const q = (document.getElementById('search-input')?.value || '').toLowerCase();
+  let list = products.filter(p => p.name.toLowerCase().includes(q));
+
+  if (activeFilter === 'crit')    list = list.filter(p => getStatus(p) === 'critical');
+  if (activeFilter === 'low')     list = list.filter(p => getStatus(p) === 'low');
+  if (activeFilter === 'expiring') list = list.filter(p => { const d = daysUntil(p.exp); return d !== null && d <= 7; });
+
+  list.sort((a, b) => {
+    const o = { critical:0, low:1, ok:2 };
+    return o[getStatus(a)] - o[getStatus(b)] || a.name.localeCompare(b.name);
+  });
+
+  const el = document.getElementById('estoque-list');
+  if (!list.length) {
+    el.innerHTML = `<div class="empty-box"><div class="empty-icon">📦</div><strong>${t('btnAddProduct')}</strong><span>Nenhum produto encontrado</span></div>`;
+  } else {
+    el.innerHTML = list.map(p => cardHTML(p, true)).join('');
+  }
+}
+
+function filterProducts() { renderEstoque(); }
+
+function setPill(f, el) {
+  activeFilter = f;
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  renderEstoque();
+}
+
+function toggleAddForm() {
+  const form = document.getElementById('add-product-form');
+  form.classList.toggle('open');
+  if (form.classList.contains('open')) {
+    document.getElementById('f-name').focus();
+    document.getElementById('btn-add-product').style.display = 'none';
+  } else {
+    document.getElementById('btn-add-product').style.display = 'flex';
+    pendingEAN = null;
+    document.getElementById('f-ean-hint').textContent = '';
+  }
+}
+
+function saveNewProduct() {
+  const name  = document.getElementById('f-name').value.trim();
+  const qty   = parseFloat(document.getElementById('f-qty').value);
+  const min   = parseFloat(document.getElementById('f-min').value);
+  const unit  = document.getElementById('f-unit').value;
+  const price = parseFloat(document.getElementById('f-price').value) || 0;
+  const exp   = document.getElementById('f-exp').value || null;
+  if (!name || isNaN(qty) || isNaN(min)) { toast('⚠ ' + t('formName') + ' / ' + t('formQty') + ' / ' + t('formMin'), 'warn'); return; }
+  products.push({ id: Date.now(), name, qty, min, unit, price, exp, ean: pendingEAN });
+  log.unshift({ id: Date.now(), time: ts(), type: 'in', name, qty, unit, reason: 'Cadastro' });
+  save();
+  ['f-name','f-qty','f-min','f-price','f-exp'].forEach(id => document.getElementById(id).value = '');
+  pendingEAN = null;
+  document.getElementById('f-ean-hint').textContent = '';
+  toggleAddForm();
+  renderAll();
+  updateRecvProductSelect();
+  toast(t('toastSaved'), 'success');
+}
+
+// ---- CARD ACTIONS ----
+function toggleCardEdit(id) {
+  const edit = document.getElementById('pcard-edit-' + id);
+  const isOpen = edit.classList.contains('open');
+  document.querySelectorAll('.pcard-edit.open').forEach(e => e.classList.remove('open'));
+  if (!isOpen) {
+    edit.classList.add('open');
+    document.getElementById('pedit-qty-' + id)?.focus();
+  }
+}
+
+function saveCardEdit(id) {
+  const p   = products.find(x => x.id === id);
+  const val = parseFloat(document.getElementById('pedit-qty-' + id).value);
+  if (!p || isNaN(val) || val < 0) return;
+  const diff = r2(p.qty - val);
+  p.qty = r2(val);
+  if (diff !== 0) log.unshift({ id: Date.now(), time: ts(), type: diff > 0 ? 'out' : 'in', name: p.name, qty: Math.abs(diff), unit: p.unit, reason: lang === 'de' ? 'Manuelle Anpassung' : 'Ajuste manual' });
+  save(); renderAll();
+  toast(t('toastSaved'), 'success');
+}
+
+function quickAdj(id, delta) {
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  const newQty = r2(p.qty + delta);
+  if (newQty < 0) return;
+  p.qty = newQty;
+  if (delta < 0) log.unshift({ id: Date.now(), time: ts(), type: 'out', name: p.name, qty: Math.abs(delta), unit: p.unit, reason: 'Consumo' });
+  else           log.unshift({ id: Date.now(), time: ts(), type: 'in',  name: p.name, qty: delta, unit: p.unit, reason: 'Ajuste +1' });
+  save(); renderAll();
+  if (delta < 0) checkLow(p);
+}
+
+function quickRecv(id) {
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  goPage('receber', document.getElementById('nav-receber'));
+  setTimeout(() => {
+    document.getElementById('recv-product-sel').value = id;
+    document.getElementById('recv-qty-input').focus();
+  }, 100);
+}
+
+function confirmWaste(id) {
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  showConfirm(t('confirmWaste'), '"' + p.name + '" — ' + t('confirmWasteMsg'), () => {
+    if (p.qty <= 0) { toast('⚠ ' + p.name + ' ' + (lang === 'de' ? 'leer' : 'zerado'), 'warn'); return; }
+    p.qty = r2(p.qty - 1);
+    log.unshift({ id: Date.now(), time: ts(), type: 'waste', name: p.name, qty: 1, unit: p.unit, reason: lang === 'de' ? 'Abfall' : 'Desperdício' });
+    save(); renderAll();
+    toast(t('toastWaste'), 'warn');
+  }, lang === 'de' ? 'Ja, erfassen' : 'Sim, registrar');
+}
+
+function confirmDelete(id) {
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  showConfirm(t('confirmDel'), '"' + p.name + '" — ' + t('confirmDelMsg'), () => {
+    products = products.filter(x => x.id !== id);
+    save(); renderAll(); updateRecvProductSelect();
+    toast(lang === 'de' ? 'Entfernt' : 'Removido', 'success');
+  }, lang === 'de' ? 'Entfernen' : 'Remover');
 }
 
 // ---- RECEBIMENTO ----
-function updateRecvSelect() {
-  const sel = document.getElementById('recv-product');
-  sel.innerHTML = '<option value="">Selecione...</option>' +
-    products.map(p => `<option value="${p.id}">${p.name} (${p.qty} ${p.unit||'un'})</option>`).join('');
+function updateRecvProductSelect() {
+  const sel = document.getElementById('recv-product-sel');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">' + (lang === 'de' ? 'Auswählen...' : 'Selecionar...') + '</option>' +
+    products.map(p => `<option value="${p.id}">${p.name} (${p.qty} ${p.unit})</option>`).join('');
 }
 
-function addToReceipt() {
-  const id  = parseInt(document.getElementById('recv-product').value);
-  const qty = parseFloat(document.getElementById('recv-qty').value);
-  const supplier = document.getElementById('recv-supplier').value;
-  if (!id || isNaN(qty) || qty <= 0) return showAlert('Atenção', t('outProduct') + ' / ' + t('outQty'));
+let selSupplierBtn = null;
+function selectSupplier(s, el) {
+  selSupplier = s;
+  document.querySelectorAll('.supplier-btn').forEach(b => b.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function addToBasket() {
+  const id  = parseInt(document.getElementById('recv-product-sel').value);
+  const qty = parseFloat(document.getElementById('recv-qty-input').value);
+  if (!id || isNaN(qty) || qty <= 0) { toast('⚠ ' + t('recvProduct') + ' + ' + t('recvQty'), 'warn'); return; }
   const p = products.find(x => x.id === id);
   if (!p) return;
-  receiptItems.push({ productId: id, name: p.name, qty, unit: p.unit||'un', supplier });
-  document.getElementById('recv-qty').value = '';
-  renderReceiptItems();
-  document.getElementById('receipt-items-wrapper').style.display = 'block';
+  basket.push({ productId: id, name: p.name, qty, unit: p.unit, supplier: selSupplier });
+  document.getElementById('recv-qty-input').value = '';
+  renderBasket();
+  document.getElementById('recv-basket-wrap').style.display = 'block';
 }
 
-function renderReceiptItems() {
-  document.getElementById('receipt-items-list').innerHTML = receiptItems.map((item, i) => `
-    <div class="receipt-item-row">
+function renderBasket() {
+  document.getElementById('basket-count').textContent = basket.length;
+  document.getElementById('basket-items').innerHTML = basket.map((item, i) => `
+    <div class="recv-basket-item">
       <div>
-        <div class="receipt-item-name">${item.name}</div>
-        <div style="font-size:0.63rem;color:var(--muted)">${item.supplier}</div>
+        <div class="recv-basket-item-name">${item.name}</div>
+        <div style="font-size:0.65rem;color:var(--muted)">${item.supplier}</div>
       </div>
       <div style="display:flex;align-items:center;gap:10px">
-        <span class="receipt-item-qty">+${item.qty} ${item.unit}</span>
-        <button class="btn-remove-receipt" onclick="removeReceiptItem(${i})">✕</button>
+        <span class="recv-basket-item-qty">+${item.qty} ${item.unit}</span>
+        <button class="btn-remove-basket" onclick="removeBasketItem(${i})">✕</button>
       </div>
     </div>`).join('');
 }
 
-function removeReceiptItem(i) {
-  receiptItems.splice(i, 1);
-  renderReceiptItems();
-  if (!receiptItems.length) document.getElementById('receipt-items-wrapper').style.display = 'none';
+function removeBasketItem(i) {
+  basket.splice(i, 1);
+  renderBasket();
+  if (!basket.length) document.getElementById('recv-basket-wrap').style.display = 'none';
 }
 
-function confirmReceipt() {
-  if (!receiptItems.length) return;
-  const photoImg = document.getElementById('recv-preview');
-  const photo = (photoImg.style.display !== 'none' && photoImg.src) ? photoImg.src : null;
-  receiptItems.forEach(item => {
+function confirmBasket() {
+  if (!basket.length) return;
+  basket.forEach(item => {
     const p = products.find(x => x.id === item.productId);
     if (p) {
-      p.qty = round2(p.qty + item.qty);
-      log.unshift({ id: Date.now() + Math.random(), time: now(), type: 'entrada', name: item.name, qty: item.qty, unit: item.unit, reason: 'Recebimento — ' + item.supplier });
+      p.qty = r2(p.qty + item.qty);
+      log.unshift({ id: Date.now() + Math.random(), time: ts(), type: 'in', name: item.name, qty: item.qty, unit: item.unit, reason: 'Recebimento — ' + item.supplier });
     }
   });
-  receipts.unshift({ id: Date.now(), time: now(), items: [...receiptItems], photo, supplier: receiptItems[0]?.supplier || '' });
+  receipts.unshift({ id: Date.now(), time: ts(), items: [...basket], supplier: basket[0]?.supplier || '' });
   save();
-  receiptItems = [];
-  document.getElementById('receipt-items-wrapper').style.display = 'none';
-  document.getElementById('recv-qty').value = '';
-  document.getElementById('recv-preview').style.display = 'none';
-  document.getElementById('recv-photo-label').textContent = t('recvPhotoBtn');
-  renderReceiptHistory();
-  renderProducts();
-  showBanner(t('recvConfirm') + ' ✓', 'ok');
+  basket = [];
+  document.getElementById('recv-basket-wrap').style.display = 'none';
+  document.getElementById('recv-qty-input').value = '';
+  renderAll();
+  renderRecvHistory();
+  updateRecvProductSelect();
+  toast(t('toastReceived'), 'success');
 }
 
-function clearReceipt() {
-  receiptItems = [];
-  document.getElementById('receipt-items-wrapper').style.display = 'none';
+function clearBasket() {
+  basket = [];
+  document.getElementById('recv-basket-wrap').style.display = 'none';
 }
 
-function renderReceiptHistory() {
-  const c = document.getElementById('receipt-history');
+function renderRecvHistory() {
+  const el = document.getElementById('recv-history-list');
+  if (!el) return;
   if (!receipts.length) {
-    c.innerHTML = '<div class="empty-state"><strong>' + t('recvEmpty') + '</strong></div>';
+    el.innerHTML = `<div class="empty-box" style="padding:24px 0"><div class="empty-icon">🚚</div><strong>${t('recvEmpty')}</strong></div>`;
     return;
   }
-  c.innerHTML = receipts.slice(0, 10).map(r => `
-    <div class="card" style="margin-bottom:10px">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
-        <div>
-          <div style="font-weight:700;font-size:0.85rem">🚚 ${r.supplier}</div>
-          <div style="font-size:0.63rem;color:var(--muted)">${r.time}</div>
-        </div>
-        <span style="font-size:0.65rem;color:var(--ok);font-weight:700">${r.items.length} ${r.items.length === 1 ? 'item' : 'itens'}</span>
+  el.innerHTML = receipts.slice(0, 8).map(r => `
+    <div class="recv-history-card">
+      <div class="recv-history-header">
+        <span class="recv-history-supplier">🚚 ${r.supplier}</span>
+        <span class="recv-history-time">${r.time}</span>
       </div>
-      ${r.items.map(i => `<div style="font-size:0.75rem;color:var(--muted);padding:2px 0">${i.name}: <span style="color:var(--ok)">+${i.qty} ${i.unit}</span></div>`).join('')}
-      ${r.photo ? `<img src="${r.photo}" style="width:100%;height:80px;object-fit:cover;border-radius:6px;margin-top:8px">` : ''}
+      <div class="recv-history-items">${r.items.map(i => `${i.name}: <strong style="color:var(--green)">+${i.qty} ${i.unit}</strong>`).join(' &nbsp;·&nbsp; ')}</div>
     </div>`).join('');
-}
-
-// ---- SAIDAS ----
-function updateOutSelect() {
-  document.getElementById('out-product').innerHTML = '<option value="">Selecione...</option>' +
-    products.map(p => `<option value="${p.id}">${p.name} (${p.qty} ${p.unit||'un'})</option>`).join('');
-}
-
-function registerOut() {
-  const id     = parseInt(document.getElementById('out-product').value);
-  const qty    = parseFloat(document.getElementById('out-qty').value);
-  const reason = document.getElementById('out-reason').value;
-  if (!id || isNaN(qty) || qty <= 0) return showAlert('Atenção', t('outProduct') + ' / ' + t('outQty'));
-  const p = products.find(x => x.id === id);
-  if (!p) return;
-  if (qty > p.qty) return showAlert('', p.name + ': ' + p.qty + ' ' + (p.unit||'un'));
-  p.qty = round2(p.qty - qty);
-  const type = (reason === 'Desperdício' || reason === 'Vencimento') ? 'desperdicio' : 'saida';
-  log.unshift({ id: Date.now(), time: now(), type, name: p.name, qty, unit: p.unit||'un', reason });
-  save(); renderProducts(); updateOutSelect();
-  document.getElementById('out-qty').value = '';
-  const a = document.getElementById('out-alert');
-  if (getStatus(p) !== 'ok') {
-    a.innerHTML = `<div class="buy-item" style="margin-top:12px"><div><div class="buy-name">⚠ ${p.name}</div><div class="buy-info">${p.qty} ${p.unit||'un'} · mín: ${p.min}</div></div></div>`;
-    checkLowStock(p);
-  } else a.innerHTML = '';
-  showBanner(type === 'desperdicio' ? '🗑 ' + (lang === 'de' ? 'Abfall erfasst' : 'Desperdício registrado') : '✓ OK', type === 'desperdicio' ? '' : 'ok');
 }
 
 // ---- HACCP ----
-function addHACCP() {
-  const location = document.getElementById('haccp-location').value;
-  const temp     = parseFloat(document.getElementById('haccp-temp').value);
-  const note     = document.getElementById('haccp-note').value.trim();
-  if (isNaN(temp)) return showAlert('', lang === 'de' ? 'Bitte Temperatur eingeben.' : 'Insira a temperatura.');
-  const limits = HACCP_LIMITS[location] || { min: -99, max: 99 };
-  const isWarm = location === 'Warmhalte';
-  const ok = isWarm ? (temp >= limits.min) : (temp <= limits.max && temp >= limits.min);
-  const status = ok ? 'ok' : 'bad';
-  haccpLog.unshift({ id: Date.now(), time: now(), location, temp, status, note });
-  document.getElementById('haccp-temp').value = '';
-  document.getElementById('haccp-note').value = '';
-  save();
-  renderHACCP();
-  if (status === 'bad') {
-    showBanner('⚠ ' + location + ': ' + temp + '°C — ' + (lang === 'de' ? 'Grenzwert überschritten!' : 'Fora do limite!'), '');
-    checkNotif('⚠ HACCP', location + ': ' + temp + '°C');
-  } else {
-    showBanner('🌡 ✓ ' + location + ': ' + temp + '°C', 'ok');
-  }
+function lastHACCPFor(key) {
+  return haccpLog.find(h => h.key === key);
 }
 
-function renderHACCP() {
-  const c = document.getElementById('haccp-log');
-  if (!haccpLog.length) {
-    c.innerHTML = '<div class="empty-state"><strong>' + t('haccpEmpty') + '</strong></div>';
-    return;
-  }
-  const limits_label = { ok: lang === 'de' ? 'OK' : 'OK', bad: lang === 'de' ? 'ALARM' : 'ALERTA' };
-  c.innerHTML = haccpLog.slice(0, 40).map(h => {
-    const limits = HACCP_LIMITS[h.location] || { min: -99, max: 99 };
-    const isWarm = h.location === 'Warmhalte';
-    return `<div class="haccp-row ${h.status}">
-      <div style="flex:1;min-width:0">
-        <div class="haccp-location">${h.location} <span class="haccp-badge ${h.status}">${limits_label[h.status]}</span></div>
-        <div class="haccp-meta">${h.time}${h.note ? ' · ' + h.note : ''}<br>${isWarm ? 'Min: ' + limits.min + '°C' : 'Max: ' + limits.max + '°C · Min: ' + limits.min + '°C'}</div>
-      </div>
-      <div class="haccp-temp ${h.status}">${h.temp}°C</div>
-    </div>`;
-  }).join('');
-}
-
-// ---- BUY LIST ----
-function renderBuyList() {
-  const c = document.getElementById('buy-list-container');
-  const low       = products.filter(p => getStatus(p) !== 'ok');
-  const venc      = products.filter(p => { const d = getDaysUntilExp(p.exp); return d !== null && d <= 7; });
-  const anomalies = detectAnomalies();
-
-  if (!low.length && !venc.length && !anomalies.length) {
-    c.innerHTML = '<div class="empty-state"><strong>✓ ' + t('buyOk') + '</strong>' + t('buySub') + '</div>';
-    return;
-  }
-  let html = '';
-
-  if (anomalies.length) {
-    html += '<div class="section-title" style="margin-bottom:8px;color:var(--danger)">⚡ ' + (lang === 'de' ? 'Ungewöhnlicher Verbrauch' : 'Consumo acima do normal') + '</div>';
-    html += anomalies.map(a => `<div class="buy-item anomaly-item" style="margin-bottom:8px">
-      <div><div class="buy-name">${a.name}</div><div class="buy-info">${lang === 'de' ? 'Letzte 3T:' : 'Últimos 3d:'} ${a.recentOut} ${a.unit} · ${lang === 'de' ? 'Ø' : 'média:'} ${a.avgOut} ${a.unit}/3d</div></div>
-      <div class="buy-qty anomaly">${lang === 'de' ? 'prüfen' : 'verificar'}<br><span style="font-size:0.6rem">${a.current} ${a.unit}</span></div>
-    </div>`).join('');
-  }
-
-  if (venc.length) {
-    html += '<div class="section-title" style="margin:' + (anomalies.length ? '14px' : '0') + ' 0 8px;color:var(--venc)">⚠ ' + (lang === 'de' ? 'Ablauf bald' : 'Vencendo em breve') + '</div>';
-    html += venc.map(p => {
-      const el = expLabel(p.exp);
-      return `<div class="buy-item venc-item" style="margin-bottom:8px">
-        <div><div class="buy-name">${p.name}</div><div class="buy-info tag-venc">${el ? el.text : ''} · ${p.qty} ${p.unit||'un'}</div></div>
-        <div class="buy-qty venc">${lang === 'de' ? 'prüfen' : 'verificar'}</div>
+function renderHACCPGrid() {
+  document.getElementById('haccp-grid').innerHTML = HACCP_CFG.map(loc => {
+    const last = lastHACCPFor(loc.key);
+    let statusCls = '';
+    let tempHTML = `<div class="loc-no-reading">${lang === 'de' ? 'Noch nicht erfasst' : 'Não registrado'}</div>`;
+    if (last) {
+      const ok = last.ok;
+      statusCls = ok ? 'ok-loc' : 'bad-loc';
+      tempHTML = `<div class="loc-last-temp">
+        <span class="loc-temp-value ${ok ? 'ok' : 'bad'}">${last.temp}°C</span>
+        <span class="loc-temp-tag ${ok ? 'ok' : 'bad'}">${ok ? 'OK' : (lang === 'de' ? 'ALARM' : 'ALERTA')}</span>
       </div>`;
-    }).join('');
-  }
-
-  if (low.length) {
-    if (anomalies.length || venc.length) html += '<div class="section-title" style="margin:14px 0 8px">' + (lang === 'de' ? 'Nachbestellen' : 'Repor estoque') + '</div>';
-    html += low.map(p => {
-      const suggest = Math.max(Math.ceil(p.min * 2 - p.qty), p.min);
-      return `<div class="buy-item" style="margin-bottom:8px">
-        <div><div class="buy-name">${p.name}</div><div class="buy-info">${lang === 'de' ? 'aktuell' : 'atual'}: ${p.qty} · min: ${p.min} ${p.unit||'un'}</div></div>
-        <div class="buy-qty">${lang === 'de' ? 'ca.' : '~'}${suggest} ${p.unit||'un'}</div>
-      </div>`;
-    }).join('');
-  }
-  c.innerHTML = html;
-}
-
-function detectAnomalies() {
-  const anomalies = [];
-  const now3  = Date.now() - 3 * 86400000;
-  const now6  = Date.now() - 6 * 86400000;
-  products.forEach(p => {
-    const outs = log.filter(l => l.name === p.name && (l.type === 'saida' || l.type === 'desperdicio'));
-    if (outs.length < 3) return;
-    const last3 = outs.filter(l => new Date(l.time).getTime() > now3).reduce((s,l) => s+l.qty, 0);
-    const prev3 = outs.filter(l => { const t = new Date(l.time).getTime(); return t > now6 && t <= now3; }).reduce((s,l) => s+l.qty, 0);
-    if (last3 > 0 && prev3 > 0 && last3 > prev3 * 1.6) {
-      anomalies.push({ name: p.name, unit: p.unit||'un', current: p.qty, recentOut: round2(last3), avgOut: round2(prev3) });
     }
-  });
-  return anomalies;
+    const limitText = loc.cold
+      ? (lang === 'de' ? `Max ${loc.max}°C` : `Máx ${loc.max}°C`)
+      : (lang === 'de' ? `Min ${loc.min}°C` : `Mín ${loc.min}°C`);
+    return `<button class="loc-card ${statusCls}" onclick="openHACCPModal('${loc.key}')">
+      <div class="loc-icon">${loc.icon}</div>
+      <div class="loc-name">${loc.name}</div>
+      <div class="loc-sub">${limitText}</div>
+      ${tempHTML}
+    </button>`;
+  }).join('');
 }
 
-// ---- LOG ----
-function filterLog(type, el) {
-  activeLogFilter = type;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-  renderLog();
+function openHACCPModal(key) {
+  activeHACCPKey = key;
+  const cfg = HACCP_CFG.find(l => l.key === key);
+  document.getElementById('haccp-modal-title').textContent = cfg.icon + ' ' + cfg.name;
+  document.getElementById('haccp-modal-sub').textContent = t('haccpModalSub');
+  const limitText = cfg.cold
+    ? (t('limitsLabel') + ': ' + cfg.min + '°C – ' + cfg.max + '°C')
+    : (t('limitsLabel') + ': min ' + cfg.min + '°C');
+  document.getElementById('haccp-limit-info').textContent = limitText;
+  document.getElementById('haccp-temp-input').value = '';
+  document.getElementById('haccp-modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('haccp-temp-input').focus(), 100);
 }
 
-function renderLog() {
-  const c = document.getElementById('log-container');
-  let filtered = log;
-  if (activeLogFilter === 'entrada')     filtered = log.filter(l => l.type === 'entrada' && !(l.reason||'').startsWith('Recebimento'));
-  if (activeLogFilter === 'saida')       filtered = log.filter(l => l.type === 'saida');
-  if (activeLogFilter === 'desperdicio') filtered = log.filter(l => l.type === 'desperdicio');
-  if (activeLogFilter === 'recebimento') filtered = log.filter(l => (l.reason||'').startsWith('Recebimento'));
-  if (!filtered.length) {
-    c.innerHTML = '<div class="empty-state"><strong>' + t('logEmpty') + '</strong></div>';
+function closeHACCPModal(e) {
+  if (e && e.target !== document.getElementById('haccp-modal-overlay')) return;
+  document.getElementById('haccp-modal-overlay').classList.remove('open');
+}
+
+function confirmHACCP() {
+  const temp = parseFloat(document.getElementById('haccp-temp-input').value);
+  if (isNaN(temp)) { toast('⚠ °C?', 'warn'); return; }
+  const cfg = HACCP_CFG.find(l => l.key === activeHACCPKey);
+  const ok  = cfg.cold ? (temp >= cfg.min && temp <= cfg.max) : (temp >= cfg.min);
+  haccpLog.unshift({ id: Date.now(), key: activeHACCPKey, name: cfg.name, icon: cfg.icon, temp, ok, time: ts() });
+  save();
+  document.getElementById('haccp-modal-overlay').classList.remove('open');
+  renderHACCPGrid();
+  renderHACCPLog();
+  if (ok) toast(t('toastHACCP'), 'success');
+  else    toast(t('toastHACCPBad'), 'error');
+  if (!ok) checkNotif('⚠ HACCP', cfg.name + ': ' + temp + '°C');
+}
+
+function renderHACCPLog() {
+  const el = document.getElementById('haccp-recent-log');
+  if (!haccpLog.length) {
+    el.innerHTML = `<div class="empty-box" style="padding:24px 0"><div class="empty-icon">🌡</div><strong>${t('haccpEmpty')}</strong></div>`;
     return;
   }
-  const icons = { entrada: '📥', saida: '📤', desperdicio: '🗑' };
-  c.innerHTML = filtered.slice(0, 100).map(l => {
-    const icon = icons[l.type] || '📋';
-    const cls  = l.type === 'entrada' ? 'log-in' : l.type === 'desperdicio' ? 'log-waste' : 'log-out';
-    const sign = l.type === 'entrada' ? '+' : '−';
-    return `<div class="log-item">
-      <span class="log-icon">${icon}</span>
-      <div style="flex:1;min-width:0">
-        <div>${l.name} · <span class="${cls}">${sign}${l.qty} ${l.unit||'un'}</span></div>
-        <div class="log-time">${l.reason||''}</div>
+  el.innerHTML = haccpLog.slice(0, 20).map(h => `
+    <div class="haccp-log-row ${h.ok ? 'ok' : 'bad'}">
+      <div>
+        <div class="haccp-log-loc">${h.icon} ${h.name} ${h.ok ? '' : `<span style="font-size:0.65rem;color:var(--red);font-weight:700">⚠ ${lang === 'de' ? 'ALARM' : 'ALERTA'}</span>`}</div>
+        <div class="haccp-log-meta">${h.time}</div>
       </div>
-      <div class="log-time">${l.time}</div>
-    </div>`;
-  }).join('');
+      <div class="haccp-log-temp ${h.ok ? 'ok' : 'bad'}">${h.temp}°C</div>
+    </div>`).join('');
 }
 
 // ---- SCANNER ----
-function openScanner(target) {
-  scanTarget = target;
-  document.getElementById('scanner-modal').classList.add('open');
-  document.getElementById('scanner-status').textContent = '📷 ' + (lang === 'de' ? 'Barcode scannen...' : 'Aponte para o código de barras...');
+function openScanner(mode) {
+  scanMode = mode;
+  document.getElementById('scanner-overlay').classList.add('open');
+  document.getElementById('scanner-hint').textContent = lang === 'de' ? 'Kamera auf Barcode richten' : 'Aponte para o código de barras';
 
   if (typeof Quagga === 'undefined') {
-    document.getElementById('scanner-status').textContent = '❌ ' + (lang === 'de' ? 'Kamera nicht verfügbar (HTTPS erforderlich).' : 'Câmera não disponível. Use HTTPS.');
+    document.getElementById('scanner-hint').textContent = lang === 'de' ? '❌ Kamera benötigt HTTPS.' : '❌ Câmera requer HTTPS.';
     return;
   }
 
+  let lastCode = '', lastTime = 0;
   Quagga.init({
     inputStream: {
-      type: 'LiveStream',
-      target: document.querySelector('#scanner-viewport'),
+      type: 'LiveStream', target: document.querySelector('#scanner-vp'),
       constraints: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
     },
     decoder: { readers: ['ean_reader', 'ean_8_reader', 'code_128_reader', 'upc_reader'] },
     locate: true,
   }, err => {
-    if (err) {
-      document.getElementById('scanner-status').textContent = '❌ ' + (lang === 'de' ? 'Kamera: ' : 'Câmera: ') + err;
-      return;
-    }
+    if (err) { document.getElementById('scanner-hint').textContent = '❌ ' + err; return; }
     Quagga.start();
-    scannerRunning = true;
+    scannerOn = true;
   });
 
-  let lastCode = null, lastTime = 0;
   Quagga.onDetected(result => {
     const code = result.codeResult.code;
     const now2 = Date.now();
     if (code === lastCode && now2 - lastTime < 2000) return;
     lastCode = code; lastTime = now2;
     closeScanner();
-    handleScannedCode(code);
+    handleEAN(code);
   });
 }
 
 function closeScanner() {
-  if (scannerRunning && typeof Quagga !== 'undefined') {
+  if (scannerOn && typeof Quagga !== 'undefined') {
     try { Quagga.stop(); } catch(e) {}
-    scannerRunning = false;
+    scannerOn = false;
   }
-  document.getElementById('scanner-modal').classList.remove('open');
-  document.getElementById('scanner-viewport').innerHTML = '';
+  document.getElementById('scanner-overlay').classList.remove('open');
+  document.getElementById('scanner-vp').innerHTML = '';
 }
 
-async function handleScannedCode(ean) {
-  if (scanTarget === 'recv') {
+async function handleEAN(ean) {
+  if (scanMode === 'recv') {
+    // Find product by EAN and go to receber tab
     const p = products.find(x => x.ean === ean);
+    goPage('receber', document.getElementById('nav-receber'));
     if (p) {
-      document.getElementById('recv-product').value = p.id;
-      showBanner('✓ ' + p.name, 'ok');
+      setTimeout(() => {
+        document.getElementById('recv-product-sel').value = p.id;
+        document.getElementById('recv-qty-input').focus();
+        toast('✓ ' + p.name, 'success');
+      }, 150);
     } else {
-      showAlert('EAN ' + ean, lang === 'de' ? 'Nicht gefunden. Zuerst im Lager erfassen.' : 'Não cadastrado. Adicione no Estoque primeiro.');
+      toast(lang === 'de' ? '⚠ EAN nicht gefunden. Manuell auswählen.' : '⚠ EAN não cadastrado. Selecione manualmente.', 'warn');
     }
     return;
   }
 
-  // add mode: lookup Open Food Facts
+  // add / form mode: lookup product name
+  goPage('estoque', document.getElementById('nav-estoque'));
+  setTimeout(() => {
+    if (!document.getElementById('add-product-form').classList.contains('open')) toggleAddForm();
+  }, 100);
+
   pendingEAN = ean;
-  document.getElementById('new-name').value = '🔍...';
-  document.getElementById('ean-status').textContent = '';
+  document.getElementById('f-name').value = '🔍...';
+  document.getElementById('f-ean-hint').textContent = '';
 
   try {
     const res  = await fetch('https://world.openfoodfacts.org/api/v0/product/' + ean + '.json');
     const data = await res.json();
     if (data.status === 1) {
       const name = data.product.product_name_de || data.product.product_name_en || data.product.product_name || '';
-      document.getElementById('new-name').value = name;
-      document.getElementById('ean-status').textContent = '✓ EAN ' + ean + (name ? ' — ' + name : ' — ' + (lang === 'de' ? 'Name manuell eingeben' : 'Digite o nome manualmente'));
-      document.getElementById('ean-status').style.color = 'var(--ok)';
-      showBanner('✓ EAN ' + ean, 'ok');
+      document.getElementById('f-name').value = name;
+      document.getElementById('f-ean-hint').textContent = '✓ EAN ' + ean + (name ? '' : ' — ' + (lang === 'de' ? 'Name eingeben' : 'Digite o nome'));
+      document.getElementById('f-ean-hint').style.color = 'var(--green)';
+      document.getElementById('f-qty').focus();
     } else {
-      document.getElementById('new-name').value = '';
-      document.getElementById('ean-status').textContent = '⚠ EAN ' + ean + (lang === 'de' ? ' — unbekannt. Name manuell eingeben.' : ' — não encontrado. Digite o nome.');
-      document.getElementById('ean-status').style.color = 'var(--warn)';
+      document.getElementById('f-name').value = '';
+      document.getElementById('f-name').focus();
+      document.getElementById('f-ean-hint').textContent = 'EAN ' + ean + (lang === 'de' ? ' — Name eingeben' : ' — Digite o nome');
+      document.getElementById('f-ean-hint').style.color = 'var(--muted)';
     }
-  } catch(e) {
-    document.getElementById('new-name').value = '';
-    document.getElementById('ean-status').textContent = 'EAN: ' + ean + (lang === 'de' ? ' (offline)' : ' (sem internet)');
-    document.getElementById('ean-status').style.color = 'var(--muted)';
+  } catch {
+    document.getElementById('f-name').value = '';
+    document.getElementById('f-name').focus();
+    document.getElementById('f-ean-hint').textContent = 'EAN: ' + ean;
+    document.getElementById('f-ean-hint').style.color = 'var(--muted)';
   }
-}
-
-// ---- PHOTO ----
-function previewPhoto(input, previewId, labelId) {
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const img = document.getElementById(previewId);
-    img.src = e.target.result;
-    img.style.display = 'block';
-    document.getElementById(labelId).textContent = '✓ ' + (lang === 'de' ? 'Foto ausgewählt' : 'Foto selecionada');
-  };
-  reader.readAsDataURL(file);
 }
 
 // ---- NOTIFICATIONS ----
@@ -1120,58 +1590,44 @@ async function requestNotifPermission() {
     await Notification.requestPermission();
   }
 }
-
 function checkNotif(title, body) {
-  if ('Notification' in window && Notification.permission === 'granted') {
-    new Notification(title, { body });
-  }
+  if ('Notification' in window && Notification.permission === 'granted') new Notification(title, { body });
 }
-
-function checkLowStock(p) {
+function checkLow(p) {
   if (getStatus(p) === 'critical') checkNotif('⛔ ' + p.name, lang === 'de' ? 'Lager leer!' : 'Estoque zerado!');
-  else if (getStatus(p) === 'low') checkNotif('⚠ ' + p.name, p.qty + ' ' + (p.unit||'un') + ' — min: ' + p.min);
+  else if (getStatus(p) === 'low') checkNotif('⚠ ' + p.name, p.qty + ' ' + p.unit);
 }
 
-// ---- BANNER ----
-function showBanner(msg, type) {
-  const b = document.getElementById('notif-banner');
-  b.textContent = msg;
-  b.className = 'notif-banner show' + (type === 'ok' ? ' ok-banner' : '');
-  clearTimeout(bannerTimeout);
-  bannerTimeout = setTimeout(() => b.classList.remove('show'), 3000);
+// ---- TOAST ----
+function toast(msg, type = '') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (type ? ' ' + type : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
 }
 
-// ---- MODALS ----
-function showAlert(title, msg) {
-  document.getElementById('modal-title').textContent = title;
-  document.getElementById('modal-msg').textContent   = msg;
-  document.getElementById('modal-cancel').style.display = 'none';
-  document.getElementById('modal-ok').textContent = 'OK';
-  document.getElementById('modal-ok').onclick = closeModal;
-  document.getElementById('modal').classList.add('open');
+// ---- CONFIRM MODAL ----
+function showConfirm(title, msg, cb, btnLabel = '') {
+  confirmCallback = cb;
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-msg').textContent   = msg;
+  document.getElementById('confirm-yes').textContent   = btnLabel || (lang === 'de' ? 'Bestätigen' : 'Confirmar');
+  document.getElementById('confirm-yes').onclick = () => { closeConfirm(null); cb(); };
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+function closeConfirm(e) {
+  if (e && e.target !== document.getElementById('confirm-overlay')) return;
+  document.getElementById('confirm-overlay').classList.remove('open');
 }
 
-function showConfirm(title, msg, callback) {
-  document.getElementById('modal-title').textContent = title;
-  document.getElementById('modal-msg').textContent   = msg;
-  document.getElementById('modal-cancel').style.display = 'flex';
-  document.getElementById('modal-ok').textContent = lang === 'de' ? 'Bestätigen' : 'Confirmar';
-  document.getElementById('modal-ok').onclick = () => { closeModal(); callback(); };
-  document.getElementById('modal').classList.add('open');
-}
-
-function closeModal() { document.getElementById('modal').classList.remove('open'); }
-
-// ---- UTILS ----
-function round2(n) { return Math.round(n * 100) / 100; }
-function now()     { return new Date().toLocaleString(lang === 'de' ? 'de-DE' : 'pt-BR'); }
-
-// ---- BOOT ----
-if (sessionStorage.getItem('lb_auth') === '1') {
+// ---- BOOT CHECK ----
+if (sessionStorage.getItem('lb3_auth') === '1') {
   document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app-screen').style.display  = 'block';
-  window.addEventListener('DOMContentLoaded', init);
-  if (document.readyState !== 'loading') init();
+  document.getElementById('app-screen').style.display = 'block';
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else { boot(); }
 }
 </script>
 </body>
