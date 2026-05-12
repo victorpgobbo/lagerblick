@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Lagerblick</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <style>
 /* ─── TOKENS ─────────────────────────────────────────── */
 :root {
@@ -58,9 +58,9 @@ input,select{font-family:inherit}
 /* ─── PIN SCREEN ─────────────────────────────────────── */
 .pin-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:#0F172A;padding:32px 24px;padding-bottom:calc(32px + env(safe-area-inset-bottom,0))}
 .pin-brand{display:flex;flex-direction:column;align-items:center;gap:14px;margin-bottom:48px}
-.pin-mark{width:60px;height:60px;border-radius:18px;background:var(--em);display:flex;align-items:center;justify-content:center}
-.pin-wordmark{font-size:1.375rem;font-weight:700;color:#fff;letter-spacing:-0.01em}
-.pin-tagline{font-size:0.8125rem;color:#475569;font-weight:400;margin-top:-6px}
+.pin-wordmark{font-family:'Syne',sans-serif;font-size:2.5rem;font-weight:800;color:#fff;letter-spacing:-0.01em;line-height:1}
+.pin-wordmark span{color:var(--em)}
+.pin-tagline{font-size:0.8125rem;color:#475569;font-weight:400;margin-top:-2px}
 .pin-dots{display:flex;gap:18px;margin-bottom:40px}
 .pin-dot{width:11px;height:11px;border-radius:50%;background:rgba(255,255,255,0.12);border:2px solid rgba(255,255,255,0.18);transition:all .15s}
 .pin-dot.filled{background:var(--em);border-color:var(--em);transform:scale(1.15)}
@@ -76,8 +76,8 @@ input,select{font-family:inherit}
 
 .app-header{position:sticky;top:0;z-index:50;height:var(--hdr);background:rgba(255,255,255,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px}
 .hdr-brand{display:flex;align-items:center;gap:10px}
-.hdr-mark{width:30px;height:30px;border-radius:9px;background:var(--em);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.hdr-wordmark{font-size:1rem;font-weight:700;color:var(--t1);letter-spacing:-0.01em}
+.hdr-wordmark{font-family:'Syne',sans-serif;font-size:1.25rem;font-weight:800;color:var(--t1);letter-spacing:-0.01em}
+.hdr-wordmark span{color:var(--em)}
 .lang-btn{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:100px;border:1.5px solid var(--border);color:var(--t2);font-size:.75rem;font-weight:600;background:var(--surface);cursor:pointer;transition:all .15s}
 .lang-btn:active{background:var(--surface2)}
 
@@ -345,12 +345,7 @@ input,select{font-family:inherit}
 <!-- ════════════ PIN ════════════ -->
 <div class="pin-screen" id="pin-screen">
   <div class="pin-brand">
-    <div class="pin-mark">
-      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-      </svg>
-    </div>
-    <div class="pin-wordmark">Lagerblick</div>
+    <div class="pin-wordmark">lager<span>blick</span></div>
     <div class="pin-tagline">Controle de estoque</div>
   </div>
   <div class="pin-dots" id="pin-dots">
@@ -383,12 +378,7 @@ input,select{font-family:inherit}
 
   <header class="app-header">
     <div class="hdr-brand">
-      <div class="hdr-mark">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-        </svg>
-      </div>
-      <span class="hdr-wordmark">Lagerblick</span>
+      <span class="hdr-wordmark">lager<span>blick</span></span>
     </div>
     <button class="lang-btn" id="lang-btn" onclick="toggleLang()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
