@@ -220,12 +220,11 @@ input,select{font-family:inherit}
 .sup-btn{padding:7px 14px;border-radius:100px;font-size:.75rem;font-weight:600;background:var(--surface2);border:1.5px solid var(--border);color:var(--t2);cursor:pointer;transition:all .15s}
 .sup-btn.sel{background:var(--em);border-color:var(--em);color:#fff}
 
-.recv-row{display:flex;gap:10px;align-items:flex-end}
-.recv-select,.recv-qty{background:var(--bg);border:1.5px solid var(--border);color:var(--t1);padding:11px 14px;font-size:.9375rem;border-radius:var(--r-s);outline:none;transition:border-color .15s;-webkit-appearance:none}
+.recv-row{display:grid;grid-template-columns:1fr 72px 44px;gap:8px;align-items:end}
+.recv-select,.recv-qty{width:100%;background:var(--bg);border:1.5px solid var(--border);color:var(--t1);padding:11px 12px;font-size:.9375rem;border-radius:var(--r-s);outline:none;transition:border-color .15s;-webkit-appearance:none;min-width:0}
 .recv-select:focus,.recv-qty:focus{border-color:var(--em)}
-.recv-select{flex:2}
-.recv-qty{flex:1;text-align:center;font-weight:700}
-.btn-recv-add{background:var(--em);color:#fff;border:none;border-radius:var(--r-s);padding:11px 14px;font-size:.875rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;flex-shrink:0;transition:opacity .15s}
+.recv-qty{text-align:center;font-weight:700}
+.btn-recv-add{width:44px;height:44px;background:var(--em);color:#fff;border:none;border-radius:var(--r-s);font-size:.875rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity .15s;flex-shrink:0}
 .btn-recv-add:active{opacity:.88}
 
 .basket-card{background:var(--surface);border-radius:var(--r);border:1.5px solid var(--border);overflow:hidden;margin-bottom:10px;box-shadow:var(--sh-s)}
@@ -1322,17 +1321,29 @@ async function handleEAN(ean){
   pendingEAN=ean;
   document.getElementById('f-name').value=lang==='de'?'Suche…':'Buscando…';
   try{
-    const res=await fetch('https://world.openfoodfacts.org/api/v0/product/'+ean+'.json');
-    const data=await res.json();
-    if(data.status===1){
-      const name=data.product.product_name_de||data.product.product_name_en||data.product.product_name||'';
+    // 1ª tentativa: Open Food Facts (melhor pra alimentos)
+    let name='';
+    const r1=await fetch('https://world.openfoodfacts.org/api/v0/product/'+ean+'.json');
+    const d1=await r1.json();
+    if(d1.status===1){
+      name=d1.product.product_name_de||d1.product.product_name_en||d1.product.product_name||'';
+    }
+    // 2ª tentativa: UPC Item DB (banco global, cobre o que OFF não tem)
+    if(!name){
+      try{
+        const r2=await fetch('https://api.upcitemdb.com/prod/trial/lookup?upc='+ean);
+        const d2=await r2.json();
+        if(d2.code==='OK'&&d2.items&&d2.items[0]) name=d2.items[0].title||'';
+      }catch(_){}
+    }
+    if(name){
       document.getElementById('f-name').value=name;
-      document.getElementById('f-ean-hint').textContent='EAN '+ean+(name?'':' — '+(lang==='de'?'Name eingeben':'Digite o nome'));
+      document.getElementById('f-ean-hint').textContent='EAN '+ean+' ✓';
       document.getElementById('f-ean-hint').style.color='var(--em)';
       document.getElementById('f-qty').focus();
     } else {
       document.getElementById('f-name').value=''; document.getElementById('f-name').focus();
-      document.getElementById('f-ean-hint').textContent='EAN '+ean;
+      document.getElementById('f-ean-hint').textContent='EAN '+ean+' — '+(lang==='de'?'Name eingeben':'Digite o nome manualmente');
       document.getElementById('f-ean-hint').style.color='var(--t2)';
     }
   } catch {
